@@ -3,77 +3,104 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rate & discuss | Vibe Vault</title>
+    <title>Rate &amp; discuss | Vibe Vault</title>
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b0c10'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle'%3E%F0%9F%8C%8C%3C/text%3E%3C/svg%3E">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background-color: #0b0c10; color: #c5c6c7; line-height: 1.6; padding: 2rem 1rem;
-               font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        .container { max-width: 820px; margin: 0 auto; }
-        a { color: #66fcf1; }
-        header { border-bottom: 1px solid #1f2833; padding-bottom: 1.2rem; margin-bottom: 1.6rem; }
-        header .home { font-size: 0.85rem; text-decoration: none; }
-        h1 { font-size: 1.6rem; color: #fff; margin-top: 0.6rem; }
-        .vibe { font-style: italic; color: #9fa6ad; margin-bottom: 0.6rem; }
-        .meta { font-size: 0.85rem; color: #9fa6ad; margin-bottom: 1rem; }
-        .actions { display: flex; gap: 0.6rem; margin-bottom: 2rem; }
-        .play-btn { background: #66fcf1; color: #0b0c10; font-weight: 600; padding: 0.5rem 1.6rem;
-                    border-radius: 6px; text-decoration: none; font-size: 0.95rem; }
-        .ext-btn { border: 1px solid #66fcf1; color: #66fcf1; padding: 0.5rem 1rem; border-radius: 6px;
-                   text-decoration: none; font-size: 0.95rem; }
-        .how { font-size: 0.85rem; color: #5d6770; margin-bottom: 1.4rem; }
-        #giscus-box { min-height: 300px; }
-        footer { text-align: center; margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid #1f2833;
-                 font-size: 0.8rem; color: #45faf4; opacity: 0.5; }
-    </style>
+    <link rel="stylesheet" href="vault.css">
+    <script src="theme.js"></script>
 </head>
 <body>
-<div class="container">
-    <header>
-        <a class="home" href="./">← Vibe Vault</a>
-        <h1 id="title">…</h1>
-        <p class="vibe" id="vibe"></p>
-        <p class="meta" id="meta"></p>
-        <div class="actions" id="actions"></div>
-    </header>
-    <p class="how">Sign in with GitHub below, then <strong>react to the main post</strong> to rate
-       (👍 liked it · ❤️ loved it · 👀 it unsettled me in the intended way) — or leave the creator a comment.
-       Ratings appear on the game's card within a few hours.</p>
-    <div id="giscus-box"></div>
-    <footer><p>&copy; 2026 Vibe Vault &bull; comments powered by <a href="https://giscus.app">giscus</a> + GitHub Discussions</p></footer>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header"><div><a class="brand" href="./"><span class="brand-mark" aria-hidden="true">🌌</span>Vibe Vault</a>
+<div class="brand-subtitle">Games made with AI</div></div>
+<nav aria-label="Main navigation" class="site-nav"><a href="./">Games</a><a href="./#how">How it works</a><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Submit a game</a><a href="https://github.com/NMAIResearch/vibe-vault">GitHub</a></nav>
+<button class="theme-toggle-btn" hidden id="themeToggle" type="button">Theme</button></header>
+
+<main class="vault" id="main">
+<div class="rate-head">
+<a class="back-link" href="./"><span aria-hidden="true">←</span> All games</a>
+<h1 id="title">Loading…</h1>
+<p class="vibe-line" id="vibe"></p>
+<p class="meta" id="meta"></p>
+<div class="actions" id="actions"></div>
 </div>
+<p class="how">Sign in with GitHub below, then <strong>react to the main post</strong> to rate
+   (👍 liked it · ❤️ loved it · 👀 it unsettled me in the intended way), or leave the creator a comment.
+   Ratings appear on the game's card within a few hours.</p>
+<div id="giscus-box"></div>
+</main>
+
+<footer class="hub-footer">
+<p class="ai-disclaimer">AI disclosure: Claude Opus 5.5 (Anthropic) drafted this page's layout.</p>
+<p>&copy; 2026 Vibe Vault · comments powered by <a href="https://giscus.app">giscus</a> + GitHub Discussions</p>
+<p>Hosted by <a href="https://nmairesearch.com/">NM AI Research</a></p>
+</footer>
+
 <script>
 (async function () {
+    "use strict";
     const id = new URLSearchParams(location.search).get("id");
+    const title = document.getElementById("title");
+    const vibe = document.getElementById("vibe");
+    const actions = document.getElementById("actions");
+    const isWebLink = url => typeof url === "string" && /^https?:\/\//i.test(url);
+    function link(className, href, parts) {
+        const a = document.createElement("a");
+        a.className = className;
+        a.href = href;
+        for (const part of parts) a.append(part);
+        return a;
+    }
+    function glyph(text) {
+        const span = document.createElement("span");
+        span.setAttribute("aria-hidden", "true");
+        span.textContent = text;
+        return span;
+    }
+
     let games = [];
     try { games = await (await fetch("games.json")).json(); } catch (e) {}
-    const g = games.find(x => x.id === id);
+    const g = Array.isArray(games) ? games.find(x => x.id === id) : undefined;
     if (!g) {
-        document.getElementById("title").textContent = "Game not found";
-        document.getElementById("vibe").innerHTML = 'Back to <a href="./">the vault</a>.';
+        title.textContent = "Game not found";
+        vibe.replaceChildren("Back to ", link("", "./", ["the vault"]), ".");
         return;
     }
-    document.title = `${g.title} — rate & discuss | Vibe Vault`;
-    document.getElementById("title").textContent = g.title;
-    document.getElementById("vibe").textContent = g.vibe || "";
+    document.title = `${g.title}: rate & discuss | Vibe Vault`;
+    title.textContent = g.title;
+    vibe.textContent = g.vibe || "";
     document.getElementById("meta").textContent = g.built_with ? `built with ${g.built_with}` : "";
-    document.getElementById("actions").innerHTML =
-        `<a class="play-btn" href="games/${g.id}/">▶ Play</a>` +
-        (g.discuss_url ? `<a class="ext-btn" href="${g.discuss_url}">Thread on GitHub ↗</a>` : "");
+    actions.append(link("btn btn-primary", `games/${encodeURIComponent(g.id)}/`, [glyph("▶"), "Play"]));
+    if (isWebLink(g.discuss_url)) actions.append(link("btn btn-quiet", g.discuss_url, ["Thread on GitHub", glyph("↗")]));
+
     const m = (g.discuss_url || "").match(/\/discussions\/(\d+)/);
     if (!m) return;
     const s = document.createElement("script");
     s.src = "https://giscus.app/client.js";
     s.async = true; s.crossOrigin = "anonymous";
-    s.setAttribute("data-repo", "Vibe-Vault/Vibe-Vault");
-    s.setAttribute("data-repo-id", "R_kgDOS17SbA");
+    s.setAttribute("data-repo", "NMAIResearch/vibe-vault");
+    s.setAttribute("data-repo-id", "R_kgDOVDGEcg");
     s.setAttribute("data-mapping", "number");
     s.setAttribute("data-term", m[1]);
     s.setAttribute("data-reactions-enabled", "1");
     s.setAttribute("data-input-position", "top");
-    s.setAttribute("data-theme", "noborder_dark");
+    const giscusTheme = () => document.documentElement.dataset.theme === "light" ? "noborder_light" : "noborder_dark";
+    s.setAttribute("data-theme", giscusTheme());
     s.setAttribute("data-lang", "en");
     document.getElementById("giscus-box").appendChild(s);
+    // theme.js sets data-theme on a toggle and on a system change. Before the giscus frame exists, keep the
+    // pending script's theme current; once the frame has sent its first message, send it the current theme.
+    let giscusReady = false;
+    const syncGiscus = () => {
+      const frame = document.querySelector("iframe.giscus-frame");
+      if (giscusReady && frame && frame.contentWindow) frame.contentWindow.postMessage({ giscus: { setConfig: { theme: giscusTheme() } } }, "https://giscus.app");
+      else s.setAttribute("data-theme", giscusTheme());
+    };
+    new MutationObserver(syncGiscus).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    window.addEventListener("message", (event) => {
+      if (giscusReady || event.origin !== "https://giscus.app" || !event.data || typeof event.data !== "object" || !("giscus" in event.data)) return;
+      giscusReady = true;
+      syncGiscus();
+    });
 })();
 </script>
 </body>

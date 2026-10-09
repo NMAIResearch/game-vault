@@ -21,7 +21,7 @@ jobs:
         run: |
           gh api graphql -f query='
             query {
-              repository(owner: "Vibe-Vault", name: "Vibe-Vault") {
+              repository(owner: "NMAIResearch", name: "vibe-vault") {
                 discussions(first: 100) {
                   nodes {
                     number

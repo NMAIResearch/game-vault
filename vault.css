@@ -1,0 +1,76 @@
+/* Vibe Vault presentation: the NM AI Research palette, type, header, footer and focus pattern, with the vault's catalogue and rating components. */
+:root{color-scheme:light;--bg:#fff;--surface:#fff;--raised:#f7fafc;--text:#2d3748;--muted:#4a5568;--line:#e2e8f0;--accent:#2b6cb0;--heading:#1a365d;--tag:#f7fafc;--sans:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f141d;--surface:#161d2b;--raised:#161d2b;--text:#e8edf4;--muted:#a0aec0;--line:#2a3444;--accent:#63b3ed;--heading:#e2e8f0;--tag:#161d2b}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f141d;--surface:#161d2b;--raised:#161d2b;--text:#e8edf4;--muted:#a0aec0;--line:#2a3444;--accent:#63b3ed;--heading:#e2e8f0;--tag:#161d2b}}
+*{box-sizing:border-box}html{scroll-padding-top:1.5rem}body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 var(--sans)}
+a{color:var(--accent);text-underline-offset:.22em;text-decoration-thickness:1px}a:hover{text-decoration-thickness:2px}
+button{font:inherit;color:var(--text);cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.55rem .85rem}
+:focus-visible{outline:3px solid var(--accent);outline-offset:4px}[hidden]{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip-link{position:absolute;top:-100px;left:20px;padding:10px;background:var(--surface);z-index:10}.skip-link:focus{top:15px}
+
+/* Header, as on the NM AI Research pages */
+.site-header{max-width:1200px;margin:auto;padding:24px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid var(--line)}
+.brand{color:var(--heading);font-size:1rem;font-weight:750;text-decoration:none;letter-spacing:.025em}.brand-mark{margin-right:.35em}.brand-subtitle{font-size:.8rem;color:var(--muted);margin-top:2px}
+.site-nav{display:flex;gap:25px;flex-wrap:wrap}.site-nav a{font-size:.9rem;color:var(--muted);text-decoration:none;padding:7px 0}.site-nav a[aria-current]{color:var(--accent);border-bottom:2px solid var(--accent)}
+.theme-toggle-btn{font-size:.8rem;min-height:44px;white-space:nowrap}
+
+/* Type and shared components */
+h1,h2,h3{color:var(--heading)}h1{font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.12;letter-spacing:-.045em;font-weight:660;margin:0 0 22px}h2{line-height:1.3;letter-spacing:-.025em}p{overflow-wrap:anywhere}
+.vault{max-width:1200px;margin:auto;padding:0 28px}
+.eyebrow{font-size:.76rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:0 0 16px;font-weight:650}
+.btn{display:inline-flex;align-items:center;gap:.4em;min-height:48px;padding:.7rem 1.25rem;border-radius:8px;font-weight:650;font-size:.98rem;line-height:1.3;text-decoration:none;border:1px solid var(--line)}
+.btn-primary{background:var(--heading);border-color:var(--heading);color:var(--bg)}.btn-primary:hover{background:var(--accent);border-color:var(--accent)}
+.btn-quiet{color:var(--heading);background:var(--surface)}.btn-quiet:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Catalogue hero */
+.vault-hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:56px;align-items:center;padding:64px 0 56px}
+.vault-hero h1{font-size:clamp(2.2rem,4.6vw,3.3rem);max-width:17ch}
+.lede{font-size:clamp(1.08rem,1.5vw,1.22rem);line-height:1.65;color:var(--muted);max-width:60ch;margin:0 0 32px}.lede strong{color:var(--heading);font-weight:650}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px 14px;align-items:center}
+.hero-panel{padding:24px 28px 8px;background:var(--raised);border:1px solid var(--line);border-radius:14px}
+.hero-panel h2{font-size:.76rem;line-height:1.5;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:650;margin:0 0 4px}
+.steps{list-style:none;margin:0;padding:0}.steps li{padding:14px 0}.steps li+li{border-top:1px solid var(--line)}
+.steps h3{font-size:1.05rem;line-height:1.4;margin:0 0 4px}.steps p{margin:0;font-size:.94rem;line-height:1.6;color:var(--muted)}
+
+/* Catalogue */
+.games{padding:56px 0 64px;border-top:1px solid var(--line)}
+.section-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px 16px;flex-wrap:wrap;margin-bottom:20px}
+.section-head h2{font-size:clamp(1.5rem,2.6vw,2rem);margin:0}.section-head a{font-size:.92rem;font-weight:600}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 8px}
+.filters button{min-height:40px;padding:.35rem .95rem;border-radius:999px;font-size:.88rem;color:var(--muted)}
+.filters button:hover{border-color:var(--accent);color:var(--accent)}
+.filters button[aria-pressed="true"]{background:var(--heading);border-color:var(--heading);color:var(--bg)}
+.filter-status{min-height:1.6em;margin:0 0 14px;font-size:.85rem;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px}
+.game{display:flex;flex-direction:column;min-width:0;padding:26px;background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--accent);border-radius:12px}
+.game h3{font-size:1.28rem;line-height:1.3;letter-spacing:-.02em;margin:0 0 6px}
+.game h3 a{color:inherit;text-decoration-color:var(--line)}.game h3 a:hover{color:var(--accent)}
+.vibe-line{font-style:italic;color:var(--muted);margin:0 0 14px;line-height:1.6}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px;padding:0;list-style:none}
+.tags li{font-size:.75rem;line-height:1.5;background:var(--tag);border:1px solid var(--line);color:var(--muted);padding:2px 8px;border-radius:4px}
+.meta{font-size:.85rem;color:var(--muted);margin:0 0 18px}
+.actions{margin-top:auto;padding-top:16px;border-top:1px solid var(--line);display:flex;flex-wrap:wrap;gap:10px}
+.actions .btn{min-height:44px;padding:.5rem 1.05rem;font-size:.92rem}
+.notice{grid-column:1/-1;text-align:center;padding:56px 20px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+.notice h3{margin:0 0 8px;font-size:1.2rem}.notice p{margin:0}
+
+/* Rating page */
+.rate-head{max-width:820px;padding:44px 0 8px}
+.back-link{display:inline-block;margin:0 0 18px;font-size:.9rem;font-weight:600}
+.rate-head h1{font-size:clamp(2rem,4.4vw,3rem);margin:0 0 10px}
+.rate-head .vibe-line{font-size:1.08rem}
+.rate-head .actions{border-top:0;padding-top:4px;margin:0 0 24px}
+.how{max-width:820px;margin:0 0 22px;padding:18px 22px;background:var(--raised);border:1px solid var(--line);border-radius:12px;font-size:.92rem;color:var(--muted)}
+.how strong{color:var(--heading)}
+#giscus-box{max-width:820px;min-height:300px;margin-bottom:48px}
+
+/* Footer, as on the NM AI Research pages */
+.hub-footer{max-width:1144px;margin:0 auto;padding:26px 0 40px;border-top:1px solid var(--line);font-size:.8rem;color:var(--muted)}
+.hub-footer p{margin:0 0 10px}.footer-links{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:14px}
+
+@media(max-width:1200px){.hub-footer{margin-left:28px;margin-right:28px}}
+@media(max-width:960px){.vault-hero{grid-template-columns:1fr;gap:40px}.hero-panel{max-width:560px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:850px){.site-header{flex-wrap:wrap;gap:15px}.site-nav{order:3;width:100%;gap:4px 25px}.theme-toggle-btn{margin-left:auto}}
+@media(max-width:620px){body{font-size:16px}.site-header{padding:20px}.vault{padding:0 20px}.vault-hero{padding:40px 0;gap:32px}.hero-panel{padding:20px 22px 6px}.games{padding:40px 0 48px}.grid{grid-template-columns:1fr;gap:18px}.game{padding:22px}.hub-footer{margin-left:20px;margin-right:20px}.theme-toggle-btn{font-size:.72rem}.site-nav{gap:2px 20px}.site-nav a{font-size:.85rem}.rate-head{padding-top:32px}.how{padding:16px 18px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}

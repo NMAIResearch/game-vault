@@ -3,185 +3,191 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Vibe Vault — a community home for games people made with Claude and other AI. Play in your browser, share yours, rate the rest.">
-    <meta property="og:title" content="Vibe Vault — games made with AI, playable in your browser">
+    <meta name="description" content="Vibe Vault: a community home for games people made with Claude and other AI. Play in your browser, share yours, rate the rest.">
+    <meta property="og:title" content="Vibe Vault: games made with AI, playable in your browser">
     <meta property="og:description" content="Made a game with Claude? It lives here. Play free browser games people vibe-coded with AI, submit yours, rate the rest. No installs, no accounts, no tracking.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://vibe-vault.github.io/Vibe-Vault/">
+    <meta property="og:url" content="https://nmairesearch.com/vibe-vault/">
     <meta name="twitter:card" content="summary">
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b0c10'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle'%3E%F0%9F%8C%8C%3C/text%3E%3C/svg%3E">
     <title>Vibe Vault | Games made with AI, playable in your browser</title>
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            background-color: #0b0c10;
-            color: #c5c6c7;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            padding: 2rem 1rem;
-        }
-        .container { max-width: 1100px; margin: 0 auto; }
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            border-bottom: 1px solid #1f2833;
-            padding-bottom: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-        .brand h1 { font-size: 1.8rem; color: #66fcf1; letter-spacing: -0.5px; }
-        .brand p { font-size: 0.9rem; color: #45f3ff; font-style: italic; opacity: 0.8; }
-        .submit-btn {
-            background: #66fcf1; color: #0b0c10; font-weight: 600;
-            padding: 0.55rem 1.1rem; border-radius: 6px; text-decoration: none;
-            font-size: 0.95rem; transition: opacity 0.2s;
-        }
-        .submit-btn:hover { opacity: 0.85; }
-        .intro { margin-bottom: 2.5rem; font-size: 1rem; color: #9fa6ad; max-width: 720px; }
-        .intro strong { color: #ffffff; }
-        nav.filters { margin-bottom: 2rem; display: flex; flex-wrap: wrap; gap: 0.4rem; }
-        nav.filters button {
-            background: #1f2833; color: #c5c6c7; border: 1px solid #1f2833;
-            padding: 0.3rem 0.9rem; border-radius: 999px; font-size: 0.85rem;
-            cursor: pointer; transition: color 0.2s, border-color 0.2s;
-        }
-        nav.filters button:hover, nav.filters button.active { color: #66fcf1; border-color: #66fcf1; }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-        .card {
-            background: #1f2833;
-            border-radius: 8px;
-            overflow: hidden;
-            border: 1px solid #1f2833;
-            transition: transform 0.2s, border-color 0.2s;
-            display: flex; flex-direction: column;
-        }
-        .card:hover { transform: translateY(-4px); border-color: #66fcf1; }
-        .card-content { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; }
-        .card-content h2 { font-size: 1.3rem; color: #ffffff; margin-bottom: 0.35rem; }
-        .vibe-line { font-style: italic; color: #9fa6ad; font-size: 0.9rem; margin-bottom: 0.9rem; }
-        .vibe-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
-        .tag { font-size: 0.75rem; background: #0b0c10; color: #66fcf1; padding: 0.2rem 0.6rem; border-radius: 4px; text-transform: lowercase; }
-        .meta { font-size: 0.8rem; color: #9fa6ad; margin-bottom: 1.1rem; }
-        .meta .paid { color: #f1c40f; }
-        .actions { margin-top: auto; display: flex; gap: 0.6rem; }
-        .play-btn {
-            background: #66fcf1; color: #0b0c10; font-weight: 600;
-            padding: 0.45rem 1.4rem; border-radius: 6px; text-decoration: none; font-size: 0.9rem;
-        }
-        .ext-btn {
-            border: 1px solid #66fcf1; color: #66fcf1;
-            padding: 0.45rem 1rem; border-radius: 6px; text-decoration: none; font-size: 0.9rem;
-        }
-        .empty {
-            grid-column: 1 / -1; text-align: center; padding: 4rem 1rem;
-            border: 1px dashed #1f2833; border-radius: 8px; color: #9fa6ad;
-        }
-        .empty h2 { color: #ffffff; margin-bottom: 0.5rem; font-size: 1.2rem; }
-        .empty a { color: #66fcf1; }
-        footer { text-align: center; margin-top: 5rem; padding-top: 2rem; border-top: 1px solid #1f2833; font-size: 0.8rem; color: #45faf4; opacity: 0.5; }
-        footer a { color: inherit; }
-    </style>
+    <link rel="stylesheet" href="vault.css">
+    <script src="theme.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="brand">
-                <h1>🌌 Vibe Vault</h1>
-                <p>Made a game with Claude? It lives here.</p>
-            </div>
-            <a class="submit-btn" href="https://github.com/Vibe-Vault/Vibe-Vault/issues/new/choose">+ Submit your game</a>
-        </header>
+<a class="skip-link" href="#games">Skip to the games</a>
+<header class="site-header"><div><a class="brand" href="./"><span class="brand-mark" aria-hidden="true">🌌</span>Vibe Vault</a>
+<div class="brand-subtitle">Games made with AI</div></div>
+<nav aria-label="Main navigation" class="site-nav"><a aria-current="page" href="./">Games</a><a href="#how">How it works</a><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Submit a game</a><a href="https://github.com/NMAIResearch/vibe-vault">GitHub</a></nav>
+<button class="theme-toggle-btn" hidden id="themeToggle" type="button">Theme</button></header>
 
-        <p class="intro">
-            A community home for <strong>vibe-coded games</strong> — built by describing what you want
-            and shaping it with an AI, prompt by prompt. Every game plays <strong>right in your browser</strong>:
-            no installs, no accounts, no tracking. From one-prompt jam toys to games iterated on for months —
-            both belong here.
-        </p>
+<main class="vault" id="main">
+<section class="vault-hero" aria-labelledby="vault-title">
+<div>
+<p class="eyebrow">Games made with AI · Playable in your browser</p>
+<h1 id="vault-title">Made a game with Claude? It lives here.</h1>
+<p class="lede">A community home for <strong>vibe-coded games</strong>, built by describing what you want and shaping it with an AI, prompt by prompt. Every game plays <strong>right in your browser</strong>: no installs, no accounts, no tracking. From one-prompt jam toys to games iterated on for months, both belong here.</p>
+<div class="cta-row">
+<a class="btn btn-primary" href="#games">Play the games</a>
+<a class="btn btn-quiet" href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose"><span aria-hidden="true">+</span> Submit your game</a>
+</div>
+</div>
+<aside class="hero-panel" id="how" aria-labelledby="how-title">
+<h2 id="how-title">How it works</h2>
+<ol class="steps">
+<li><h3>Play</h3><p>Every game in the vault runs right in your browser.</p></li>
+<li><h3>Share</h3><p>Built something with Claude (or another model)? Submit it with a game submission issue on GitHub, or send a pull request.</p></li>
+<li><h3>Rate and discuss</h3><p>Each game has its own discussion thread for reactions, ratings, and feedback to the creator.</p></li>
+</ol>
+</aside>
+</section>
 
-        <nav class="filters" id="filters"></nav>
+<section class="games" id="games" aria-labelledby="games-title">
+<div class="section-head"><h2 id="games-title">The games</h2><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Submit your game</a></div>
+<div class="filters" id="filters" role="group" aria-label="Filter games by tag"></div>
+<p class="filter-status" id="filter-status" role="status"></p>
+<div class="grid" id="grid"></div>
+<noscript><p class="notice">The catalogue needs JavaScript to list the games. Browse the <a href="https://github.com/NMAIResearch/vibe-vault/tree/main/games">games folder on GitHub</a>.</p></noscript>
+</section>
+</main>
 
-        <main class="grid" id="grid"></main>
+<footer class="hub-footer">
+<p class="ai-disclaimer">AI disclosure: Claude Opus 5.5 (Anthropic) drafted this page's layout.</p>
+<p>&copy; 2026 Vibe Vault · Open source under <a href="https://github.com/NMAIResearch/vibe-vault/blob/main/LICENSE">MIT</a></p>
+<p>Hosted by <a href="https://nmairesearch.com/">NM AI Research</a></p>
+<div class="footer-links"><a href="https://github.com/NMAIResearch/vibe-vault">GitHub</a><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Submit a game</a></div>
+</footer>
 
-        <footer>
-            <p>&copy; 2026 Vibe Vault &bull; Open source under <a href="https://github.com/Vibe-Vault/Vibe-Vault/blob/main/LICENSE">MIT</a>
-               &bull; <a href="https://github.com/Vibe-Vault/Vibe-Vault">GitHub</a></p>
-        </footer>
-    </div>
+<script>
+(function () {
+    "use strict";
+    const REPO = "https://github.com/NMAIResearch/vibe-vault";
+    const grid = document.getElementById("grid");
+    const filters = document.getElementById("filters");
+    const status = document.getElementById("filter-status");
+    let games = [];
+    let ratings = {};
 
-    <script>
-    (async function () {
-        const grid = document.getElementById("grid");
-        const filtersNav = document.getElementById("filters");
-        let games = [], ratings = {};
-        try {
-            games = await (await fetch("games.json")).json();
-        } catch (e) { /* fall through to empty state */ }
-        try {
-            ratings = await (await fetch("ratings.json")).json();
-        } catch (e) { /* ratings are optional */ }
-
-        function render(filter) {
-            grid.innerHTML = "";
-            const shown = filter ? games.filter(g => (g.tags || []).includes(filter)) : games;
-            if (!shown.length) {
-                grid.innerHTML = `<div class="empty">
-                    <h2>The vault is opening…</h2>
-                    <p>The first games are checking in. Built one with Claude (or another AI)?<br>
-                    <a href="https://github.com/Vibe-Vault/Vibe-Vault/issues/new/choose">Be among the first on the shelf.</a></p>
-                </div>`;
-                return;
-            }
-            for (const g of shown) {
-                const card = document.createElement("article");
-                card.className = "card";
-                const tags = (g.tags || []).map(t => `<span class="tag">#${t}</span>`).join("");
-                const built = g.built_with ? `built with ${g.built_with}` : "";
-                const R = ratings[g.id];
-                const rate = R && (R.up + R.heart + R.eyes + R.comments) > 0
-                    ? ` &bull; <span style="color:#66fcf1">${R.up ? "👍" + R.up + " " : ""}${R.heart ? "❤️" + R.heart + " " : ""}${R.eyes ? "👀" + R.eyes + " " : ""}${R.comments ? "💬" + R.comments : ""}</span>` : "";
-                const paid = g.full_version_url ? ` &bull; <span class="paid">demo — full version available</span>` : "";
-                const ext = g.full_version_url ? `<a class="ext-btn" href="${g.full_version_url}">Full version ↗</a>` : "";
-                const disc = g.discuss_url ? `<a class="ext-btn" href="rate.html?id=${g.id}">💬 Rate</a>` : "";
-                card.innerHTML = `
-                    <div class="card-content">
-                        <h2>${g.title}</h2>
-                        <p class="vibe-line">${g.vibe || ""}</p>
-                        <div class="vibe-tags">${tags}</div>
-                        <p class="meta">${built}${rate}${paid}</p>
-                        <div class="actions">
-                            <a class="play-btn" href="games/${g.id}/">▶ Play</a>
-                            ${ext}${disc}
-                        </div>
-                    </div>`;
-                grid.appendChild(card);
-            }
+    function make(tag, props, children) {
+        const node = document.createElement(tag);
+        for (const [key, value] of Object.entries(props || {})) {
+            if (key === "text") node.textContent = value;
+            else if (key === "className") node.className = value;
+            else node.setAttribute(key, value);
         }
+        for (const child of children || []) node.append(child);
+        return node;
+    }
+    const glyph = text => make("span", { "aria-hidden": "true", text });
+    const spoken = text => make("span", { className: "sr-only", text });
+    const isWebLink = url => typeof url === "string" && /^https?:\/\//i.test(url);
 
+    function notice(title, body) {
+        grid.replaceChildren(make("div", { className: "notice" }, [make("h3", { text: title }), body]));
+    }
+
+    function emptyState() {
+        notice("The vault is opening…", make("p", {}, [
+            "The first games are checking in. Built one with Claude (or another AI)?", make("br"),
+            make("a", { href: REPO + "/issues/new/choose", text: "Be among the first on the shelf." })
+        ]));
+    }
+
+    function failedState() {
+        notice("The game list could not be loaded.", make("p", {}, [
+            "Reload the page, or browse the ", make("a", { href: REPO + "/tree/main/games", text: "games folder on GitHub" }), "."
+        ]));
+    }
+
+    function ratingNode(r) {
+        const parts = [["up", "👍", "liked it"], ["heart", "❤️", "loved it"], ["eyes", "👀", "found it unsettling in the intended way"], ["comments", "💬", "comments"]]
+            .filter(([key]) => r[key]);
+        const node = make("span", { className: "ratings" });
+        node.append(glyph(parts.map(([key, symbol]) => symbol + r[key]).join(" ")));
+        node.append(spoken("Ratings: " + parts.map(([key, , label]) => r[key] + " " + label).join(", ")));
+        return node;
+    }
+
+    function card(g) {
+        const id = encodeURIComponent(g.id);
+        const play = "games/" + id + "/";
+        const article = make("article", { className: "game" });
+        article.append(make("h3", {}, [make("a", { href: play, text: g.title })]));
+        article.append(make("p", { className: "vibe-line", text: g.vibe || "" }));
+        const tags = g.tags || [];
+        if (tags.length) article.append(make("ul", { className: "tags", "aria-label": "Tags" }, tags.map(t => make("li", { text: "#" + t }))));
+        const details = [];
+        if (g.built_with) details.push("built with " + g.built_with);
+        const r = ratings[g.id];
+        if (r && (r.up + r.heart + r.eyes + r.comments) > 0) details.push(ratingNode(r));
+        if (g.full_version_url) details.push(make("span", { className: "paid", text: "demo, full version available" }));
+        const meta = make("p", { className: "meta" });
+        details.forEach((item, i) => { if (i) meta.append(" · "); meta.append(item); });
+        article.append(meta);
+        const actions = make("div", { className: "actions" });
+        actions.append(make("a", { className: "btn btn-primary", href: play }, [glyph("▶"), "Play", spoken(" " + g.title)]));
+        if (isWebLink(g.full_version_url)) {
+            actions.append(make("a", { className: "btn btn-quiet", href: g.full_version_url }, ["Full version", glyph("↗"), spoken(" of " + g.title)]));
+        }
+        if (g.discuss_url) {
+            actions.append(make("a", { className: "btn btn-quiet", href: "rate.html?id=" + id }, [glyph("💬"), "Rate", spoken(" " + g.title)]));
+        }
+        article.append(actions);
+        return article;
+    }
+
+    function render(tag) {
+        const shown = tag ? games.filter(g => (g.tags || []).includes(tag)) : games;
+        if (!shown.length) { emptyState(); return; }
+        grid.replaceChildren(...shown.map(card));
+    }
+
+    function buildFilters() {
         const allTags = [...new Set(games.flatMap(g => g.tags || []))];
-        if (allTags.length) {
-            const mkBtn = (label, tag) => {
-                const b = document.createElement("button");
-                b.textContent = label;
-                b.onclick = () => {
-                    filtersNav.querySelectorAll("button").forEach(x => x.classList.remove("active"));
-                    b.classList.add("active");
-                    render(tag);
-                };
-                return b;
-            };
-            const all = mkBtn("All", null); all.classList.add("active");
-            filtersNav.appendChild(all);
-            for (const t of allTags) filtersNav.appendChild(mkBtn("#" + t, t));
+        if (!allTags.length) return;
+        const buttons = [];
+        const choose = (button, tag) => {
+            buttons.forEach(b => b.setAttribute("aria-pressed", String(b === button)));
+            render(tag);
+            const count = tag ? games.filter(g => (g.tags || []).includes(tag)).length : games.length;
+            status.textContent = tag
+                ? "Showing " + count + (count === 1 ? " game" : " games") + " tagged #" + tag + "."
+                : "Showing all games.";
+        };
+        const add = (label, tag) => {
+            const button = make("button", { type: "button", "aria-pressed": "false", text: label });
+            button.addEventListener("click", () => choose(button, tag));
+            buttons.push(button);
+            filters.append(button);
+            return button;
+        };
+        add("All", null).setAttribute("aria-pressed", "true");
+        for (const tag of allTags) add("#" + tag, tag);
+    }
+
+    async function load(path) {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error(path + " returned " + response.status);
+        return response.json();
+    }
+
+    (async function () {
+        try {
+            games = await load("games.json");
+        } catch (error) {
+            failedState();
+            return;
         }
+        if (!Array.isArray(games)) { failedState(); return; }
+        try {
+            ratings = (await load("ratings.json")) || {};
+        } catch (error) {
+            ratings = {};  // Ratings are optional.
+        }
+        buildFilters();
         render(null);
     })();
-    </script>
+})();
+</script>
 </body>
 </html>

@@ -41,10 +41,10 @@ Built something bigger you want to charge for? Submit a **playable demo** for th
 ## 🧰 Run locally
 
 ```bash
-git clone https://github.com/Vibe-Vault/Vibe-Vault.git
-cd Vibe-Vault
+git clone https://github.com/NMAIResearch/vibe-vault.git
+cd vibe-vault
 ```
-Open `index.html` in any modern browser. No build step.
+Serve the folder with any static web server, for example `python3 -m http.server`, then open the address it prints. Browsers may refuse to load the game list when `index.html` is opened straight from disk. No build step.
 
 ---
 
