@@ -1,4 +1,16 @@
 {
+  "fact-checkmate": {
+    "up": 0,
+    "heart": 0,
+    "eyes": 0,
+    "comments": 0
+  },
+  "keyboard-magician": {
+    "up": 0,
+    "heart": 0,
+    "eyes": 0,
+    "comments": 0
+  },
   "tic-tac-toe": {
     "up": 0,
     "heart": 0,

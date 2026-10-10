@@ -1,5 +1,21 @@
 [
   {
+    "id": "fact-checkmate",
+    "title": "Fact Checkmate",
+    "vibe": "chess against a bot that talks a big game: check its claims",
+    "tags": ["classic", "strategy", "ai"],
+    "built_with": "Claude (Opus 5.5)",
+    "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/5"
+  },
+  {
+    "id": "keyboard-magician",
+    "title": "Keyboard Magician",
+    "vibe": "a calm rhythm game: play the tune on your keyboard, with real piano and strings",
+    "tags": ["rhythm", "music", "calm"],
+    "built_with": "Claude (Opus 5.5)",
+    "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/6"
+  },
+  {
     "id": "tic-tac-toe",
     "title": "Tic Tac Toe",
     "vibe": "well, it is exactly what you expect",

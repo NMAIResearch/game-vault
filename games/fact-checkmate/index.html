@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fact Checkmate</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b0e1c'/%3E%3Ctext x='50' y='72' font-size='64' text-anchor='middle' fill='%23e8ecff'%3E%E2%99%9E%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #080a14; --panel: rgba(255, 255, 255, 0.045); --line: rgba(255, 255, 255, 0.1);
+    --text: #e6e9f5; --muted: #9aa3c0; --accent: #8ea2ff; --good: #34d399; --bad: #f87171; --warn: #fbbf24;
+    --light: #dfe4f2; --dark: #7183b6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(1200px 700px at 70% -10%, #1b2148 0%, transparent 60%), radial-gradient(900px 600px at -10% 110%, #231637 0%, transparent 55%), var(--bg);
+  }
+  a { color: var(--accent); }
+  button, select { font: inherit; color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 18px 20px 40px; }
+  header.top { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; margin-bottom: 18px; }
+  header.top h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.4rem); letter-spacing: -0.02em; }
+  header.top h1 span { color: var(--accent); }
+  header.top p { margin: 0; color: var(--muted); }
+  .back { font-size: 0.9rem; text-decoration: none; flex-basis: 100%; }
+  .layout { display: grid; grid-template-columns: minmax(0, 560px) minmax(280px, 1fr); gap: 26px; align-items: start; }
+
+  .board-wrap { position: relative; width: min(560px, 100%); }
+  .board { display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; border-radius: 12px; overflow: hidden;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08); user-select: none; touch-action: manipulation; }
+  .sq { position: relative; border: 0; padding: 0; margin: 0; display: grid; place-items: center; cursor: pointer; aspect-ratio: 1; }
+  .sq.light { background: var(--light); }
+  .sq.dark { background: var(--dark); }
+  .sq:focus-visible { outline: 3px solid var(--warn); outline-offset: -3px; z-index: 2; }
+  .sq.last::before { content: ""; position: absolute; inset: 0; background: rgba(255, 214, 102, 0.42); }
+  .sq.sel::before { content: ""; position: absolute; inset: 0; background: rgba(255, 196, 61, 0.62); }
+  .sq.check::before { content: ""; position: absolute; inset: 0; background: radial-gradient(circle, rgba(248, 56, 56, 0.95) 0%, rgba(248, 56, 56, 0.45) 45%, transparent 72%); }
+  .sq.ev::after { content: ""; position: absolute; inset: 3px; border-radius: 6px; box-shadow: 0 0 0 3px #22d3ee, 0 0 18px #22d3ee; pointer-events: none; z-index: 3; }
+  .sq .dot { position: absolute; width: 28%; height: 28%; border-radius: 50%; background: rgba(15, 20, 45, 0.32); z-index: 2; pointer-events: none; }
+  .sq .ring { position: absolute; inset: 6%; border-radius: 50%; border: 5px solid rgba(15, 20, 45, 0.32); z-index: 2; pointer-events: none; }
+  .pc { position: relative; z-index: 1; font-family: "Segoe UI Symbol", "Noto Sans Symbols 2", "DejaVu Sans", "Apple Symbols", "Arial Unicode MS", serif;
+    font-size: min(8.4vw, 50px); line-height: 1; pointer-events: none; }
+  .pc.w { color: #fbf8f0; -webkit-text-stroke: 1.4px #1c2033; paint-order: stroke fill; text-shadow: 0 2px 3px rgba(0, 0, 0, 0.35); }
+  .pc.b { color: #1a1d2e; -webkit-text-stroke: 0.6px #1a1d2e; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25), 0 2px 3px rgba(0, 0, 0, 0.3); }
+  .coord { position: absolute; font-size: 0.68rem; font-weight: 700; pointer-events: none; z-index: 1; }
+  .coord.rank { top: 3px; left: 4px; }
+  .coord.file { bottom: 2px; right: 5px; }
+  .sq.light .coord { color: var(--dark); }
+  .sq.dark .coord { color: var(--light); }
+
+  .overlay { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 12px; background: rgba(8, 10, 20, 0.72); backdrop-filter: blur(3px); z-index: 5; text-align: center; padding: 20px; }
+  .overlay .card { background: #12162b; border: 1px solid var(--line); border-radius: 14px; padding: 22px 24px; max-width: 380px; }
+  .overlay h2 { margin: 0 0 6px; font-size: 1.5rem; }
+  .overlay p { margin: 0 0 14px; color: var(--muted); }
+  .promo-row { display: flex; gap: 10px; justify-content: center; }
+  .promo-row button { width: 64px; height: 64px; border-radius: 12px; border: 1px solid var(--line); background: var(--light); cursor: pointer; }
+  .promo-row button:hover, .promo-row button:focus-visible { outline: 3px solid var(--accent); }
+  .overlay .card p:last-child { margin: 14px 0 0; }
+
+  .panel { display: grid; gap: 14px; }
+  .box { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  .bot { display: grid; grid-template-columns: 64px 1fr; gap: 14px; align-items: start; }
+  .avatar { position: relative; width: 64px; height: 64px; border-radius: 18px; background: linear-gradient(145deg, #7c8cff, #9b5cf6); box-shadow: 0 6px 18px rgba(124, 140, 255, 0.35); display: flex; gap: 12px; justify-content: center; align-items: center; }
+  .avatar::before { content: ""; position: absolute; top: -10px; left: 29px; width: 6px; height: 10px; border-radius: 3px 3px 0 0; background: #b7c1ff; }
+  .avatar::after { content: ""; position: absolute; top: -16px; left: 26px; width: 12px; height: 12px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 10px #fbbf24; }
+  .eye { width: 11px; height: 14px; border-radius: 50%; background: #fff; animation: blink 4.5s infinite; }
+  .avatar.thinking { animation: pulse 0.9s ease-in-out infinite; }
+  .avatar.busted .eye { height: 3px; border-radius: 2px; transform: rotate(18deg); animation: none; }
+  .avatar.busted .eye + .eye { transform: rotate(-18deg); }
+  .avatar.smug .eye { height: 6px; border-radius: 6px 6px 2px 2px; animation: none; }
+  @keyframes blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(0.1); } }
+  @keyframes pulse { 50% { transform: scale(1.06); filter: brightness(1.15); } }
+  .who { margin: 0 0 4px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .claim { margin: 0; font-size: 1.12rem; font-weight: 600; min-height: 3.2em; }
+  .quip { margin: 4px 0 0; color: var(--muted); font-style: italic; min-height: 1.4em; }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+  .btn { border: 1px solid var(--line); background: rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 9px 16px; cursor: pointer; font-weight: 650; }
+  .btn:hover:not(:disabled) { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #0b0e1c; }
+  .btn:disabled { opacity: 0.45; cursor: default; }
+  .hint { color: var(--muted); font-size: 0.86rem; }
+  .verdict { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; font-size: 0.95rem; }
+  .verdict.good { background: rgba(52, 211, 153, 0.12); border: 1px solid rgba(52, 211, 153, 0.4); }
+  .verdict.bad { background: rgba(248, 113, 113, 0.12); border: 1px solid rgba(248, 113, 113, 0.4); }
+  .verdict.info { background: rgba(142, 162, 255, 0.1); border: 1px solid rgba(142, 162, 255, 0.35); }
+  .tally { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; text-align: center; }
+  .tally strong { display: block; font-size: 2rem; line-height: 1.1; }
+  .tally span { color: var(--muted); font-size: 0.85rem; }
+  .tally .vs { color: var(--muted); font-size: 0.85rem; }
+  .rules { margin: 10px 0 0; color: var(--muted); font-size: 0.86rem; text-align: center; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+  .controls label { display: grid; gap: 4px; font-size: 0.8rem; color: var(--muted); }
+  .controls select { background: #12162b; border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; }
+  details summary { cursor: pointer; font-weight: 650; }
+  details ul { margin: 10px 0 0; padding-left: 18px; color: var(--muted); font-size: 0.9rem; }
+  details li { margin-bottom: 6px; }
+  .log { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; max-height: 260px; overflow: auto; }
+  .log li { font-size: 0.88rem; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, 0.035); }
+  .log .tag { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 1px 7px; border-radius: 6px; margin-right: 6px; }
+  .tag.caught { background: rgba(52, 211, 153, 0.2); color: var(--good); }
+  .tag.slipped { background: rgba(251, 191, 36, 0.18); color: var(--warn); }
+  .tag.wrong { background: rgba(248, 113, 113, 0.18); color: var(--bad); }
+  .tag.true { background: rgba(142, 162, 255, 0.16); color: var(--accent); }
+  .log small { display: block; color: var(--muted); margin-top: 3px; }
+  .moves { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 0.85rem; color: var(--muted); max-height: 90px; overflow: auto; margin: 0; }
+  .status { margin: 10px 0 0; text-align: center; color: var(--muted); min-height: 1.5em; }
+  footer { margin-top: 30px; color: var(--muted); font-size: 0.8rem; }
+  footer p { margin: 0 0 6px; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .board-wrap { margin: 0 auto; } .pc { font-size: min(10.4vw, 50px); } }
+  @media (prefers-reduced-motion: reduce) { .eye, .avatar.thinking { animation: none; } }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <a class="back" href="../../"><span aria-hidden="true">←</span> Vibe Vault</a>
+    <h1>Fact <span>Checkmate</span></h1>
+    <p>Play chess against Sir Claims-a-Lot. It talks a big game. Check its claims.</p>
+  </header>
+
+  <main class="layout">
+    <section class="board-wrap" aria-label="Chess board">
+      <div id="board" class="board"></div>
+      <div id="promo" class="overlay" hidden>
+        <div class="card">
+          <h2>Promote to</h2>
+          <div class="promo-row" id="promoRow"></div>
+          <p><button class="btn" id="promoCancel" type="button">Cancel</button></p>
+        </div>
+      </div>
+      <div id="result" class="overlay" hidden>
+        <div class="card">
+          <h2 id="resultTitle"></h2>
+          <p id="resultText"></p>
+          <button class="btn primary" id="againBtn" type="button">New game</button>
+        </div>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+    </section>
+
+    <aside class="panel">
+      <div class="box">
+        <div class="bot">
+          <div class="avatar" id="avatar" aria-hidden="true"><span class="eye"></span><span class="eye"></span></div>
+          <div>
+            <p class="who">Sir Claims-a-Lot</p>
+            <p class="claim" id="claim" aria-live="polite"></p>
+            <p class="quip" id="quip" aria-live="polite"></p>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="checkBtn" type="button" disabled>Check that claim</button>
+          <span class="hint" id="checkHint">or just make your move</span>
+        </div>
+        <p class="verdict" id="verdict" hidden aria-live="polite"></p>
+      </div>
+
+      <div class="box">
+        <div class="tally">
+          <div><strong id="youScore">0</strong><span>you</span></div>
+          <div class="vs">fact-check<br>score</div>
+          <div><strong id="botScore">0</strong><span>Sir Claims-a-Lot</span></div>
+        </div>
+        <p class="rules">Catch a false claim and you score. Challenge a true one, or let a false one slip past, and the bot scores.</p>
+      </div>
+
+      <div class="box controls">
+        <label>Level
+          <select id="level">
+            <option value="gentle">Gentle</option>
+            <option value="fair">Fair</option>
+            <option value="sharp">Sharp</option>
+          </select>
+        </label>
+        <label>Play as
+          <select id="side">
+            <option value="w">White</option>
+            <option value="b">Black</option>
+          </select>
+        </label>
+        <button class="btn" id="newBtn" type="button">New game</button>
+      </div>
+
+      <div class="box">
+        <details>
+          <summary>How claims are checked</summary>
+          <ul>
+            <li><strong>Points:</strong> pawn 1, knight 3, bishop 3, rook 5, queen 9.</li>
+            <li><strong>Hanging:</strong> if it were my move, I could take that piece and come out ahead in points after both sides finish recapturing on its square.</li>
+            <li><strong>Attacks:</strong> my piece could move to that square if it were my turn, ignoring pins.</li>
+            <li><strong>Mate in one:</strong> if you passed, I would have a move that is checkmate.</li>
+            <li><strong>Castling:</strong> whether you still have the right to castle, even if the way is blocked right now.</li>
+          </ul>
+        </details>
+      </div>
+
+      <div class="box">
+        <p class="who">Claims so far</p>
+        <ol class="log" id="log"></ol>
+      </div>
+
+      <div class="box">
+        <p class="who">Moves</p>
+        <p class="moves" id="moves"></p>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <p>AI disclosure: Claude Opus 5.5 (Anthropic) wrote this game for Vibe Vault.</p>
+    <p>Chess rules: <a href="https://github.com/jhlywa/chess.js">chess.js</a> 1.4.0 by Jeff Hlywa, BSD-2-Clause (<a href="LICENSE-chess.js.txt">licence</a>).</p>
+  </footer>
+</div>
+
+<script type="module">
+import { Chess, chooseMove, makeClaim, NAMES, other } from "./logic.js";
+
+const params = new URLSearchParams(location.search);
+const TEST = params.has("test");
+const rng = params.has("seed") ? mulberry32(Number(params.get("seed"))) : Math.random;
+const LIE_RATE = 0.4;
+const GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
+const TEXT_STYLE = "\uFE0E"; // ask for the plain symbol, not an emoji
+const STORE = "fact-checkmate:settings";
+const $ = (s) => document.querySelector(s);
+const pick = (list) => list[Math.floor(rng() * list.length)];
+
+function mulberry32(a) {
+  return () => {
+    a |= 0; a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function read() { try { return JSON.parse(localStorage.getItem(STORE) || "{}") || {}; } catch (e) { return {}; } }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(settings)); } catch (e) {} }
+const settings = Object.assign({ level: "gentle", side: "w" }, read());
+
+let game = null, squares = {}, botTimer = null;
+
+/* ---------- board ---------- */
+
+function buildBoard() {
+  const board = $("#board"), flip = game.player === "b";
+  squares = {};
+  const frag = document.createDocumentFragment();
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const file = "abcdefgh"[flip ? 7 - c : c], rank = "87654321"[flip ? 7 - r : r], sq = file + rank;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "sq " + ((r + c) % 2 === 0 ? "light" : "dark");
+      btn.dataset.square = sq;
+      if (c === 0) btn.insertAdjacentHTML("beforeend", `<span class="coord rank">${rank}</span>`);
+      if (r === 7) btn.insertAdjacentHTML("beforeend", `<span class="coord file">${file}</span>`);
+      squares[sq] = btn;
+      frag.append(btn);
+    }
+  }
+  board.replaceChildren(frag);
+}
+
+function paint() {
+  const ch = game.chess;
+  const checkSq = ch.inCheck() ? ch.findPiece({ type: "k", color: ch.turn() })[0] : null;
+  const targets = new Map(game.targets.map((m) => [m.to, m]));
+  for (const [sq, btn] of Object.entries(squares)) {
+    const piece = ch.get(sq);
+    btn.classList.toggle("last", Boolean(game.last) && (game.last.from === sq || game.last.to === sq));
+    btn.classList.toggle("sel", game.selected === sq);
+    btn.classList.toggle("check", sq === checkSq);
+    btn.classList.toggle("ev", game.evidence.includes(sq));
+    for (const el of btn.querySelectorAll(".pc, .dot, .ring")) el.remove();
+    if (piece) {
+      const span = document.createElement("span");
+      span.className = "pc " + piece.color;
+      span.textContent = GLYPH[piece.type] + TEXT_STYLE;
+      btn.append(span);
+    }
+    if (targets.has(sq)) {
+      const mark = document.createElement("span");
+      mark.className = piece ? "ring" : "dot";
+      btn.append(mark);
+    }
+    const label = piece ? `${sq}, ${piece.color === "w" ? "white" : "black"} ${NAMES[piece.type]}` : sq;
+    btn.setAttribute("aria-label", targets.has(sq) ? `${label}, move here` : label);
+  }
+  const parts = [];
+  let no = game.startNo, white = game.startTurn === "w";
+  ch.history().forEach((san, i) => {
+    if (white) parts.push(`${no}. ${san}`);
+    else { parts.push(i === 0 ? `${no}… ${san}` : san); no++; }
+    white = !white;
+  });
+  $("#moves").textContent = parts.join(" ") || "No moves yet.";
+}
+
+/* ---------- the bot's voice and the claim panel ---------- */
+
+function say(text) { $("#claim").textContent = text; quip(""); }
+function quip(text) { $("#quip").textContent = text; }
+function mood(name) { $("#avatar").className = "avatar" + (name ? " " + name : ""); }
+function status(text) { $("#status").textContent = text; }
+function verdict(text, kind) {
+  const v = $("#verdict");
+  v.hidden = !text;
+  v.textContent = text || "";
+  v.className = "verdict " + (kind || "info");
+}
+function scores() { $("#youScore").textContent = game.scores.you; $("#botScore").textContent = game.scores.bot; }
+function setCheckable(on) {
+  $("#checkBtn").disabled = !on;
+  $("#checkHint").hidden = !on;
+}
+
+function logClaim(c, outcome) {
+  const tags = { caught: "Caught", wrong: "True, you challenged it", slipped: "Slipped past", true: "True" };
+  const li = document.createElement("li");
+  const tag = document.createElement("span");
+  tag.className = "tag " + outcome;
+  tag.textContent = tags[outcome];
+  const small = document.createElement("small");
+  small.textContent = (c.truth ? "True: " : "False: ") + c.why;
+  li.append(tag, document.createTextNode(`${c.label} ${c.text}`), small);
+  $("#log").prepend(li);
+}
+
+/* ---------- game flow ---------- */
+
+function newGame(fen) {
+  clearTimeout(botTimer);
+  const chess = new Chess(fen);
+  game = {
+    chess, player: settings.side, bot: other(settings.side), selected: null, targets: [], last: null,
+    claim: null, evidence: [], scores: { you: 0, bot: 0 }, over: false, thinking: false,
+    startNo: chess.moveNumber(), startTurn: chess.turn()
+  };
+  $("#log").replaceChildren();
+  $("#result").hidden = true;
+  $("#promo").hidden = true;
+  verdict("");
+  scores();
+  mood("");
+  buildBoard();
+  paint();
+  setCheckable(false);
+  if (chess.turn() === game.bot) { say("I'll start. I never lie. Mostly."); botTurn(); }
+  else { say("I never lie. Mostly. Your move."); status("Your move."); }
+}
+
+// Called when the player moves: an unchallenged false claim scores for the bot.
+function settleClaim() {
+  const c = game.claim;
+  game.claim = null;
+  game.evidence = [];
+  setCheckable(false);
+  verdict("");
+  if (!c || c.resolved) return;
+  c.resolved = true;
+  if (c.truth) { logClaim(c, "true"); return; }
+  game.scores.bot++;
+  scores();
+  logClaim(c, "slipped");
+  verdict(`A false claim slipped past you: "${c.text}" ${c.why}`, "bad");
+}
+
+function challenge() {
+  const c = game.claim;
+  if (!c || c.resolved || game.thinking || game.over) return;
+  c.resolved = true;
+  setCheckable(false);
+  game.evidence = c.squares;
+  if (!c.truth) {
+    game.scores.you++;
+    verdict(`Caught it! False. ${c.why}`, "good");
+    mood("busted");
+    quip(pick(["Fine. That one was... creative.", "I may have embellished.", "Who checks these things, honestly?", "That was a test. You passed."]));
+    logClaim(c, "caught");
+  } else {
+    game.scores.bot++;
+    verdict(`That one was true. ${c.why}`, "bad");
+    mood("smug");
+    quip(pick(["Told you. Facts only.", "You doubted me?", "I never lie. Usually.", "Checked and correct. As always."]));
+    logClaim(c, "wrong");
+  }
+  scores();
+  paint();
+}
+
+function onSquare(sq) {
+  if (game.over || game.thinking || game.chess.turn() !== game.player) return;
+  const ch = game.chess, piece = ch.get(sq);
+  const options = game.targets.filter((m) => m.to === sq);
+  if (game.selected && options.length) {
+    if (options.some((m) => m.promotion)) askPromotion(game.selected, sq);
+    else playerMove({ from: game.selected, to: sq });
+    return;
+  }
+  if (piece && piece.color === game.player && game.selected !== sq) {
+    game.selected = sq;
+    game.targets = ch.moves({ square: sq, verbose: true });
+  } else {
+    game.selected = null;
+    game.targets = [];
+  }
+  paint();
+}
+
+function askPromotion(from, to) {
+  const row = $("#promoRow");
+  row.replaceChildren();
+  for (const t of ["q", "r", "b", "n"]) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.setAttribute("aria-label", NAMES[t]);
+    const span = document.createElement("span");
+    span.className = "pc " + game.player;
+    span.textContent = GLYPH[t] + TEXT_STYLE;
+    b.append(span);
+    b.addEventListener("click", () => { $("#promo").hidden = true; playerMove({ from, to, promotion: t }); });
+    row.append(b);
+  }
+  $("#promo").hidden = false;
+  row.firstElementChild.focus();
+}
+
+function playerMove(move) {
+  const done = game.chess.move(move);
+  game.last = { from: done.from, to: done.to };
+  game.selected = null;
+  game.targets = [];
+  settleClaim();
+  mood("");
+  paint();
+  if (finished()) return;
+  botTurn();
+}
+
+function botTurn() {
+  game.thinking = true;
+  mood("thinking");
+  status("Sir Claims-a-Lot is thinking…");
+  const started = performance.now();
+  botTimer = setTimeout(() => {
+    const m = chooseMove(game.chess, settings.level, rng);
+    const wait = Math.max(0, 450 - (performance.now() - started));
+    botTimer = setTimeout(() => {
+      const done = game.chess.move({ from: m.from, to: m.to, promotion: m.promotion });
+      game.last = { from: done.from, to: done.to };
+      game.thinking = false;
+      mood("");
+      paint();
+      if (finished()) return;
+      const c = makeClaim(game.chess, game.bot, game.last, rng, LIE_RATE);
+      if (c) {
+        c.label = `${done.san}:`;
+        game.claim = c;
+        say(c.text);
+        setCheckable(true);
+      } else {
+        say("Your move.");
+      }
+      status("Your move.");
+    }, wait);
+  }, 30);
+}
+
+function finished() {
+  const ch = game.chess;
+  let title = null;
+  if (ch.isCheckmate()) {
+    const youWon = ch.turn() === game.bot;
+    title = youWon ? "Checkmate. You win!" : "Checkmate. Sir Claims-a-Lot wins.";
+    say(youWon ? "I... may have overstated my position." : "Checkmate. And that one is true.");
+    mood(youWon ? "busted" : "smug");
+  } else if (ch.isDraw()) {
+    title = ch.isStalemate() ? "Stalemate: a draw." : ch.isThreefoldRepetition() ? "Draw by repetition."
+      : ch.isInsufficientMaterial() ? "Draw: not enough pieces left to mate." : "Draw by the fifty-move rule.";
+    say("A draw. I'm calling that a moral victory.");
+    mood("");
+  }
+  if (!title) return false;
+  game.over = true;
+  game.thinking = false;
+  game.claim = null;
+  setCheckable(false);
+  const s = game.scores;
+  $("#resultTitle").textContent = title;
+  $("#resultText").textContent = `Fact-check score: you ${s.you}, Sir Claims-a-Lot ${s.bot}.`;
+  $("#result").hidden = false;
+  status(title);
+  return true;
+}
+
+$("#board").addEventListener("click", (e) => { const b = e.target.closest(".sq"); if (b) onSquare(b.dataset.square); });
+$("#checkBtn").addEventListener("click", challenge);
+function closePromotion() { $("#promo").hidden = true; game.selected = null; game.targets = []; paint(); }
+$("#promoCancel").addEventListener("click", closePromotion);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && !$("#promo").hidden) closePromotion(); });
+$("#newBtn").addEventListener("click", () => newGame());
+$("#againBtn").addEventListener("click", () => newGame());
+$("#level").value = settings.level;
+$("#side").value = settings.side;
+$("#level").addEventListener("change", (e) => { settings.level = e.target.value; save(); });
+$("#side").addEventListener("change", (e) => { settings.side = e.target.value; save(); newGame(); });
+
+if (TEST) window.__fc = { game: () => game, newGame, challenge, onSquare };
+newGame(params.get("fen") && TEST ? params.get("fen") : undefined);
+</script>
+</body>
+</html>
