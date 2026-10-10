@@ -1,274 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Quiet Acre</title>
-<style>
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #e8e8e0; overflow: hidden; touch-action: manipulation;
-    background: linear-gradient(#7ec8e3, #cfe8d6);
-    transition: background 4s linear;
-    display: flex; flex-direction: column; align-items: center;
-  }
-  body.dusk  { background: linear-gradient(#e8a87c, #b8927a); }
-  body.night { background: linear-gradient(#1a2238, #2e3a4f); }
-  body.dawn  { background: linear-gradient(#f0c9a0, #cfe0c0); }
-  #top {
-    width: 100%; max-width: 560px; padding: 12px 14px 6px;
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  #coins { font-size: 1.25rem; font-weight: 700; color: #2c2a25;
-           background: rgba(255,255,250,0.75); padding: 4px 14px; border-radius: 999px; }
-  body.night #coins { background: rgba(20,25,40,0.7); color: #f0e8c8; }
-  #mute { background: none; border: none; font-size: 1.2rem; cursor: pointer; opacity: 0.7; }
-  #field {
-    display: grid; gap: 7px; padding: 12px;
-    background: rgba(96,72,48,0.25); border-radius: 16px; margin: 8px;
-  }
-  .plot {
-    width: min(17vw, 78px); height: min(17vw, 78px);
-    border-radius: 12px; position: relative;
-    background: linear-gradient(#8a6a4a, #6e5238);
-    box-shadow: inset 0 2px 6px rgba(0,0,0,0.3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.9rem; cursor: pointer; user-select: none;
-    transition: transform 0.1s;
-  }
-  .plot:active { transform: scale(0.94); }
-  .plot.locked { background: rgba(90,80,70,0.35); box-shadow: none; font-size: 0.95rem; color: rgba(255,255,255,0.75); }
-  .plot.ripe { box-shadow: inset 0 2px 6px rgba(0,0,0,0.3), 0 0 14px rgba(255,230,120,0.65); }
-  .plot .crop { pointer-events: none; transition: transform 0.25s; }
-  .plot .timer { position: absolute; bottom: 4px; left: 8px; right: 8px; height: 4px;
-                 background: rgba(0,0,0,0.25); border-radius: 2px; overflow: hidden; pointer-events: none; }
-  .plot .timer i { display: block; height: 100%; background: #b8e08a; border-radius: 2px; }
-  #shop {
-    display: flex; gap: 8px; padding: 6px 10px 14px; flex-wrap: wrap; justify-content: center;
-    width: 100%; max-width: 560px;
-  }
-  .buy {
-    flex: 1 1 100px; max-width: 160px;
-    background: rgba(255,255,250,0.78); color: #2c2a25; border: none; border-radius: 12px;
-    padding: 8px 6px; font-size: 0.78rem; line-height: 1.35; cursor: pointer; text-align: center;
-  }
-  body.night .buy { background: rgba(20,25,40,0.72); color: #e8e4d0; }
-  .buy b { display: block; font-size: 0.95rem; }
-  .buy .cost { color: #8a6d1f; font-weight: 700; }
-  body.night .buy .cost { color: #e0c060; }
-  .buy:disabled { opacity: 0.45; cursor: default; }
-  #hint { font-size: 0.78rem; opacity: 0.75; padding: 0 16px 12px; text-align: center; max-width: 460px;
-          color: #2c2a25; }
-  body.night #hint { color: #cfd2c8; }
-  #ghost { position: fixed; pointer-events: none; font-size: 2rem; transform: translate(-50%, -60%);
-           z-index: 50; display: none; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.4)); }
-  .pop { position: fixed; pointer-events: none; font-weight: 700; color: #fff;
-         text-shadow: 0 1px 4px rgba(0,0,0,0.5); animation: rise 0.9s ease-out forwards; z-index: 40; }
-  @keyframes rise { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-44px); } }
-  #overlay { position: fixed; inset: 0; background: rgba(10,14,10,0.85); display: none;
-             align-items: center; justify-content: center; z-index: 100; }
-  .panel { max-width: 420px; width: 88%; background: #f5f2e8; color: #3a352c; border-radius: 14px;
-           padding: 26px 26px; text-align: center; }
-  .panel h1 { font-size: 1.3rem; margin-bottom: 8px; }
-  .panel p { font-size: 0.92rem; line-height: 1.6; margin-bottom: 6px; }
-  .panel button { margin-top: 12px; background: #5a8a4a; color: #fff; border: none; border-radius: 8px;
-                  padding: 9px 26px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Quiet Acre is off the shelf for now | Vibe Vault</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b0c10'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle'%3E%F0%9F%8C%8C%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="../../vault.css">
+    <script src="../../theme.js"></script>
 </head>
 <body>
-  <div id="top">
-    <div id="coins">🪙 0</div>
-    <div style="font-size:0.85rem;opacity:0.8" id="clockLabel"></div>
-    <button id="mute" title="sound">🔊</button>
-  </div>
-  <div id="field"></div>
-  <div id="shop">
-    <button class="buy" id="buyPlot"><b>🟫 New plot</b><span class="cost"></span></button>
-    <button class="buy" id="buySoil"><b>🪴 Rich soil</b>value +50%<br><span class="cost"></span></button>
-    <button class="buy" id="buyWater"><b>💧 Watering can</b>grow +30%<br><span class="cost"></span></button>
-  </div>
-  <p id="hint">Tap soil to plant 🌱 (5🪙). Tap a ripe crop to harvest — or <b>drag it onto a matching ripe crop</b> to merge them into something better. Crops keep growing while you're away.</p>
-  <div id="ghost"></div>
-  <div id="overlay"><div class="panel" id="panel"></div></div>
-<script>
-"use strict";
-/* ---------- config ---------- */
-const SIZE = 5, START_PLOTS = 9;                       // 3x3 unlocked of a 5x5 field
-const TIERS = ["", "🌱", "🌿", "🍅", "🎃", "🌻", "🌳"];
-const VALUE = [0, 9, 25, 70, 200, 600, 2000];
-const SEED_COST = 5, GROW_MS = 15000;
-const PLOT_COSTS = [15, 30, 60, 100, 160, 240, 340, 460, 600, 760, 940, 1150, 1400, 1700, 2050, 2450];
-const SOIL_COSTS = [150, 600, 2400], WATER_COSTS = [100, 400, 1600];
-/* ---------- state ---------- */
-let S = {
-  coins: 10, unlocked: START_PLOTS, soil: 0, water: 0, treeSeen: false, muted: false,
-  plots: new Array(SIZE * SIZE).fill(null),            // null | {tier, plantedAt, ripe}
-};
-try {
-  const saved = JSON.parse(localStorage.getItem("quiet-acre"));
-  if (saved && saved.plots) S = Object.assign(S, saved);
-} catch (e) {}
-const save = () => { try { localStorage.setItem("quiet-acre", JSON.stringify(S)); } catch (e) {} };
-/* ---------- audio ---------- */
-let AC = null;
-function tone(f, d, v, type) {
-  if (S.muted) return;
-  if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
-  const o = AC.createOscillator(), g = AC.createGain();
-  o.type = type || "sine"; o.frequency.value = f;
-  g.gain.setValueAtTime(v, AC.currentTime);
-  g.gain.exponentialRampToValueAtTime(0.0001, AC.currentTime + d);
-  o.connect(g); g.connect(AC.destination); o.start(); o.stop(AC.currentTime + d);
-}
-const sPlant = () => tone(220, 0.12, 0.05, "triangle");
-const sHarvest = t => { tone(520 + t * 80, 0.1, 0.06); setTimeout(() => tone(660 + t * 80, 0.12, 0.05), 90); };
-const sMerge = t => { tone(392, 0.1, 0.05); setTimeout(() => tone(523, 0.1, 0.05), 90); setTimeout(() => tone(659 + t * 60, 0.16, 0.06), 180); };
-const sNo = () => tone(120, 0.1, 0.05, "square");
-/* ---------- helpers ---------- */
-const $ = id => document.getElementById(id);
-const field = $("field"); field.style.gridTemplateColumns = `repeat(${SIZE}, auto)`;
-const growMs = () => GROW_MS / (1 + S.water * 0.3);
-const val = t => Math.round(VALUE[t] * (1 + S.soil * 0.5));
-function pop(x, y, text) {
-  const el = document.createElement("div");
-  el.className = "pop"; el.textContent = text;
-  el.style.left = x + "px"; el.style.top = y + "px";
-  document.body.appendChild(el); setTimeout(() => el.remove(), 950);
-}
-/* ---------- render ---------- */
-const cells = [];
-for (let i = 0; i < SIZE * SIZE; i++) {
-  const c = document.createElement("div");
-  c.className = "plot"; c.dataset.i = i;
-  c.innerHTML = `<span class="crop"></span><div class="timer" style="display:none"><i></i></div>`;
-  field.appendChild(c); cells.push(c);
-}
-function draw() {
-  $("coins").textContent = "🪙 " + Math.floor(S.coins);
-  for (let i = 0; i < cells.length; i++) {
-    const c = cells[i], p = S.plots[i], crop = c.firstChild, bar = c.lastChild;
-    if (i >= S.unlocked) {
-      c.classList.add("locked"); c.classList.remove("ripe");
-      crop.textContent = "🔒"; bar.style.display = "none"; continue;
-    }
-    c.classList.remove("locked");
-    if (!p) { crop.textContent = ""; c.classList.remove("ripe"); bar.style.display = "none"; continue; }
-    const pr = Math.min(1, (Date.now() - p.plantedAt) / growMs());
-    p.ripe = p.ripe || pr >= 1;
-    crop.textContent = TIERS[p.tier];
-    crop.style.transform = p.ripe ? "scale(1.15)" : `scale(${0.45 + pr * 0.55})`;
-    crop.style.opacity = p.ripe ? 1 : 0.55 + pr * 0.45;
-    c.classList.toggle("ripe", p.ripe);
-    bar.style.display = p.ripe ? "none" : "block";
-    bar.firstChild.style.width = (pr * 100) + "%";
-  }
-  const bp = $("buyPlot"), extra = S.unlocked - START_PLOTS;
-  if (extra >= PLOT_COSTS.length) { bp.style.display = "none"; }
-  else { bp.querySelector(".cost").textContent = PLOT_COSTS[extra] + "🪙"; bp.disabled = S.coins < PLOT_COSTS[extra]; }
-  const bs = $("buySoil");
-  if (S.soil >= SOIL_COSTS.length) bs.style.display = "none";
-  else { bs.querySelector(".cost").textContent = SOIL_COSTS[S.soil] + "🪙"; bs.disabled = S.coins < SOIL_COSTS[S.soil]; }
-  const bw = $("buyWater");
-  if (S.water >= WATER_COSTS.length) bw.style.display = "none";
-  else { bw.querySelector(".cost").textContent = WATER_COSTS[S.water] + "🪙"; bw.disabled = S.coins < WATER_COSTS[S.water]; }
-}
-/* ---------- day/night ---------- */
-function sky() {
-  const t = (Date.now() / 1000 / 60) % 6;             // 6-minute full day
-  document.body.className = t < 3 ? "" : t < 3.7 ? "dusk" : t < 5.4 ? "night" : "dawn";
-  $("clockLabel").textContent = t < 3 ? "" : t < 3.7 ? "golden hour" : t < 5.4 ? "the quiet hours" : "first light";
-}
-/* ---------- actions ---------- */
-function plant(i, x, y) {
-  if (S.coins < SEED_COST) { sNo(); pop(x, y, "need 5🪙"); return; }
-  S.coins -= SEED_COST;
-  S.plots[i] = { tier: 1, plantedAt: Date.now(), ripe: false };
-  sPlant(); save(); draw();
-}
-function harvest(i, x, y) {
-  const p = S.plots[i], v = val(p.tier);
-  S.coins += v; S.plots[i] = null;
-  sHarvest(p.tier); pop(x, y, "+" + v + "🪙");
-  save(); draw();
-}
-function merge(from, to, x, y) {
-  const a = S.plots[from], b = S.plots[to];
-  if (!a || !b || !a.ripe || !b.ripe || a.tier !== b.tier || a.tier >= TIERS.length - 1 || from === to) { sNo(); return; }
-  S.plots[to] = { tier: a.tier + 1, plantedAt: 0, ripe: true };
-  S.plots[from] = null;
-  sMerge(a.tier); pop(x, y, TIERS[a.tier + 1] + "!");
-  if (S.plots[to].tier === 6 && !S.treeSeen) {
-    S.treeSeen = true;
-    setTimeout(() => showPanel("🌳 The Great Tree",
-      "Two sunflowers leaned together and became something older than the garden.<br><br>The acre is complete. It keeps growing anyway.", "Keep tending"), 400);
-  }
-  save(); draw();
-}
-/* ---------- input: tap = plant/harvest, drag ripe→ripe = merge ---------- */
-let drag = null;
-const ghost = $("ghost");
-field.addEventListener("pointerdown", e => {
-  const cell = e.target.closest(".plot"); if (!cell) return;
-  const i = +cell.dataset.i;
-  if (i >= S.unlocked) return;
-  const p = S.plots[i];
-  drag = { i, x0: e.clientX, y0: e.clientY, moved: false, ripe: !!(p && p.ripe) };
-  if (drag.ripe) { ghost.textContent = TIERS[p.tier]; }
-});
-addEventListener("pointermove", e => {
-  if (!drag) return;
-  if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 10) drag.moved = true;
-  if (drag.moved && drag.ripe) {
-    ghost.style.display = "block";
-    ghost.style.left = e.clientX + "px"; ghost.style.top = e.clientY + "px";
-  }
-});
-addEventListener("pointerup", e => {
-  if (!drag) return;
-  ghost.style.display = "none";
-  const { i, moved, ripe } = drag; drag = null;
-  const p = S.plots[i];
-  if (!moved) {                                        // tap
-    if (!p) plant(i, e.clientX, e.clientY);
-    else if (p.ripe) harvest(i, e.clientX, e.clientY);
-    return;
-  }
-  if (moved && ripe) {                                 // drop
-    const el = document.elementFromPoint(e.clientX, e.clientY);
-    const cell = el && el.closest ? el.closest(".plot") : null;
-    if (cell && +cell.dataset.i < S.unlocked) merge(i, +cell.dataset.i, e.clientX, e.clientY);
-  }
-});
-/* ---------- shop ---------- */
-$("buyPlot").addEventListener("click", () => {
-  const extra = S.unlocked - START_PLOTS;
-  if (extra < PLOT_COSTS.length && S.coins >= PLOT_COSTS[extra]) {
-    S.coins -= PLOT_COSTS[extra]; S.unlocked++; sPlant(); save(); draw();
-  }
-});
-$("buySoil").addEventListener("click", () => {
-  if (S.soil < SOIL_COSTS.length && S.coins >= SOIL_COSTS[S.soil]) { S.coins -= SOIL_COSTS[S.soil]; S.soil++; sMerge(2); save(); draw(); }
-});
-$("buyWater").addEventListener("click", () => {
-  if (S.water < WATER_COSTS.length && S.coins >= WATER_COSTS[S.water]) { S.coins -= WATER_COSTS[S.water]; S.water++; sMerge(2); save(); draw(); }
-});
-$("mute").addEventListener("click", () => { S.muted = !S.muted; $("mute").textContent = S.muted ? "🔇" : "🔊"; save(); });
-$("mute").textContent = S.muted ? "🔇" : "🔊";
-/* ---------- panel ---------- */
-function showPanel(title, html, btn) {
-  $("panel").innerHTML = `<h1>${title}</h1><p>${html}</p><button id="pBtn">${btn}</button>`;
-  $("overlay").style.display = "flex";
-  $("pBtn").onclick = () => $("overlay").style.display = "none";
-}
-if (!localStorage.getItem("quiet-acre")) {
-  showPanel("🌱 Quiet Acre",
-    "A small garden that asks very little.<br><br>Tap soil to plant. Tap ripe crops to harvest. Drag two matching ripe crops together and they become something better — keep going and see where it ends.<br><br>It saves itself, here on your device. Nothing leaves your garden.", "Begin");
-}
-/* ---------- welcome-back (offline growth is automatic via timestamps) ---------- */
-setInterval(() => { draw(); }, 250);
-setInterval(sky, 2000); sky(); draw(); save();
-</script>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="site-header"><div><a class="brand" href="../../"><span class="brand-mark" aria-hidden="true">🌌</span>Vibe Vault</a>
+<div class="brand-subtitle">Games made with AI</div></div>
+<nav aria-label="Main navigation" class="site-nav"><a href="../../">Games</a><a href="../../#how">How it works</a><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Submit a game</a><a href="https://github.com/NMAIResearch/vibe-vault">GitHub</a></nav>
+<button class="theme-toggle-btn" hidden id="themeToggle" type="button">Theme</button></header>
+
+<main class="vault" id="main">
+<div class="rate-head">
+<a class="back-link" href="../../"><span aria-hidden="true">←</span> All games</a>
+<h1>Quiet Acre is off the shelf for now</h1>
+<p class="vibe-line">We took it down while we make it easier to play. Comments on it are still welcome in its thread.</p>
+<div class="actions"><a class="btn btn-primary" href="../../">Browse the vault</a><a class="btn btn-quiet" href="https://github.com/NMAIResearch/vibe-vault/discussions/4">Its thread on GitHub <span aria-hidden="true">↗</span></a></div>
+</div>
+</main>
+
+<footer class="hub-footer">
+<p class="ai-disclaimer">AI disclosure: Claude Opus 5.5 (Anthropic) drafted this page.</p>
+<p>&copy; 2026 Vibe Vault</p>
+<p>Hosted by <a href="https://nmairesearch.com/">NM AI Research</a></p>
+</footer>
 </body>
 </html>

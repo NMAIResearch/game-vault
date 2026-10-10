@@ -1,29 +1,5 @@
 [
   {
-    "id": "quiet-acre",
-    "title": "Quiet Acre",
-    "vibe": "a small garden that asks very little — plant, merge, and grow toward the Great Tree",
-    "tags": ["cozy-ambient", "incremental", "mobile"],
-    "built_with": "Claude (Fable 5)",
-    "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/4"
-  },
-  {
-    "id": "night-shift-3d",
-    "title": "Night Shift 3D",
-    "vibe": "the same hotel, now you're inside it — first-person corridors at 3am",
-    "tags": ["liminal", "first-person", "night"],
-    "built_with": "Claude (Fable 5)",
-    "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/2"
-  },
-  {
-    "id": "night-shift",
-    "title": "Night Shift",
-    "vibe": "an empty hotel, corridors at 3am, and a list of small errands",
-    "tags": ["liminal", "ambient", "night"],
-    "built_with": "Claude (Fable 5)",
-    "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/1"
-  },
-  {
     "id": "tic-tac-toe",
     "title": "Tic Tac Toe",
     "vibe": "well, it is exactly what you expect",
