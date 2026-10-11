@@ -28,7 +28,7 @@
   .tracks { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
   .track { text-align: left; padding: 11px 14px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.03); color: var(--ink); cursor: pointer; font: inherit; }
   .track[aria-pressed="true"] { border-color: var(--accent); background: rgba(159, 216, 255, 0.1); box-shadow: 0 0 0 1px var(--accent) inset; }
-  .track b { display: block; font-size: 16px; font-weight: 600; }
+  .track b { overflow-wrap: anywhere; display: block; font-size: 16px; font-weight: 600; }
   .track span { display: block; color: var(--muted); font-size: 13px; }
   .seg { display: flex; flex-wrap: wrap; gap: 8px; }
   .seg button, .btn { font: inherit; color: var(--ink); background: rgba(255, 255, 255, 0.04); border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer; }
@@ -54,6 +54,8 @@
   .note { color: var(--muted); font-size: 13px; margin: 8px 0 0; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
   @media (max-width: 620px) {
+    .hud-pause { top: calc(64px + env(safe-area-inset-top, 0px)); left: 18px; transform: none; }
+    .opt { max-width: 100%; flex-wrap: wrap; }
     .panel { padding: 18px 16px 14px; }
     .tracks { grid-template-columns: 1fr 1fr; gap: 8px; }
     .track { padding: 9px 11px; }
@@ -91,8 +93,9 @@
       <label class="opt">Speed <input type="range" id="optSpeed" min="1" max="5" step="1"> <output id="speedOut"></output></label>
       <label class="opt">Volume <input type="range" id="optVol" min="0" max="100" step="5"> <output id="volOut"></output></label>
       <label class="opt">Bass <input type="range" id="optBass" min="0" max="12" step="1"> <output id="bassOut"></output></label>
-      <label class="opt">Timing <input type="range" id="optOffset" min="-150" max="150" step="5"> <output id="offsetOut"></output></label>
+      <label class="opt">Timing <input type="range" id="optOffset" min="-300" max="300" step="5"> <output id="offsetOut"></output></label>
     </div>
+    <div class="buttons"><button type="button" class="btn" id="calibrateBtn">Calibrate timing</button></div>
     <div class="start">
       <div id="bestLine" class="best" aria-live="polite"></div>
       <button type="button" class="btn primary" id="playBtn">Play</button>
@@ -100,7 +103,22 @@
     <div class="how" id="how"></div>
     <div class="foot">
       <a href="../../">&larr; Vibe Vault</a>
-      <span>Music: arrangements of public-domain works and an original tune, played as you go. Recorded songs (Play It Bright, Light That Travels, Spark Across the Sky, Neon Csárdás, Gravity Off): generated with YuE2 (m-a-p; weights CC BY-NC 4.0), words by Claude Opus 5.5. Piano: Versilian Community Sample Library (Steinway B) by Versilian Studios. Strings: VS Chamber Orchestra 2 Community Edition, recorded by Sam Gossner and Simon Dalzell. Both CC0. AI disclosure: Claude Opus 5.5 (Anthropic) wrote this game.</span>
+      <span>Music: arrangements of public-domain works and an original tune, played as you go. Recorded songs (Play It Bright, Light That Travels, Spark Across the Sky, Neon Csárdás, Gravity Off): generated with YuE2 (m-a-p; weights CC BY-NC 4.0), words by Claude Opus 5.5. Piano: Versilian Community Sample Library (Steinway B) by Versilian Studios. Strings: VS Chamber Orchestra 2 Community Edition, recorded by Sam Gossner and Simon Dalzell. Both CC0. AI disclosure: Claude Opus 5.5 (Anthropic) wrote the original game. OpenAI GPT-6 Astra adapted timing and play controls in this prototype.</span>
+    </div>
+  </div>
+</div>
+
+<div id="calibration" class="overlay" hidden>
+  <div class="panel small" role="dialog" aria-labelledby="calTitle">
+    <h2 id="calTitle">Find your timing</h2>
+    <p class="note">Listen to four clicks, then tap with each click. Use Space or the button below. Follow the sound, not the screen.</p>
+    <p class="note">This estimates your personal timing offset. Keep the same headphones or speakers when playing. You can fine-tune it with the Timing slider.</p>
+    <p id="calStatus" aria-live="polite">Ready</p>
+    <button type="button" class="btn primary" id="calTap" style="min-height:90px;width:100%;touch-action:none">Tap with the click</button>
+    <div class="buttons">
+      <button type="button" class="btn primary" id="calApply" disabled>Use this timing</button>
+      <button type="button" class="btn" id="calRetry">Try again</button>
+      <button type="button" class="btn" id="calCancel">Back</button>
     </div>
   </div>
 </div>
@@ -132,6 +150,8 @@
 </div>
 
 <script src="samples.js"></script>
+<script src="timings.js"></script>
+<script src="core.js"></script>
 <script>
 (() => {
 "use strict";
@@ -334,43 +354,9 @@ if (TEST) SONGS.push({
 
 /* ---------- charts ---------- */
 
-const W_OK = 0.16, W_GOOD = 0.105, W_EXC = 0.055;
+const { okay: W_OK, good: W_GOOD, excellent: W_EXC } = KM_CORE.WINDOWS;
 function makeChart(song, built, mode, diff) {
-  const L = mode === "jam" ? 4 : 6, spb = 60 / song.bpm;
-  let src = built.lead.slice().sort((a, b) => a.beat - b.beat);
-  if (diff === "easy") {
-    const kept = []; let last = -Infinity;
-    for (const n of src) {
-      const g = n.grid ?? n.beat, onBeat = Math.abs(g - Math.round(g)) < 1e-6; // recorded songs keep their score grid
-      if (onBeat && g - last >= (song.easyEvery || 1) - 1e-6) { kept.push(n); last = g; } // easyEvery: beats between Easy notes
-    }
-    src = kept;
-  }
-  if (diff === "normal") { // fast runs thinned: keep a note only 0.3 s or more after the last kept one
-    const kept = []; let last = -Infinity;
-    for (const n of src) { const t = n.beat * spb; if (t - last >= 0.3 - 1e-6) { kept.push(n); last = t; } }
-    src = kept;
-  }
-  const lanes = diff === "easy" ? (mode === "jam" ? [0, 1, 2] : [1, 2, 3, 4]) : Array.from({ length: L }, (_, i) => i);
-  const pitches = [...new Set(src.map((n) => n.pitch))].sort((a, b) => a - b);
-  const laneOf = (p) => lanes[Math.min(lanes.length - 1, Math.floor(pitches.indexOf(p) * lanes.length / pitches.length))];
-  const out = [], lastInLane = new Array(L).fill(-Infinity);
-  for (const n of src) {
-    const t = n.beat * spb, dur = n.dur * spb, lane = laneOf(n.pitch);
-    if (t - lastInLane[lane] < 0.08) continue;
-    const hold = dur >= 1.1;
-    const set = [lane];
-    if (diff === "hard" && !hold && Math.abs((n.grid ?? n.beat) % song.bar) < 1e-6 && n.dur >= 1 - 1e-6) {
-      const partner = lane + 2 < L ? lane + 2 : lane - 2;
-      if (partner >= 0) set.push(partner);
-    }
-    set.sort((a, b) => a - b);
-    const base = { t, end: hold ? t + dur * 0.85 : t, hold, pitch: n.pitch, state: 0 };
-    if (mode === "jam" || set.length === 1) out.push(Object.assign({ lanes: set }, base));
-    else for (const l of set) out.push(Object.assign({ lanes: [l] }, base));
-    for (const l of set) lastInLane[l] = t;
-  }
-  return out;
+  return KM_CORE.chart(song, built, mode, diff, song.track ? window.KM_TIMINGS[song.id] : null);
 }
 
 /* ---------- audio ---------- */
@@ -487,25 +473,24 @@ const TRACKS = {};
 function loadTrack(song) {
   if (!song.track) return Promise.resolve(null);
   if (TRACKS[song.id]) return TRACKS[song.id];
-  TRACKS[song.id] = new Promise((resolve) => {
+  TRACKS[song.id] = new Promise((resolve, reject) => {
     const decode = () => {
       const b64 = (window.KM_TRACKS || {})[song.track.key];
-      if (!b64) { resolve(null); return; }
+      if (!b64) { reject(new Error("Recorded song data is missing.")); return; }
       const bin = atob(b64), bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      ctx.decodeAudioData(bytes.buffer).then((buf) => { buf.kmSkip = alignSkip(buf, (window.KM_TRACKS || {})[song.track.key + "_ref"]); resolve(buf); },
-        (err) => { console.warn("Recorded song unavailable; playing the melody instead.", err); resolve(null); });
+      ctx.decodeAudioData(bytes.buffer).then((buf) => { buf.kmSkip = alignSkip(buf, window.KM_TIMINGS[song.id].ref); resolve(buf); }).catch(reject);
     };
     if ((window.KM_TRACKS || {})[song.track.key]) { decode(); return; }
     const tag = document.createElement("script");
     tag.src = song.track.file; tag.onload = decode;
-    tag.onerror = () => { console.warn("Recorded song file missing; playing the melody instead."); resolve(null); };
+    tag.onerror = () => reject(new Error("Recorded song file is missing."));
     document.head.appendChild(tag);
   });
-  return TRACKS[song.id];
+  return TRACKS[song.id].catch(err => { delete TRACKS[song.id]; throw err; });
 }
 // MP3 decoders differ in how much encoder delay they keep. Compare the decoded audio's loudness envelope (4 ms RMS in
-// 1 ms steps) with the one measured before encoding (build_km_songs.py) and return the lag, within 100 ms, with the
+// 1 ms steps) with the reference decoded by tools/analyse.py and return the lag, within 100 ms, with the
 // highest correlation: the seconds of decoded audio to skip so the song lines up with its chart.
 function alignSkip(buf, ref) {
   if (!ref) return 0;
@@ -530,6 +515,7 @@ function alignSkip(buf, ref) {
     const c = xy / (Math.sqrt(qq * yy) + 1e-12);
     if (c > bestC) { bestC = c; best = lag; }
   }
+  if (bestC < 0.75 || Math.abs(best) === M) throw new Error("Decoder timing could not be matched. Try another browser.");
   return best / 1000;
 }
 // Start at the note itself, skipping any silence the encoder added in front.
@@ -586,7 +572,7 @@ const settings = Object.assign({}, defaults, read(STORE + ":settings"));
 function read(key) { try { return JSON.parse(localStorage.getItem(key) || "null") || {}; } catch (e) { return {}; } }
 function write(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 const best = read(STORE + ":best");
-const bestKey = () => `${settings.song}|${settings.mode}|${settings.diff}`;
+const bestKey = () => `beat-grid-v2|${settings.song}|${settings.mode}|${settings.diff}`;
 const LEADS = [2.6, 2.2, 1.8, 1.5, 1.25];
 const leadTime = () => LEADS[settings.speed - 1] || 1.8;
 
@@ -597,57 +583,73 @@ const LABELS = { jam: ["1", "2", "3", "4"], six: ["S", "D", "F", "J", "K", "L"] 
 const GRACE = 0.08; // a fret may land this long after the strum and still count
 const COLS = ["#6ee7b7", "#f9a8d4", "#fcd34d", "#93c5fd", "#c4b5fd", "#5eead4"];
 const LEAD_IN = 2.2;
-let run = null, schedTimer = null, lastT = null;
+let run = null, schedTimer = null, lastT = null, starting = false;
 
 async function startRun() {
-  audioInit();
-  if (ctx.state !== "running") ctx.resume();
-  const btn = $("#playBtn");
-  if (!samplesReady) { btn.textContent = "Tuning instruments…"; btn.disabled = true; }
-  const samplesOK = await loadSamples();
-  const song = SONGS.find((s) => s.id === settings.song) || SONGS[0];
-  if (song.track && !TRACKS[song.id]) { btn.textContent = "Loading the song…"; btn.disabled = true; }
-  const recording = await loadTrack(song);
-  btn.textContent = "Play"; btn.disabled = false;
-  stopRun(true);
-  const built = song.build(), spb = 60 / song.bpm;
-  const chart = makeChart(song, built, settings.mode, settings.diff);
-  const bus = ctx.createGain(); bus.connect(master);
-  const events = built.parts.map((p) => ({ t: p.beat * spb, dur: p.dur * spb, f: hz(p.pitch), inst: p.inst, vel: p.vel || 1 }));
-  if (settings.guide && !recording) for (const n of built.lead) events.push({ t: n.beat * spb, dur: n.dur * spb, f: hz(n.pitch), inst: "pluck", vel: 0.22 });
-  if (!recording && (song.alwaysBeat || settings.beat)) for (const d of drumEvents(song, built)) events.push({ t: d.beat * spb, inst: d.inst, vel: d.vel, drum: true });
-  events.sort((a, b) => a.t - b.t);
-  run = {
-    song, mode: settings.mode, diff: settings.diff, spb, chart, bus, events, ei: 0, length: built.beats * spb,
-    startAt: ctx.currentTime + LEAD_IN, next: 0, held: new Array(6).fill(false), holds: [],
-    score: 0, streak: 0, maxStreak: 0, breaks: 0, counts: { Excellent: 0, Good: 0, Okay: 0, Miss: 0 }, weight: 0, judged: 0,
-    paused: false, ended: false, judge: null, strumFlash: 0, grace: null,
-    voices: samplesOK ? Object.assign({}, DEFAULT_VOICES, song.voices || {}) : {}
-  };
-  if (recording) {
-    // The recording bypasses the game's reverb, bass shelf and compressor: it is already mixed.
-    const src = ctx.createBufferSource(), gain = ctx.createGain();
-    src.buffer = recording; gain.gain.value = 0.9 * settings.vol / 100;
-    const skip = recording.kmSkip || 0;
-    src.connect(gain); gain.connect(ctx.destination); src.start(run.startAt + Math.max(0, -skip), Math.max(0, skip));
-    run.recording = { src, gain };
+  if (starting) return;
+  starting = true;
+  const saved = { ...settings };
+  try {
+    audioInit();
+    if (ctx.state !== "running") await ctx.resume();
+    const btn = $("#playBtn");
+    const song = SONGS.find((s) => s.id === saved.song) || SONGS[0];
+    if (!song.track && !samplesReady) { btn.textContent = "Tuning instruments…"; btn.disabled = true; }
+    const samplesOK = song.track ? false : await loadSamples();
+    if (song.track && !TRACKS[song.id]) { btn.textContent = "Loading the song…"; btn.disabled = true; }
+    const recording = await loadTrack(song);
+    btn.textContent = "Play"; btn.disabled = false;
+    stopRun(true);
+    const built = song.build(), spb = 60 / song.bpm;
+    const chart = makeChart(song, built, saved.mode, saved.diff);
+    const bus = ctx.createGain(); bus.connect(master);
+    const events = built.parts.map((p) => ({ t: p.beat * spb, dur: p.dur * spb, f: hz(p.pitch), inst: p.inst, vel: p.vel || 1 }));
+    if (settings.guide && !recording) for (const n of built.lead) events.push({ t: n.beat * spb, dur: n.dur * spb, f: hz(n.pitch), inst: "pluck", vel: 0.22 });
+    if (!recording && song.alwaysBeat) for (const d of drumEvents(song, built)) events.push({ t: d.beat * spb, inst: d.inst, vel: d.vel, drum: true });
+    const beats = recording ? window.KM_TIMINGS[song.id].beats : Array.from({length: Math.ceil(built.beats)}, (_, i) => i * spb);
+    for (const t of beats) events.push({t, click: true});
+    const guideBus = ctx.createGain(); guideBus.gain.value = saved.vol / 100; guideBus.connect(ctx.destination);
+    events.sort((a, b) => a.t - b.t);
+    run = {
+      beats, guideBus, song, mode: saved.mode, diff: saved.diff, scoreKey: `beat-grid-v2|${song.id}|${saved.mode}|${saved.diff}`, spb, chart, bus, events, ei: 0, length: recording ? window.KM_TIMINGS[song.id].duration : built.beats * spb,
+      startAt: ctx.currentTime + Math.max(LEAD_IN, leadTime() + 0.3), next: 0, held: new Array(6).fill(false), holds: [],
+      score: 0, streak: 0, maxStreak: 0, breaks: 0, counts: { Excellent: 0, Good: 0, Okay: 0, Miss: 0 }, weight: 0, judged: 0,
+      paused: false, ended: false, judge: null, strumFlash: 0, grace: null, timingErrors: [], droppedHolds: 0, laneFeedback: new Array(6).fill(null),
+      voices: samplesOK ? Object.assign({}, DEFAULT_VOICES, song.voices || {}) : {}
+    };
+    if (recording) {
+      // The recording bypasses the game's reverb, bass shelf and compressor: it is already mixed.
+      const src = ctx.createBufferSource(), gain = ctx.createGain();
+      src.buffer = recording; gain.gain.value = 0.9 * settings.vol / 100;
+      const skip = recording.kmSkip || 0;
+      src.connect(gain); gain.connect(ctx.destination); src.start(run.startAt + Math.max(0, -skip), Math.max(0, skip));
+      run.recording = { src, gain };
+    }
+    pointers.clear(); keyboardHeld.clear(); fx.length = 0; lastT = null; layout();
+    schedTimer = setInterval(schedule, 25); schedule();
+    showOnly(null);
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  } catch (err) {
+    stopRun(true); showOnly("#menu");
+    $("#bestLine").textContent = "Could not start: " + err.message;
+  } finally {
+    starting = false; $("#playBtn").textContent = "Play"; $("#playBtn").disabled = false;
   }
-  lastT = null; layout();
-  schedTimer = setInterval(schedule, 25); schedule();
-  showOnly(null);
-  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 function schedule() {
   if (!run || run.ended || run.paused) return;
   const horizon = ctx.currentTime + 0.25;
   while (run.ei < run.events.length && run.startAt + run.events[run.ei].t <= horizon) {
     const e = run.events[run.ei++], at = Math.max(ctx.currentTime + 0.005, run.startAt + e.t);
+    if (e.click) { if (settings.beat && run.startAt + e.t >= ctx.currentTime) softClick(run.guideBus, run.startAt + e.t); continue; }
     if (e.drum) INST[e.inst](run.bus, at, e.vel); else play(e.inst, run.bus, at, e.dur, e.f, e.vel);
   }
 }
-function songTime() {
+function songTime(stamp) {
   if (!run || !ctx) return 0;
-  return ctx.currentTime - run.startAt - (ctx.outputLatency || ctx.baseLatency || 0) - settings.offset / 1000;
+  if (run.paused) return run.pauseTime;
+  const now = performance.now();
+  return KM_CORE.audibleTime(ctx, now) - (now - KM_CORE.eventNow(stamp, now)) / 1000 - run.startAt - settings.offset / 1000;
 }
 function stopRun(immediate) {
   if (!run) return;
@@ -658,6 +660,7 @@ function stopRun(immediate) {
     if (immediate || ctx.state !== "running") { try { src.stop(); } catch (e) {} gain.disconnect(); }
     else { gain.gain.setTargetAtTime(0, ctx.currentTime, 0.06); setTimeout(() => { try { src.stop(); } catch (e) {} gain.disconnect(); }, 500); }
   }
+  if (run.guideBus) run.guideBus.disconnect();
   const bus = run.bus;
   if (immediate || ctx.state !== "running") bus.disconnect();
   else { bus.gain.setTargetAtTime(0, ctx.currentTime, 0.06); setTimeout(() => bus.disconnect(), 500); }
@@ -668,30 +671,38 @@ const multiplier = () => Math.min(4, 1 + Math.floor((run ? run.streak : 0) / 10)
 const accuracy = () => (run && run.judged ? run.weight / run.judged : 1);
 
 function hit(n, T) {
-  const d = T - n.t, ad = Math.abs(d);
-  const j = ad <= W_EXC ? "Excellent" : ad <= W_GOOD ? "Good" : "Okay";
+  if (n.state !== 0) return;
+  const d = T - n.t, j = KM_CORE.judgement(d);
+  if (!j) return;
+  run.timingErrors.push(d);
   n.state = 1; run.counts[j]++; run.judged++;
   run.weight += j === "Excellent" ? 1 : j === "Good" ? 0.7 : 0.4;
   run.streak++; run.maxStreak = Math.max(run.maxStreak, run.streak);
   run.score += (j === "Excellent" ? 100 : j === "Good" ? 70 : 40) * multiplier() * n.lanes.length;
-  play("pluck", run.bus, ctx.currentTime + 0.002, Math.max(0.3, n.end - n.t), hz(n.pitch), run.recording ? 0.5 : 0.95);
-  if (n.hold) { n.sus = sustain(run.bus, hz(n.pitch)); run.holds.push(n); }
-  for (const l of n.lanes) burst(l, j);
-  run.judge = { text: j, t0: performance.now(), late: d > W_EXC ? "late" : d < -W_EXC ? "early" : "" };
+  if (run.recording) feedbackSound(true);
+  else play("pluck", run.bus, ctx.currentTime + 0.002, Math.max(0.3, n.end - n.t), hz(n.pitch), 0.95);
+  if (n.hold) { n.sus = run.recording ? { stop() {} } : sustain(run.bus, hz(n.pitch)); n.scoredUntil = Math.max(n.t, T); run.holds.push(n); }
+  for (const l of n.lanes) { burst(l, j); run.laneFeedback[l] = { hit: true, at: performance.now() }; }
+  run.judge = { text: j, t0: performance.now(), late: Math.abs(d) < 0.005 ? "On time" : `${Math.round(Math.abs(d) * 1000)} ms ${d > 0 ? "late" : "early"}` };
 }
 function miss(n) {
+  if (n.state !== 0) return;
+  feedbackSound(false);
+  for (const l of n.lanes) run.laneFeedback[l] = { hit: false, at: performance.now() };
   n.state = 2; run.counts.Miss++; run.judged++;
   if (run.streak) run.breaks++;
   run.streak = 0;
   run.judge = { text: "Miss", t0: performance.now(), late: "" };
 }
-function pending(lane, T) {
-  for (let i = run.next; i < run.chart.length; i++) {
-    const n = run.chart[i];
-    if (n.t > T + W_OK) break;
-    if (n.state === 0 && Math.abs(n.t - T) <= W_OK && (lane === null || n.lanes[0] === lane)) return n;
-  }
-  return null;
+function pending(lane, T) { return KM_CORE.nearest(run.chart, run.next, lane, T); }
+// Quiet neutral feedback avoids adding an unverified melody to a recording.
+function feedbackSound(ok) {
+  const now = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = "sine"; o.frequency.setValueAtTime(ok ? 880 : 140, now);
+  o.frequency.exponentialRampToValueAtTime(ok ? 440 : 100, now + 0.045);
+  g.gain.setValueAtTime(ok ? 0.035 : 0.02, now);
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+  o.connect(g); g.connect(run.bus); o.start(now); o.stop(now + 0.06);
 }
 // The note's frets must be down; holding other frets as well is fine.
 function fretsMatch(lanes) { return lanes.every((l) => run.held[l]); }
@@ -707,7 +718,7 @@ function graceCheck(now) {
   const g = run.grace;
   if (!g) return;
   if (g.n.state !== 0) { run.grace = null; return; }
-  if (fretsMatch(g.n.lanes)) { run.grace = null; hit(g.n, g.T); return; }
+  if (now - g.T <= GRACE && fretsMatch(g.n.lanes)) { run.grace = null; hit(g.n, g.T); return; }
   if (now - g.T > GRACE) {
     run.grace = null;
     if (run.streak) run.breaks++;
@@ -723,25 +734,34 @@ function update(T, dt) {
   for (let i = run.next; i < chart.length; i++) {
     const n = chart[i];
     if (n.t > T - W_OK) break;
-    if (n.state === 0) miss(n);
+    if (n.state === 0 && !(run.grace && run.grace.n === n && T - run.grace.T <= GRACE)) miss(n);
   }
   while (run.next < chart.length && chart[run.next].state !== 0) run.next++;
+  settleHolds(T);
+  run.strumFlash = Math.max(0, run.strumFlash - dt * 6);
+  if (T > run.length + 0.6 && !run.holds.length && run.next >= chart.length) finish();
+}
+function settleHolds(T) {
   for (let i = run.holds.length - 1; i >= 0; i--) {
-    const h = run.holds[i], ok = h.lanes.every((l) => run.held[l]);
+    const h = run.holds[i], held = h.lanes.every(l => run.held[l]);
+    const ok = held || T <= (run.regripUntil ?? -Infinity);
+    const until = Math.max(h.scoredUntil, Math.min(T, h.end));
+    if (ok) run.score += Math.max(0, until - h.scoredUntil) * 60 * multiplier();
+    h.scoredUntil = until;
     if (T >= h.end || !ok) {
       h.sus.stop(); run.holds.splice(i, 1);
       if (T >= h.end) run.score += 50 * multiplier();
-      continue;
+      else {
+        run.droppedHolds++; if (run.streak) run.breaks++; run.streak = 0;
+        run.judge = { text: "Hold released", t0: performance.now(), late: "Keep holding to the end" };
+      }
     }
-    run.score += dt * 60 * multiplier();
   }
-  run.strumFlash = Math.max(0, run.strumFlash - dt * 6);
-  if (T > run.length + 0.6 && !run.holds.length && run.next >= chart.length) finish();
 }
 function finish() {
   run.ended = true; clearInterval(schedTimer);
   const r = run, acc = accuracy(), stars = acc >= 0.95 ? 5 : acc >= 0.88 ? 4 : acc >= 0.78 ? 3 : acc >= 0.65 ? 2 : acc >= 0.5 ? 1 : 0;
-  const key = bestKey(), prev = best[key];
+  const key = r.scoreKey, prev = best[key];
   const isBest = !prev || r.score > prev.score;
   if (isBest) { best[key] = { score: Math.round(r.score), acc: Math.round(acc * 1000) / 10, stars }; write(STORE + ":best", best); }
   $("#resTitle").textContent = r.song.title;
@@ -751,28 +771,46 @@ function finish() {
   const full = r.counts.Miss === 0 && r.breaks === 0;
   const stats = [
     [Math.round(r.score).toLocaleString("en-GB"), "Score"], [(acc * 100).toFixed(1) + "%", "Accuracy"], [r.maxStreak, full ? "Streak, full combo" : "Best streak"],
-    [r.counts.Excellent, "Excellent"], [r.counts.Good, "Good"], [r.counts.Okay, "Okay"], [r.counts.Miss, "Missed"]
+    [r.counts.Excellent, "Excellent"], [r.counts.Good, "Good"], [r.counts.Okay, "Okay"], [r.counts.Miss, "Missed"], [r.droppedHolds, "Released holds"], [r.timingErrors.length ? Math.round(r.timingErrors.reduce((a, b) => a + b, 0) / r.timingErrors.length * 1000) + " ms" : "No hits", "Mean timing (+ late)"]
   ];
   $("#resStats").replaceChildren(...stats.map(([v, l]) => { const d = document.createElement("div"); d.className = "stat"; const b = document.createElement("b"); b.textContent = v; const s = document.createElement("span"); s.textContent = l; d.append(b, s); return d; }));
   showOnly("#results");
   $("#againBtn").focus();
 }
-function togglePause() {
-  if (!run || run.ended) return;
-  if (run.paused) {
-    run.paused = false; showOnly(null); ctx.resume(); lastT = null;
-    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
-  } else {
-    run.paused = true; ctx.suspend();
-    for (const h of run.holds) h.sus.stop();
-    run.holds.length = 0; run.held.fill(false); run.grace = null;
-    showOnly("#pause"); $("#resumeBtn").focus();
-  }
+async function togglePause() {
+  if (!run || run.ended || run.pauseBusy) return;
+  const active = run;
+  active.pauseBusy = true;
+  try {
+    if (active.paused) {
+      await ctx.resume();
+      if (run !== active) return;
+      active.paused = false; active.regripUntil = songTime() + 0.25;
+      for (const h of active.holds) h.sus = active.recording ? { stop() {} } : sustain(active.bus, hz(h.pitch));
+      showOnly(null); lastT = null;
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+    } else {
+      active.pauseTime = songTime(); active.paused = true;
+      await ctx.suspend();
+      if (run !== active) return;
+      for (const h of active.holds) h.sus.stop();
+      active.held.fill(false); active.grace = null; pointers.clear(); keyboardHeld.clear();
+      showOnly("#pause"); $("#resumeBtn").focus();
+    }
+  } catch (err) {
+    if (run === active) { stopRun(true); showOnly("#menu"); $("#bestLine").textContent = "Audio pause failed: " + err.message; }
+  } finally { active.pauseBusy = false; }
 }
 
 /* ---------- input ---------- */
 
 addEventListener("keydown", (e) => {
+  if (calibration) {
+    if (e.code === "Escape") { e.preventDefault(); closeCalibration(); }
+    if (e.code === "Space") { e.preventDefault(); if (!e.repeat) calibrationTap(e.timeStamp); }
+    return;
+  }
+  if (e.repeat && (e.code === "Escape" || e.code === "KeyR")) return;
   if (e.code === "Escape") {
     if (run && !run.ended) { e.preventDefault(); togglePause(); }
     else if (run && run.ended) { e.preventDefault(); toMenu(); }
@@ -780,22 +818,23 @@ addEventListener("keydown", (e) => {
   }
   if (run && run.ended && e.code === "KeyR") { e.preventDefault(); startRun(); return; }
   if (!run || run.paused || run.ended) return;
-  const T = songTime();
+  const T = songTime(e.timeStamp);
   if (run.mode === "jam") {
     const f = FRETS.indexOf(e.code);
-    if (f >= 0) { e.preventDefault(); if (!e.repeat) { run.held[f] = true; graceCheck(T); } return; }
+    if (f >= 0) { e.preventDefault(); if (!e.repeat) { keyboardHeld.add(f); run.held[f] = true; graceCheck(T); } return; }
     if (STRUM.includes(e.code)) { e.preventDefault(); if (!e.repeat) strum(T); }
   } else {
     const k = SIX.indexOf(e.code);
-    if (k >= 0) { e.preventDefault(); if (!e.repeat) { run.held[k] = true; tap(k, T); } }
+    if (k >= 0) { e.preventDefault(); if (!e.repeat) { keyboardHeld.add(k); run.held[k] = true; tap(k, T); } }
   }
 });
 addEventListener("keyup", (e) => {
   if (!run) return;
   const k = (run.mode === "jam" ? FRETS : SIX).indexOf(e.code);
-  if (k >= 0) run.held[k] = false;
+  if (k >= 0) { if (!run.paused && !run.ended) settleHolds(songTime(e.timeStamp)); keyboardHeld.delete(k); run.held[k] = heldByPointer(k); if (!run.paused && !run.ended) settleHolds(songTime(e.timeStamp)); }
 });
-addEventListener("blur", () => { pointers.clear(); if (run) run.held.fill(false); });
+addEventListener("blur", () => { if (calibration) closeCalibration(); if (run && !run.paused && !run.ended) togglePause(); });
+const keyboardHeld = new Set();
 const pointers = new Map(); // pointer id -> the lanes that finger holds
 function laneAt(x) {
   if (!geo) return -1;
@@ -803,14 +842,7 @@ function laneAt(x) {
   for (let l = 0; l < geo.L; l++) { const d = Math.abs(x - P(laneF(l), 0)[0]); if (d < bd) { bd = d; best = l; } }
   return bd <= geo.laneW * 0.75 ? best : -1;
 }
-function pendingOn(lane, T) { // like pending(), but any lane of a chord counts
-  for (let i = run.next; i < run.chart.length; i++) {
-    const n = run.chart[i];
-    if (n.t > T + W_OK) break;
-    if (n.state === 0 && Math.abs(n.t - T) <= W_OK && n.lanes.includes(lane)) return n;
-  }
-  return null;
-}
+function pendingOn(lane, T) { return pending(lane, T); }
 function heldByPointer(l) { for (const ls of pointers.values()) if (ls.includes(l)) return true; return false; }
 const stage = $("#stage");
 stage.addEventListener("pointerdown", (e) => {
@@ -820,7 +852,7 @@ stage.addEventListener("pointerdown", (e) => {
   if (l < 0) return;
   e.preventDefault();
   try { stage.setPointerCapture(e.pointerId); } catch (err) { /* capture is optional */ }
-  const T = songTime(), n = pendingOn(l, T), lanes = n ? n.lanes.slice() : [l];
+  const T = songTime(e.timeStamp), n = pendingOn(l, T), lanes = n ? n.lanes.slice() : [l];
   pointers.set(e.pointerId, lanes);
   for (const k of lanes) run.held[k] = true;
   if (run.mode === "jam") run.strumFlash = 1;
@@ -829,11 +861,13 @@ stage.addEventListener("pointerdown", (e) => {
 function release(e) {
   const lanes = pointers.get(e.pointerId);
   if (!lanes) return;
+  if (run && !run.paused && !run.ended) settleHolds(songTime(e.timeStamp));
   pointers.delete(e.pointerId);
-  if (run) for (const k of lanes) if (!heldByPointer(k)) run.held[k] = false;
+  if (run) for (const k of lanes) if (!heldByPointer(k)) run.held[k] = keyboardHeld.has(k);
+  if (run && !run.paused && !run.ended) settleHolds(songTime(e.timeStamp));
 }
 for (const type of ["pointerup", "pointercancel", "lostpointercapture"]) stage.addEventListener(type, release);
-document.addEventListener("visibilitychange", () => { if (document.hidden && run && !run.paused && !run.ended) togglePause(); });
+document.addEventListener("visibilitychange", () => { if (document.hidden && calibration) closeCalibration(); if (document.hidden && run && !run.paused && !run.ended) togglePause(); });
 
 /* ---------- drawing ---------- */
 
@@ -914,11 +948,18 @@ function drawHighway(T) {
     gr.addColorStop(0, "rgba(10,16,40,0)"); gr.addColorStop(0.25, "rgba(10,16,40,0.45)"); gr.addColorStop(1, "rgba(14,22,52,0.8)");
     g.fillStyle = gr; g.beginPath(); g.moveTo(x1, y1); g.lineTo(x2, y1); g.lineTo(x3, y3); g.lineTo(x4, y3); g.closePath(); g.fill();
     g.lineWidth = 1;
-    for (let bt = Math.ceil(T / spb) * spb; bt < T + lead; bt += spb) {
+    const beats = run.song.track ? window.KM_TIMINGS[run.song.id].beats.filter(t => t >= T && t < T + lead) : Array.from({length: Math.ceil(lead / spb)}, (_, i) => (Math.ceil(T / spb) + i) * spb);
+    for (const bt of beats) {
       const z = (bt - T) / lead, [lx, ly] = P(left, z), [rx] = P(right, z);
-      const isBar = Math.round(bt / spb) % run.song.bar === 0;
-      g.strokeStyle = `rgba(170,190,255,${isBar ? 0.16 : 0.07})`; seg(lx, ly, rx, ly);
+      g.strokeStyle = "rgba(170,190,255,0.10)"; seg(lx, ly, rx, ly);
     }
+  }
+  const bi = KM_CORE.beatIndex(run.beats || [], T);
+  const pulse = settings.beat && bi >= 0 ? Math.max(0, 1 - (T - run.beats[bi]) / .16) : 0;
+  if (pulse > 0) {
+    const [left, y] = P(laneF(0) - .5, 0), [right] = P(laneF(L - 1) + .5, 0);
+    g.strokeStyle = `rgba(210,235,255,${pulse * .65})`; g.lineWidth = reduceMotion ? 2 : 2 + pulse * 3;
+    seg(left, y, right, y);
   }
   const labels = LABELS[run.mode], r = geo.laneW * 0.3;
   for (let l = 0; l < L; l++) {
@@ -927,6 +968,12 @@ function drawHighway(T) {
     g.strokeStyle = rgba(col, 0.1); g.lineWidth = 6; seg(ax, ay, bx, by);
     g.strokeStyle = rgba(col, on ? 0.9 : 0.42); g.lineWidth = on ? 2 : 1.2; seg(ax, ay, bx, by);
     const [x, y] = P(lf, 0);
+    const feedback = run.laneFeedback[l];
+    if (feedback) {
+      const fade = Math.max(0, 1 - (performance.now() - feedback.at) / 280);
+      g.strokeStyle = feedback.hit ? `rgba(255,255,255,${fade})` : `rgba(255,150,160,${fade})`;
+      g.lineWidth = feedback.hit ? 4 : 2; g.beginPath(); g.arc(x, y, r + (1 - fade) * 9, 0, 6.283); g.stroke();
+    }
     if (on) { g.globalAlpha = 0.5; g.drawImage(sprite(col), x - r * 2, y - r * 2, r * 4, r * 4); g.globalAlpha = 1; }
     g.strokeStyle = rgba(col, on ? 1 : 0.7); g.lineWidth = 3; g.beginPath(); g.arc(x, y, r, 0, 6.283); g.stroke();
     if (!document.body.classList.contains("touch")) { g.fillStyle = "rgba(225,232,255,0.8)"; g.font = "600 13px system-ui, sans-serif"; g.textAlign = "center"; g.fillText(labels[l], x, y + r + 20); }
@@ -985,16 +1032,16 @@ function drawFx(now) {
 }
 function drawHud(T, now) {
   const pad = 18;
-  g.textAlign = "left"; g.fillStyle = "rgba(233,237,251,0.95)"; g.font = "600 16px system-ui, sans-serif"; g.fillText(run.song.title, pad, 30);
+  g.textAlign = "left"; g.fillStyle = "rgba(233,237,251,0.95)"; g.font = "600 16px system-ui, sans-serif"; g.fillText(run.song.title, pad, 30, W < 620 ? W - 36 : W * 0.42);
   g.fillStyle = "rgba(169,179,214,0.9)"; g.font = "13px system-ui, sans-serif";
   g.fillText(`${run.mode === "jam" ? "Jam" : "Six Strings"} · ${run.diff[0].toUpperCase() + run.diff.slice(1)}`, pad, 50);
-  g.textAlign = "right"; g.fillStyle = "#ffffff"; g.font = "600 26px system-ui, sans-serif"; g.fillText(Math.round(run.score).toLocaleString("en-GB"), W - pad, 34);
+  g.textAlign = "right"; g.fillStyle = "#ffffff"; g.font = "600 26px system-ui, sans-serif"; g.fillText(Math.round(run.score).toLocaleString("en-GB"), W - pad, W < 620 ? 78 : 34);
   g.fillStyle = "rgba(169,179,214,0.95)"; g.font = "13px system-ui, sans-serif";
-  g.fillText(`Streak ${run.streak} · ×${multiplier()} · ${(accuracy() * 100).toFixed(1)}%`, W - pad, 54);
+  g.fillText(`Streak ${run.streak} · ×${multiplier()} · ${(accuracy() * 100).toFixed(1)}%`, W - pad, W < 620 ? 98 : 54);
   const p = Math.max(0, Math.min(1, T / run.length));
   g.fillStyle = "rgba(255,255,255,0.08)"; g.fillRect(0, 0, W, 3); g.fillStyle = "rgba(159,216,255,0.8)"; g.fillRect(0, 0, W * p, 3);
   g.textAlign = "center";
-  if (T < 0) { g.fillStyle = `rgba(233,237,251,${Math.min(1, -T)})`; g.font = "600 28px system-ui, sans-serif"; g.fillText("Ready", W / 2, H * 0.4); }
+  if (T < 0) { g.fillStyle = `rgba(233,237,251,${Math.min(1, -T)})`; g.font = "600 28px system-ui, sans-serif"; g.fillText(Math.ceil(-T).toString(), W / 2, H * 0.4); }
   const j = run.judge;
   if (j) {
     const age = (now - j.t0) / 1000;
@@ -1021,9 +1068,80 @@ function frame(now) {
   drawHighway(T); drawNotes(T); drawFx(now); drawHud(T, now);
 }
 
+/* ---------- calibration and beat guide ---------- */
+
+function softClick(bus, at) {
+  const o = ctx.createOscillator(), gain = ctx.createGain();
+  o.frequency.value = 1100;
+  gain.gain.setValueAtTime(.0001, at);
+  gain.gain.exponentialRampToValueAtTime(.065, at + .002);
+  gain.gain.exponentialRampToValueAtTime(.0001, at + .035);
+  o.connect(gain); gain.connect(bus); o.start(at); o.stop(at + .04);
+  o.onended = () => { o.disconnect(); gain.disconnect(); };
+}
+let calibration = null, calibrationSerial = 0;
+function stopCalibration() {
+  calibrationSerial++;
+  if (calibration) { clearInterval(calibration.timer); calibration.bus.disconnect(); }
+  calibration = null;
+}
+function closeCalibration() { stopCalibration(); showOnly("#menu"); renderMenu(); $("#calibrateBtn").focus(); }
+async function startCalibration() {
+  stopCalibration();
+  const serial = calibrationSerial;
+  $("#calApply").disabled = true;
+  try {
+    audioInit();
+    showOnly("#calibration"); $("#calStatus").textContent = "Listen first…";
+    if (ctx.state !== "running") await ctx.resume();
+    if (serial !== calibrationSerial) return;
+    const bus = ctx.createGain(); bus.gain.value = settings.vol / 100; bus.connect(ctx.destination);
+    calibration = {bus, start: ctx.currentTime + .7, period: .65, count: 20, next: 0, taps: new Map(), done: false};
+    calibration.timer = setInterval(calibrationTick, 25); calibrationTick();
+    $("#calTap").focus();
+  } catch (err) { stopCalibration(); showOnly("#menu"); $("#bestLine").textContent = "Calibration could not start: " + err.message; }
+}
+function calibrationTick() {
+  const c = calibration; if (!c || c.done) return;
+  while (c.next < c.count && c.start + c.next * c.period <= ctx.currentTime + .15) {
+    const at = c.start + c.next++ * c.period;
+    if (at >= ctx.currentTime) softClick(c.bus, at);
+  }
+  const elapsed = KM_CORE.audibleTime(ctx, performance.now()) - c.start;
+  if (elapsed >= 3.5 * c.period && !c.prompted) { c.prompted = true; $("#calStatus").textContent = "Tap along to the sound."; }
+  if (elapsed > (c.count - 1) * c.period + .35) {
+    c.done = true; clearInterval(c.timer);
+    c.result = KM_CORE.calibrationResult([...c.taps.values()]);
+    if (c.result.ok) {
+      $("#calStatus").textContent = `Suggested timing: ${c.result.offset > 0 ? "+" : ""}${c.result.offset} ms. Tap variation: ${c.result.spread} ms. Apply it, then try the beat guide in a song.`;
+      $("#calApply").disabled = false;
+    } else $("#calStatus").textContent = c.result.reason;
+  }
+}
+function calibrationTap(stamp) {
+  const c = calibration; if (!c || c.done) return;
+  const now = performance.now();
+  const at = KM_CORE.audibleTime(ctx, now) - (now - KM_CORE.eventNow(stamp, now)) / 1000;
+  const index = Math.round((at - c.start) / c.period);
+  const delta = at - (c.start + index * c.period);
+  if (index < 4 || index >= c.count || Math.abs(delta) > .3 || c.taps.has(index)) return;
+  c.taps.set(index, delta);
+  $("#calTap").textContent = `${c.taps.size} taps recorded`;
+}
+$("#calibrateBtn").addEventListener("click", startCalibration);
+$("#calRetry").addEventListener("click", () => { $("#calTap").textContent = "Tap with the click"; startCalibration(); });
+$("#calCancel").addEventListener("click", closeCalibration);
+$("#calTap").addEventListener("pointerdown", e => { e.preventDefault(); calibrationTap(e.timeStamp); });
+$("#calApply").addEventListener("click", () => {
+  if (!calibration?.result?.ok) return;
+  settings.offset = calibration.result.offset;
+  settings.calibration = {offset: settings.offset, spread: calibration.result.spread, taps: calibration.result.used};
+  save(); closeCalibration();
+});
+
 /* ---------- menus ---------- */
 
-function showOnly(sel) { for (const id of ["#menu", "#pause", "#results"]) $(id).hidden = id !== sel; $("#hudPause").hidden = sel !== null || !run; }
+function showOnly(sel) { for (const id of ["#menu", "#pause", "#results", "#calibration"]) $(id).hidden = id !== sel; $("#hudPause").hidden = sel !== null || !run; }
 function toMenu() { stopRun(false); renderMenu(); showOnly("#menu"); $("#playBtn").focus(); }
 function save() { write(STORE + ":settings", settings); }
 function renderMenu() {
@@ -1040,9 +1158,9 @@ function renderMenu() {
   for (const b of $("#modes").children) b.setAttribute("aria-pressed", String(b.dataset.mode === settings.mode));
   for (const b of $("#diffs").children) b.setAttribute("aria-pressed", String(b.dataset.diff === settings.diff));
   const song = SONGS.find((s) => s.id === settings.song) || SONGS[0];
-  $("#optBeat").checked = song.alwaysBeat || song.track ? true : settings.beat;
-  $("#optBeat").disabled = Boolean(song.alwaysBeat || song.track);
-  $("#beatText").textContent = song.alwaysBeat || song.track ? "Beat built in" : "Soft beat";
+  $("#optBeat").checked = settings.beat;
+  $("#optBeat").disabled = false;
+  $("#beatText").textContent = "Beat guide: click + pulse";
   $("#optGuide").checked = song.track ? true : settings.guide;
   $("#optGuide").disabled = Boolean(song.track);
   $("#optSpeed").value = settings.speed; $("#speedOut").textContent = ["Slowest", "Slow", "Medium", "Fast", "Fastest"][settings.speed - 1];
@@ -1052,10 +1170,10 @@ function renderMenu() {
   const b = best[bestKey()];
   $("#bestLine").textContent = b ? `Best here: ${b.score.toLocaleString("en-GB")}, ${b.acc}% accuracy` : "";
   $("#how").innerHTML = document.body.classList.contains("touch")
-    ? "Tap a lane as its note reaches the ring, and keep your finger down through long notes. In Jam a tap is the fret and the strum together. The <b>II</b> button at the top pauses. Timing moves the notes if hits feel early or late."
+    ? "Tap a lane as its note reaches the ring, and keep your finger down through long notes. In Jam a tap is the fret and the strum together. The <b>II</b> button at the top pauses. Timing: positive values move notes later; negative values move them earlier. Use this if audio still feels out of time."
     : settings.mode === "jam"
-    ? "Hold the fret keys <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> and strum with <kbd>Backspace</kbd> as each note reaches its ring (<kbd>Enter</kbd> works too). Other frets can stay down, and a fret that lands just after the strum still counts. Keep the fret down through long notes. For JamLegend's two-handed style, tilt the keyboard towards the screen and strum with your thumb. <kbd>Esc</kbd> pauses. Timing moves the notes if hits feel early or late."
-    : "Tap <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> as each note reaches its ring, and keep holding through long notes. <kbd>Esc</kbd> pauses. Timing moves the notes if hits feel early or late.";
+    ? "Hold the fret keys <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> and strum with <kbd>Backspace</kbd> as each note reaches its ring (<kbd>Enter</kbd> works too). Other frets can stay down, and a fret that lands just after the strum still counts. Keep the fret down through long notes. For JamLegend's two-handed style, tilt the keyboard towards the screen and strum with your thumb. <kbd>Esc</kbd> pauses. Timing: positive values move notes later; negative values move them earlier. Use this if audio still feels out of time."
+    : "Tap <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> as each note reaches its ring, and keep holding through long notes. <kbd>Esc</kbd> pauses. Timing: positive values move notes later; negative values move them earlier. Use this if audio still feels out of time.";
 }
 for (const b of $("#modes").children) b.addEventListener("click", () => { settings.mode = b.dataset.mode; save(); renderMenu(); });
 for (const b of $("#diffs").children) b.addEventListener("click", () => { settings.diff = b.dataset.diff; save(); renderMenu(); });
@@ -1075,7 +1193,7 @@ $("#tracksBtn").addEventListener("click", toMenu);
 
 addEventListener("resize", resize);
 resize(); renderMenu(); requestAnimationFrame(frame);
-if (TEST) window.__ms = { SONGS, makeChart, songTime, run: () => run, start: async (id, mode, diff) => { Object.assign(settings, { song: id, mode, diff }); await startRun(); }, sets: () => SETS };
+if (TEST) window.__ms = { SONGS, makeChart, songTime, run: () => run, start: async (id, mode, diff) => { Object.assign(settings, { song: id, mode, diff }); await startRun(); }, sets: () => SETS, settings, hit, miss, tap, strum, graceCheck, update, settleHolds, togglePause, stopRun, alignSkip, layout, laneAt, geometry: () => geo, setRun: r => { run = r; }, setContext: c => { ctx = c; }, loadTrack, keyboardHeld, pointers, schedule, drawNotes, point: P, frame, startCalibration, calibrationTap, calibrationTick, closeCalibration, calibration: () => calibration };
 })();
 </script>
 </body>
