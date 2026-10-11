@@ -1,5 +1,21 @@
 [
   {
+    "id": "halo-run",
+    "title": "Halo Run",
+    "vibe": "a rhythm game on a glowing ring: tap as each note lands, to two AI-made songs",
+    "tags": ["rhythm", "music", "touch"],
+    "built_with": "OpenAI GPT-6 (Astra)",
+    "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/7"
+  },
+  {
+    "id": "event-horizon",
+    "title": "Event Horizon",
+    "vibe": "bend a beam of light past black holes into a detector, eight chambers",
+    "tags": ["puzzle", "space", "calm"],
+    "built_with": "OpenAI GPT-6 (Astra)",
+    "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/8"
+  },
+  {
     "id": "fact-checkmate",
     "title": "Fact Checkmate",
     "vibe": "chess against a bot that talks a big game: check its claims",
@@ -10,7 +26,7 @@
   {
     "id": "keyboard-magician",
     "title": "Keyboard Magician",
-    "vibe": "a calm rhythm game: play the tune on your keyboard, with real piano and strings",
+    "vibe": "a calm rhythm game: play the tune on your keyboard or phone, with real piano, strings and recorded songs",
     "tags": ["rhythm", "music", "calm"],
     "built_with": "Claude (Opus 5.5)",
     "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/6"

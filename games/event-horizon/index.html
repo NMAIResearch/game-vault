@@ -1,0 +1,367 @@
+<!doctype html>
+<!-- Purpose: an offline, illustrative light-bending puzzle. -->
+<html lang="en-GB">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Guide a ribbon of light around dark stars into a distant detector.">
+<title>Event Horizon</title>
+<style>
+:root{color-scheme:dark;--ink:#eef4ff;--muted:#a5b8cf;--line:#31455e;--mint:#91f7d5;--gold:#ffd58a}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 20% 0,#203747,#080f1d 64%);color:var(--ink);font:16px/1.5 system-ui,sans-serif;min-height:100vh;padding:24px max(16px,env(safe-area-inset-right)) 30px}main{max-width:960px;margin:auto}header{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:clamp(1.8rem,6vw,3rem);font-weight:650;letter-spacing:-.05em;line-height:1.05;margin:6px 0 16px}.eyebrow{color:var(--mint);font-size:.73rem;letter-spacing:.23em;text-transform:uppercase}.tag{border:1px solid var(--line);padding:6px 12px;border-radius:30px;font-size:.75rem;color:var(--muted)}button,select,input{font:inherit}button,select{min-height:44px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:#19293c;padding:8px 14px;cursor:pointer}button:hover{border-color:var(--mint)}button:disabled{opacity:.45;cursor:default}button.primary{background:var(--mint);color:#0b2925;font-weight:750;border-color:var(--mint)}:focus-visible{outline:3px solid var(--gold);outline-offset:3px}[hidden]{display:none!important}.layout{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:20px}.stage{position:relative;min-width:0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#080f1b}canvas{display:block;width:100%;aspect-ratio:4/3;touch-action:none;cursor:crosshair}.stage-foot{padding:13px 16px;background:#111e2e;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted);display:flex;justify-content:space-between;gap:10px}.legend{display:flex;gap:16px;color:var(--muted);font-size:.8rem;margin:12px 2px}.mint{color:var(--mint)}.gold{color:var(--gold)}aside{padding:18px;border:1px solid var(--line);border-radius:18px;background:#102032}h2{font-size:1.12rem;margin:7px 0}p{margin:8px 0 18px}.hint{color:var(--muted);font-size:.9rem;min-height:4em}.level-control{display:flex;align-items:center;gap:10px;margin:12px 0 18px}.level-control select{flex:1;min-width:0}label{font-size:.84rem;color:var(--muted)}input[type=range]{width:100%;min-height:44px;accent-color:var(--mint)}.angle-row{display:flex;align-items:center;justify-content:space-between;gap:8px}.angle-row output{font-variant-numeric:tabular-nums;font-size:1.4rem}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.actions button{flex:1}.status{min-height:3em;font-size:.92rem;color:var(--gold);margin-top:15px}.details{margin-top:18px;color:var(--muted);font-size:.87rem}.details summary{cursor:pointer;min-height:44px;display:flex;align-items:center}.details p{max-width:70ch}footer{margin-top:20px;color:var(--muted);font-size:.76rem}.progress{font-size:.8rem;color:var(--muted)}@media(max-width:700px){body{padding-top:18px}.layout{grid-template-columns:1fr;gap:12px}aside{padding:16px}.hint{min-height:0}header .tag{display:none}.level-control{margin-top:8px}.actions{margin-top:8px}.status{min-height:1.5em;margin-bottom:0}.legend{flex-wrap:wrap;gap:8px 14px}}
+</style>
+<main>
+<header><div><div class="eyebrow">Game Vault / Light studies</div><h1>Event Horizon</h1></div><span class="tag">A small gravity puzzle</span></header>
+<div class="level-control"><label for="level">Chamber</label><select id="level"></select><span id="progress" class="progress">0 / 8 solved</span></div>
+<div class="layout"><section><div class="stage"><canvas id="board" width="720" height="540" tabindex="0" aria-label="Light puzzle. Aim with left and right arrows, then press Space to launch. The angle slider provides the same controls."></canvas><div class="stage-foot"><span id="flight-label">Awaiting light</span><span>Illustrative model</span></div></div><div class="legend"><span class="mint">● Emitter</span><span class="gold">◎ Detector</span><span>◉ Gravity wells</span></div></section>
+<aside><div class="eyebrow" id="chapter">Chamber 01</div><h2 id="name"></h2><p class="hint" id="hint"></p><label for="angle">Launch angle</label><div class="angle-row"><button id="less" aria-label="Decrease angle by one degree">−</button><output id="angle-value" for="angle">0.0°</output><button id="more" aria-label="Increase angle by one degree">+</button></div><input id="angle" type="range" min="-65" max="65" step="0.1" value="0" aria-label="Launch angle in degrees"><div class="actions"><button id="launch" class="primary">Release light</button><button id="reset">Reset</button></div><p id="status" class="status" role="status">Find a path to the detector.</p><button id="next" hidden>Next chamber →</button></aside></div>
+<details class="details"><summary>Controls &amp; field notes</summary><p>Drag on the star field to aim, or use the angle slider. Left and right arrows adjust by one degree; hold Shift for a tenth of a degree. Space or Enter releases light when the field is focused. R resets the chamber. Every chamber is available from the selector.</p><p>Light curves towards each dark centre. Its direction changes in small, fixed steps, with a softened pull and a capped turn. Touching a dark core or a pale barrier ends the path. This is a visual illustration, not a simulation of real physics. Previous paths remain faintly visible to help you adjust.</p></details>
+<footer>Made with OpenAI GPT-6 (Astra) for NM AI Research.</footer>
+</main>
+<script id="game-code">
+/* Purpose: shared deterministic path model and accessible canvas controls. */
+(() => {
+'use strict';
+const W=720,H=540,STEP=2,MAX_STEPS=2200;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function segmentDistance(a,b,p){const dx=b.x-a.x,dy=b.y-a.y,l=dx*dx+dy*dy;const t=l?clamp(((p.x-a.x)*dx+(p.y-a.y)*dy)/l,0,1):0;return Math.hypot(a.x+t*dx-p.x,a.y+t*dy-p.y);}
+function rectHit(a,b,r){let lo=0,hi=1;for(const [p,d,min,max] of [[a.x,b.x-a.x,r.x,r.x+r.w],[a.y,b.y-a.y,r.y,r.y+r.h]]){if(Math.abs(d)<1e-12){if(p<min||p>max)return false;}else{let t1=(min-p)/d,t2=(max-p)/d;if(t1>t2)[t1,t2]=[t2,t1];lo=Math.max(lo,t1);hi=Math.min(hi,t2);if(lo>hi)return false;}}return true;}
+function trace(level,degrees){
+ if(!Number.isFinite(degrees))throw new TypeError('Angle must be finite');
+ let p={...level.source},theta=degrees*Math.PI/180;const points=[p];
+ for(let i=0;i<MAX_STEPS;i++){
+  const ux=Math.cos(theta),uy=Math.sin(theta);let bend=0;
+  for(const h of level.holes){const dx=h.x-p.x,dy=h.y-p.y;const d2=dx*dx+dy*dy+28*28;bend+=h.strength*(ux*dy-uy*dx)/Math.pow(d2,1.5);}
+  theta+=clamp(bend*STEP,-.065,.065);
+  const q={x:p.x+Math.cos(theta)*STEP,y:p.y+Math.sin(theta)*STEP};points.push(q);
+  if(level.holes.some(h=>segmentDistance(p,q,h)<=h.r))return {points,outcome:'core'};
+  if(level.walls.some(r=>rectHit(p,q,r)))return {points,outcome:'barrier'};
+  if(segmentDistance(p,q,level.target)<=level.target.r)return {points,outcome:'success'};
+  if(q.x<0||q.x>W||q.y<0||q.y>H)return {points,outcome:'escaped'};
+  p=q;
+ }
+ return {points,outcome:'orbit'};
+}
+const levels=[
+ {
+  "name": "First curve",
+  "hint": "Aim above the well. Its pull will bring the light back down.",
+  "source": {
+   "x": 55,
+   "y": 270
+  },
+  "holes": [
+   {
+    "x": 355,
+    "y": 325,
+    "r": 18,
+    "strength": 36
+   }
+  ],
+  "walls": [],
+  "target": {
+   "x": 646.2,
+   "y": 251.6,
+   "r": 25
+  },
+  "initial": 0
+ },
+ {
+  "name": "Counterweight",
+  "hint": "Aim below the well to curve upwards into the detector.",
+  "source": {
+   "x": 55,
+   "y": 310
+  },
+  "holes": [
+   {
+    "x": 325,
+    "y": 220,
+    "r": 20,
+    "strength": 44
+   }
+  ],
+  "walls": [],
+  "target": {
+   "x": 645.9,
+   "y": 295.7,
+   "r": 23
+  },
+  "initial": 0
+ },
+ {
+  "name": "Closer passage",
+  "hint": "A stronger pull needs a wider approach.",
+  "source": {
+   "x": 55,
+   "y": 200
+  },
+  "holes": [
+   {
+    "x": 345,
+    "y": 285,
+    "r": 24,
+    "strength": 52
+   }
+  ],
+  "walls": [],
+  "target": {
+   "x": 645.7,
+   "y": 258.4,
+   "r": 21
+  },
+  "initial": 0
+ },
+ {
+  "name": "Between tides",
+  "hint": "Two wells share the path. Leave room for the second turn.",
+  "source": {
+   "x": 55,
+   "y": 345
+  },
+  "holes": [
+   {
+    "x": 280,
+    "y": 260,
+    "r": 22,
+    "strength": 45
+   },
+   {
+    "x": 480,
+    "y": 370,
+    "r": 20,
+    "strength": 38
+   }
+  ],
+  "walls": [],
+  "target": {
+   "x": 645.3,
+   "y": 299,
+   "r": 20
+  },
+  "initial": 0
+ },
+ {
+  "name": "Narrow window",
+  "hint": "Find the opening in the barrier after the second curve.",
+  "source": {
+   "x": 55,
+   "y": 260
+  },
+  "holes": [
+   {
+    "x": 270,
+    "y": 330,
+    "r": 23,
+    "strength": 48
+   },
+   {
+    "x": 455,
+    "y": 205,
+    "r": 23,
+    "strength": 50
+   }
+  ],
+  "walls": [
+   {
+    "x": 570,
+    "y": 0,
+    "w": 9,
+    "h": 277
+   },
+   {
+    "x": 570,
+    "y": 361,
+    "w": 9,
+    "h": 179
+   }
+  ],
+  "target": {
+   "x": 646.1,
+   "y": 312.4,
+   "r": 18
+  },
+  "initial": 0
+ },
+ {
+  "name": "Long return",
+  "hint": "The lower route curls back. Fine adjustment helps at the opening.",
+  "source": {
+   "x": 55,
+   "y": 385
+  },
+  "holes": [
+   {
+    "x": 300,
+    "y": 290,
+    "r": 23,
+    "strength": 52
+   },
+   {
+    "x": 500,
+    "y": 350,
+    "r": 22,
+    "strength": 45
+   }
+  ],
+  "walls": [
+   {
+    "x": 570,
+    "y": 0,
+    "w": 9,
+    "h": 215
+   },
+   {
+    "x": 570,
+    "y": 299,
+    "w": 9,
+    "h": 241
+   }
+  ],
+  "target": {
+   "x": 646.8,
+   "y": 261.5,
+   "r": 16
+  },
+  "initial": 0
+ },
+ {
+  "name": "Three-body weave",
+  "hint": "Each well changes the approach to the next. Follow the faint previous path.",
+  "source": {
+   "x": 55,
+   "y": 230
+  },
+  "holes": [
+   {
+    "x": 245,
+    "y": 305,
+    "r": 24,
+    "strength": 44
+   },
+   {
+    "x": 430,
+    "y": 215,
+    "r": 24,
+    "strength": 42
+   },
+   {
+    "x": 555,
+    "y": 380,
+    "r": 22,
+    "strength": 38
+   }
+  ],
+  "walls": [
+   {
+    "x": 570,
+    "y": 0,
+    "w": 9,
+    "h": 246
+   },
+   {
+    "x": 570,
+    "y": 330,
+    "w": 9,
+    "h": 210
+   }
+  ],
+  "target": {
+   "x": 645.3,
+   "y": 303.3,
+   "r": 15
+  },
+  "initial": 0
+ },
+ {
+  "name": "The last aperture",
+  "hint": "Thread two openings and reach the smallest detector.",
+  "source": {
+   "x": 55,
+   "y": 360
+  },
+  "holes": [
+   {
+    "x": 230,
+    "y": 275,
+    "r": 24,
+    "strength": 48
+   },
+   {
+    "x": 405,
+    "y": 360,
+    "r": 24,
+    "strength": 42
+   },
+   {
+    "x": 540,
+    "y": 235,
+    "r": 23,
+    "strength": 45
+   }
+  ],
+  "walls": [
+   {
+    "x": 350,
+    "y": 0,
+    "w": 9,
+    "h": 287
+   },
+   {
+    "x": 350,
+    "y": 347,
+    "w": 9,
+    "h": 193
+   },
+   {
+    "x": 595,
+    "y": 0,
+    "w": 9,
+    "h": 308
+   },
+   {
+    "x": 595,
+    "y": 368,
+    "w": 9,
+    "h": 172
+   }
+  ],
+  "target": {
+   "x": 646.4,
+   "y": 335.4,
+   "r": 14
+  },
+  "initial": 0
+ }
+];
+globalThis.HorizonCore=Object.freeze({trace,segmentDistance,rectHit,levels,W,H,MAX_STEPS});
+if(typeof document==='undefined')return;
+const $=id=>document.getElementById(id),canvas=$('board'),ctx=canvas.getContext('2d');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+let index=0,angle=0,flight=null,previous=null,reveal=0,lastFrame=0,attempts=0,dragging=false;
+const solved=new Set();
+levels.forEach((l,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${String(i+1).padStart(2,'0')} · ${l.name}`;$('level').append(o);});
+function aim(value){angle=Math.round(clamp(value,-65,65)*10)/10;$('angle').value=angle;$('angle-value').value=`${angle.toFixed(1)}°`;if(flight){previous=flight;flight=null;}$('flight-label').textContent='Aim ready';$('next').hidden=true;draw();}
+function load(i){index=i;attempts=0;flight=null;previous=null;reveal=0;const l=levels[i];$('level').value=i;$('name').textContent=l.name;$('hint').textContent=l.hint;$('chapter').textContent=`Chamber ${String(i+1).padStart(2,'0')}`;$('status').textContent='Find a path to the detector.';$('next').hidden=true;aim(l.initial);}
+function complete(){if(!flight)return;const messages={success:'Detector reached. A path through the dark.',core:'The core absorbed the light. Give it more room.',barrier:'The barrier interrupted the path. Try another angle.',escaped:'The light left the field. Adjust the angle and try again.',orbit:'The path curled too far. Try a wider approach.'};$('status').textContent=messages[flight.outcome];$('flight-label').textContent=`Attempt ${attempts} · ${flight.outcome==='success'?'connected':'adjust and retry'}`;if(flight.outcome==='success'){solved.add(index);$('progress').textContent=`${solved.size} / ${levels.length} solved`;$('level').options[index].textContent=`${String(index+1).padStart(2,'0')} · ${levels[index].name} ✓`;$('next').hidden=false;$('next').textContent=index===levels.length-1?'Return to first chamber':'Next chamber →';if(solved.size===levels.length)$('status').textContent='Every detector connected. All chambers complete.';}}
+function launch(){previous=flight||previous;flight=trace(levels[index],angle);attempts++;reveal=reduced.matches?flight.points.length:1;lastFrame=0;$('next').hidden=true;$('status').textContent='Light in transit…';$('flight-label').textContent=`Attempt ${attempts} · tracing`;if(reduced.matches)complete();draw();}
+function path(points,count,colour,width){if(!points||count<2)return;ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);for(let i=1;i<Math.min(count,points.length);i++)ctx.lineTo(points[i].x,points[i].y);ctx.strokeStyle=colour;ctx.lineWidth=width;ctx.stroke();}
+function draw(){
+ const scale=Math.min(devicePixelRatio||1,2);if(canvas.width!==W*scale){canvas.width=W*scale;canvas.height=H*scale;}ctx.setTransform(scale,0,0,scale,0,0);ctx.fillStyle='#080f1b';ctx.fillRect(0,0,W,H);
+ for(let i=0;i<90;i++){ctx.fillStyle=i%3?'#243a50':'#597184';ctx.fillRect((i*137+31)%W,(i*89+17)%H,i%3?1:2,1);}
+ const l=levels[index];
+ for(const h of l.holes){const g=ctx.createRadialGradient(h.x,h.y,h.r,h.x,h.y,95);g.addColorStop(0,'#7f74b050');g.addColorStop(1,'#7f74b000');ctx.fillStyle=g;ctx.beginPath();ctx.arc(h.x,h.y,95,0,Math.PI*2);ctx.fill();for(const r of [h.r+9,h.r+30]){ctx.strokeStyle='#7b76943a';ctx.lineWidth=1;ctx.beginPath();ctx.arc(h.x,h.y,r,0,Math.PI*2);ctx.stroke();}ctx.fillStyle='#010409';ctx.strokeStyle='#a09abe';ctx.lineWidth=2;ctx.beginPath();ctx.arc(h.x,h.y,h.r,0,Math.PI*2);ctx.fill();ctx.stroke();}
+ for(const r of l.walls){ctx.fillStyle='#536478';ctx.fillRect(r.x,r.y,r.w,r.h);ctx.fillStyle='#a7b5c6';ctx.fillRect(r.x,r.y,2,r.h);}
+ if(previous)path(previous.points,previous.points.length,'#73938650',1.5);
+ if(flight){path(flight.points,Math.floor(reveal),'#91f7d5',3);const p=flight.points[Math.min(Math.floor(reveal)-1,flight.points.length-1)];if(p){ctx.fillStyle='#f2fff9';ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill();}}
+ const t=l.target;ctx.strokeStyle='#ffd58a';ctx.lineWidth=3;ctx.beginPath();ctx.arc(t.x,t.y,t.r,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(t.x,t.y,t.r+6,0,Math.PI*2);ctx.strokeStyle='#ffd58a40';ctx.stroke();ctx.fillStyle='#ffd58a';ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillText('DETECTOR',t.x,Math.max(18,t.y-t.r-13));
+ const s=l.source,a=angle*Math.PI/180;ctx.strokeStyle='#91f7d5';ctx.lineWidth=2;ctx.setLineDash([5,6]);ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x+60*Math.cos(a),s.y+60*Math.sin(a));ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#91f7d5';ctx.beginPath();ctx.arc(s.x,s.y,8,0,Math.PI*2);ctx.fill();ctx.font='12px system-ui';ctx.textAlign='center';ctx.fillText('LIGHT',s.x,s.y+27);
+}
+function frame(t){if(flight&&reveal<flight.points.length){const dt=lastFrame?Math.min((t-lastFrame)/1000,.05):0;reveal=reduced.matches?flight.points.length:Math.min(flight.points.length,reveal+dt*480);if(reveal>=flight.points.length)complete();draw();}lastFrame=t;requestAnimationFrame(frame);}
+function pointer(e){const r=canvas.getBoundingClientRect(),s=levels[index].source;const x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;aim(Math.atan2(y-s.y,x-s.x)*180/Math.PI);}
+canvas.addEventListener('pointerdown',e=>{dragging=true;canvas.setPointerCapture(e.pointerId);canvas.focus();pointer(e);});canvas.addEventListener('pointermove',e=>{if(dragging)pointer(e);});for(const name of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(name,()=>dragging=false);
+$('angle').addEventListener('input',e=>aim(Number(e.target.value)));$('less').onclick=()=>aim(angle-1);$('more').onclick=()=>aim(angle+1);$('launch').onclick=launch;$('reset').onclick=()=>load(index);$('next').onclick=()=>load((index+1)%levels.length);$('level').onchange=e=>load(Number(e.target.value));
+document.addEventListener('keydown',e=>{if(e.ctrlKey||e.altKey||e.metaKey)return;const tag=e.target.tagName;if(e.key.toLowerCase()==='r'&&!/^(INPUT|SELECT)$/.test(tag)){e.preventDefault();load(index);return;}if(/^(INPUT|SELECT|BUTTON|SUMMARY)$/.test(tag))return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();aim(angle+(e.key==='ArrowLeft'?-1:1)*(e.shiftKey?.1:1));}else if((e.code==='Space'||e.key==='Enter')&&!e.repeat){e.preventDefault();launch();}});
+window.addEventListener('resize',draw);load(0);requestAnimationFrame(frame);
+})();
+</script>
+</html>
