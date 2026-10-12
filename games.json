@@ -22,5 +22,12 @@
     "tags": ["classic", "casual"],
     "built_with": "Claude (Sonnet) — by DonatOtvosDev",
     "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/3"
+  },
+  {
+    "id": "tideline",
+    "title": "Tideline",
+    "vibe": "first-person surf: slide along steep ramps, strafe through the air and carry your speed across four stages",
+    "tags": ["action", "speed", "surf"],
+    "built_with": "Codex (GPT-6 Astra)"
   }
 ]

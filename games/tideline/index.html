@@ -1,0 +1,53 @@
+<!doctype html>
+<!-- Purpose: offline entry page for Tideline, an original surf game. -->
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Follow the edge. A first-person surf course above a quiet sea.">
+  <title>Tideline | Surf</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="physics.js"></script>
+  <script defer src="renderer.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <main id="game">
+    <canvas id="view" aria-label="First-person view of suspended surf ramps" tabindex="-1"></canvas>
+    <div id="hud" aria-hidden="true">
+      <header>
+        <div class="brand">TIDELINE <span>SURF CLUB</span></div>
+        <div class="clock"><span>RUN TIME</span><strong id="timer">00:00.000</strong><small id="bestRun">BEST / --</small></div>
+        <button id="pause" type="button" title="Pause (Escape)">Pause <kbd>Esc</kbd></button>
+      </header>
+      <section class="stage-card"><span id="stageNumber" class="eyebrow">01 / 04</span><h2 id="stageName">First light</h2><p id="stageHint">Find the edge</p><div id="progress"><i></i><i></i><i></i><i></i></div></section>
+      <div id="crosshair"><i></i><i></i></div>
+      <div class="bottom"><div class="velocity"><span>VELOCITY</span><div><strong id="speed">0</strong><small>u/s</small></div><div class="speed-track"><i id="speedBar"></i></div></div>
+        <div class="movement"><b id="contact">START PAD</b><p id="guidance">W to approach the edge</p><div class="keys"><kbd id="keyA">A</kbd><kbd id="keyW">W</kbd><kbd id="keyS">S</kbd><kbd id="keyD">D</kbd><kbd id="keySpace">SPACE</kbd></div></div>
+        <div class="split"><span>STAGE TIME</span><strong id="split">00:00.000</strong><small id="bestStage">BEST / --</small></div>
+      </div>
+    </div>
+    <p id="notice" role="status" aria-live="polite"></p>
+    <section id="menu" class="overlay" aria-labelledby="menuTitle">
+      <div class="panel">
+        <div class="eyebrow">A COURSE ABOVE THE QUIET SEA</div>
+        <h1 id="menuTitle">Tide<span>line.</span></h1>
+        <p class="intro" id="intro">Find your line. Keep your momentum.</p>
+        <p id="mobileNote" class="warning" hidden>This game needs a keyboard and mouse. Open it on a desktop to surf.</p>
+        <p id="error" class="warning" hidden></p>
+        <div class="lesson" id="lesson">
+          <div><b>01</b><p><strong>Leave the pad</strong>Hold <kbd>W</kbd> to reach the edge. Release it once you are on the ramp.</p></div>
+          <div><b>02</b><p><strong>Hold into the slope</strong><kbd>D</kbd> on the left ramp, <kbd>A</kbd> on the right. Look along the ramp and turn gently away from its high edge.</p></div>
+          <div><b>03</b><p><strong>Carry your speed</strong>In the air, match your turn to your strafe. <kbd>Space</kbd> clears the wide gaps. The gold gate saves a checkpoint.</p></div>
+        </div>
+        <div id="results" hidden></div>
+        <div class="actions"><button type="button" class="primary" id="play">Enter the tide <span>↗</span></button><button type="button" id="restart" hidden>New run</button></div>
+        <div class="settings"><label for="sensitivity">Mouse sensitivity</label><input id="sensitivity" type="range" min="0.4" max="2" step="0.1" value="1"><output id="sensitivityValue">1.0×</output></div>
+        <p class="fine">Mouse to look · WASD to move · Space to jump · R to recover · Esc to pause<br>Recovery adds two seconds. The clock pauses when you leave the game.</p>
+        <footer>AI disclosure: OpenAI GPT-6 Astra wrote this game.<br><span>Original course · No downloads or account needed</span></footer>
+      </div>
+    </section>
+    <noscript><div class="no-script">Tideline needs JavaScript enabled and a desktop keyboard and mouse.</div></noscript>
+  </main>
+</body>
+</html>
