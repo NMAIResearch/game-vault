@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#1b1430">
+<title>Hungry Horizon</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="view"></canvas>
+
+<div id="hud" hidden>
+  <div class="hud-l pill">
+    <div id="clock">0:00.0</div>
+    <div id="best-small"></div>
+  </div>
+  <div class="hud-c pill">
+    <div class="tier-row">
+      <span id="tier-name">Speck</span>
+      <div class="bar" id="tier-bar"><i></i><span></span></div>
+      <span id="tier-next">Puddle</span>
+    </div>
+    <div class="eats"><span class="key solid"></span><span class="lbl">Fits now</span> <b id="eats-now"></b></div>
+    <div class="eats" id="soon-row"><span class="key dashed"></span><span class="lbl">Next size</span> <b id="eats-next"></b></div>
+  </div>
+  <div class="hud-r pill">
+    <div id="left">0 left</div>
+    <div class="bar small" id="left-bar"><i></i></div>
+  </div>
+  <button id="pause-btn" class="pill" aria-label="Pause">&#10074;&#10074;</button>
+</div>
+
+<div id="pins"></div>
+<div id="edge-arrows"></div>
+<div id="radar-box" hidden><canvas id="radar"></canvas><div id="radar-cap"></div></div>
+<div id="hint-arrow" hidden><div class="tri"></div></div>
+<div id="you" hidden><div class="tri"></div><span>you</span></div>
+<div id="banner" hidden><div class="b1"></div><div class="b2"></div></div>
+<div id="toast" hidden></div>
+<div id="floaters"></div>
+
+<div id="menu" class="screen">
+  <div class="card menu-card">
+    <div class="menu-main">
+    <h1>Hungry <span>Horizon</span></h1>
+    <p class="tag">Start as a speck. Swallow somewhere new.</p>
+    <div id="map-picker" role="group" aria-label="Choose a map"></div>
+    <p id="map-description"></p>
+    <button id="play" class="big">Play</button>
+    <div id="best-line"></div>
+    </div><div class="menu-options">
+    <div class="looks">
+      <div class="sub">Looks <small>(earned by playing)</small></div>
+      <div id="looks-row"></div>
+      <div id="look-how"></div>
+    </div>
+    <div class="toggles">
+      <button class="tog" data-set="music"></button>
+      <button class="tog" data-set="sfx"></button>
+      <button class="tog" data-set="calm"></button>
+    </div>
+    <p class="controls">Steer towards the mouse or a held finger. Arrow keys and WASD work too. P or Esc pauses.</p>
+    <p class="credit">Made with Opus 5.5 (Claude Code CLI) and GPT-6 Astra (Codex CLI).</p>
+    </div>
+  </div>
+</div>
+
+<div id="pause" class="screen" hidden>
+  <div class="card">
+    <h2>Paused</h2>
+    <button id="resume" class="big">Resume</button>
+    <div class="row"><button id="restart">Restart</button><button id="to-menu">Menu</button></div>
+    <div class="toggles">
+      <button class="tog" data-set="music"></button>
+      <button class="tog" data-set="sfx"></button>
+      <button class="tog" data-set="calm"></button>
+    </div>
+  </div>
+</div>
+
+<div id="done" class="screen" hidden>
+  <div class="card">
+    <h2 id="done-title">Map swallowed!</h2>
+    <div id="done-time"></div>
+    <div id="done-best"></div>
+    <div id="done-unlocks"></div>
+    <button id="again" class="big">Play again</button>
+    <div class="row"><button id="done-menu">Menu</button></div>
+  </div>
+</div>
+
+<div id="selftest" hidden></div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

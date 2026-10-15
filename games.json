@@ -29,5 +29,12 @@
     "vibe": "first-person surf: slide along steep ramps, strafe through the air and carry your speed across four stages",
     "tags": ["action", "speed", "surf"],
     "built_with": "Codex (GPT-6 Astra)"
+  },
+  {
+    "id": "hungry-horizon",
+    "title": "Hungry Horizon",
+    "vibe": "be a small, hungry black hole: swallow your way through a town, a harbour, a farm and a fairground, growing with every bite",
+    "tags": ["arcade", "physics", "casual"],
+    "built_with": "Codex (GPT-6 Astra)"
   }
 ]
