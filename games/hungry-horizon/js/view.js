@@ -19,7 +19,7 @@ export function depthRange(dist) {
 }
 
 // Places the camera for play or for the menu orbit and updates its matrices.
-export function frameCamera(camera, hole, dist, edge, mode, menuAngle = 0) {
+export function frameCamera(camera, hole, dist, edge, mode, menuAngle = 0, touchBias = 0) {
   if (mode === 'menu') {
     const pitch = 0.78;
     camera.position.set(hole.x + Math.sin(menuAngle) * Math.cos(pitch) * dist, Math.sin(pitch) * dist, hole.z + Math.cos(menuAngle) * Math.cos(pitch) * dist);
@@ -27,11 +27,14 @@ export function frameCamera(camera, hole, dist, edge, mode, menuAngle = 0) {
   } else {
     const pitch = 0.93;
     // Near the shore the camera stops short, so the city fills the screen and the hole slides off-centre.
+    // During touch play, touchBias > 0 shifts the camera target south so the hole stays higher on screen above the thumb.
     const halfW = dist * 0.47 * Math.max(0.5, camera.aspect);
     const span = (v, lo, hi) => lo > hi ? (lo + hi) / 2 : Math.max(lo, Math.min(hi, v));
-    const cx = span(hole.x, -edge + halfW * 0.6, edge - halfW * 0.6), cz = span(hole.z, -edge + dist * 0.6, edge - dist * 0.2);
+    const bias = touchBias * dist;
+    const cx = span(hole.x, -edge + halfW * 0.6, edge - halfW * 0.6);
+    const cz = span(hole.z + bias, -edge + dist * 0.6, edge - dist * (0.2 - touchBias));
     camera.position.set(cx, Math.sin(pitch) * dist, cz + Math.cos(pitch) * dist);
-    camera.lookAt(cx, 0, cz - dist * 0.04);
+    camera.lookAt(cx, 0, cz - dist * 0.04 + bias * 0.35);
   }
   const { near, far } = depthRange(dist);
   if (camera.near !== near || camera.far !== far) { camera.near = near; camera.far = far; camera.updateProjectionMatrix(); }

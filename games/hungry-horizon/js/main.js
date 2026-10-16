@@ -1,6 +1,6 @@
 import {
   MAPS, TIERS, TYPES, LOOKS, generateMap, World, Stopwatch, Store, BestTimes, newUnlocks, formatTime,
-  tierLabels, tierProgress,
+  tierLabels, tierProgress, EraseConfirmation, SaveThrottle,
 } from './logic.js';
 
 import { landAt } from './places.js';
@@ -27,11 +27,15 @@ async function boot() {
   const { Audio } = await import('./audio.js');
   const { ENDGAME_LEFT, RADAR_LEFT } = await import('./view.js');
 
-  let def = Object.hasOwn(MAPS, params.get('map')) ? MAPS[params.get('map')] : MAPS.downtown;
-  const seedParam = params.get('seed');
-  let seed = seedParam !== null && seedParam !== '' && isFinite(+seedParam) ? (Math.floor(+seedParam) >>> 0) : def.defaultSeed;
   const store = new Store();
   const bests = new BestTimes(store);
+  const savedMapId = store.get('map', null);
+  let def = Object.hasOwn(MAPS, params.get('map'))
+    ? MAPS[params.get('map')]
+    : (savedMapId && Object.hasOwn(MAPS, savedMapId) ? MAPS[savedMapId] : MAPS.downtown);
+  const seedParam = params.get('seed');
+  const calcSeed = d => seedParam !== null && seedParam !== '' && isFinite(+seedParam) ? (Math.floor(+seedParam) >>> 0) : d.defaultSeed;
+  let seed = calcSeed(def);
   const legacyDowntownClear = +store.get('clears', 0) > 0 && Object.keys(MAPS).every(id => !store.get(`cleared.${id}`, false));
   if (legacyDowntownClear) store.set('cleared.downtown', true);
   const settings = Object.assign({ music: true, sfx: true, calm: false }, store.get('settings', {}));
@@ -45,51 +49,227 @@ async function boot() {
   audio.setMusic(settings.music); audio.setSfx(settings.sfx);
 
   const canvas = $('view');
+  const touchPad = $('touch-pad');
+  const touchKnob = $('touch-knob');
   const renderer = new Renderer(canvas);
   const forcedPR = params.has('pr') ? +params.get('pr') : null;
   if (forcedPR) renderer.setPixelRatio(forcedPR);
-  let map = generateMap(seed, def);
-  let mapSig = 0;
-  for (const o of map.objects) mapSig = (Math.imul(mapSig, 31) + Math.round(o.x * 100) * 7 + Math.round(o.z * 100) + o.type) | 0;
-  let world = new World(map);
-  renderer.setWorld(world);
-  renderer.setLook(look);
-  renderer.setCalm(settings.calm);
-  document.body.classList.toggle('calm', settings.calm);
+
+  let touchMode = Boolean(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  renderer.touchBias = touchMode ? 0.16 : 0;
 
   let phase = 'menu';
   const watch = new Stopwatch();
   let run = null;
+  let hasSavedRun = false;
+  const saveThrottle = new SaveThrottle();
+  const eraseDialog = $('erase-dialog');
+  const eraseConfirmation = new EraseConfirmation(resetAllProgress);
+
+  function buildMapSig(m) {
+    let sig = 0;
+    for (const o of m.objects) sig = (Math.imul(sig, 31) + Math.round(o.x * 100) * 7 + Math.round(o.z * 100) + o.type) | 0;
+    return sig;
+  }
+
+  let map = generateMap(seed, def);
+  let mapSig = buildMapSig(map);
+  let world = new World(map);
+
+  const initialSaved = store.get('run', null);
+  if (initialSaved && Object.hasOwn(MAPS, initialSaved.map)
+      && (!params.has('map') || params.get('map') === initialSaved.map)
+      && (!params.has('seed') || seed === initialSaved.seed)) {
+    def = MAPS[initialSaved.map];
+    seed = typeof initialSaved.seed === 'number' && isFinite(initialSaved.seed) ? (initialSaved.seed >>> 0) : calcSeed(def);
+    map = generateMap(seed, def);
+    mapSig = buildMapSig(map);
+    const candidate = new World(map);
+    if (candidate.restore(initialSaved)) {
+      world = candidate;
+      const el = typeof initialSaved.elapsed === 'number' && isFinite(initialSaved.elapsed) && initialSaved.elapsed >= 0 ? initialSaved.elapsed : world.t;
+      watch.reset();
+      watch.acc = el * 1000;
+      run = {
+        map: map.id,
+        maxTier: world.stats.maxTier,
+        people: world.stats.people,
+        cleared: false,
+        beatPrevious: false,
+        time: 0,
+        eats: typeof initialSaved.eats === 'number' ? initialSaved.eats : initialSaved.eaten.length,
+        unlocked: Array.isArray(initialSaved.unlocked) ? initialSaved.unlocked.slice() : [],
+        clears: +store.get('clears', 0) || 0,
+        abyssAt: typeof initialSaved.abyssAt === 'number' ? initialSaved.abyssAt : 0,
+      };
+      hasSavedRun = true;
+    } else {
+      store.del('run');
+    }
+  }
+
+  renderer.setWorld(world);
+  renderer.rv = world.hole.r;
+  renderer.dist = renderer.viewDistance(world.hole.r);
+  renderer.setLook(look);
+  renderer.setCalm(settings.calm);
+  document.body.classList.toggle('calm', settings.calm);
+
   let t = 0, last = performance.now();
   let fps = 60, fCount = 0, fTime = 0, perfWindow = [], prHold = 0;
 
   function resize() { renderer.resize(window.innerWidth, window.innerHeight); }
   window.addEventListener('resize', resize); resize();
 
+  function saveRunState(force = true) {
+    if (!run || world.left <= 0 || phase === 'cleared') return;
+    if (!saveThrottle.due(performance.now(), force)) return;
+    const snap = world.snapshot({
+      elapsed: +watch.elapsed.toFixed(2),
+      eats: run.eats,
+      abyssAt: +run.abyssAt.toFixed(2),
+      unlocked: run.unlocked.slice(),
+    });
+    store.set('run', snap);
+    store.set('map', map.id);
+    hasSavedRun = true;
+  }
+
   // ---------------------------------------------------------------- input
   const keys = new Set();
-  const ptr = { x: 0, y: 0, active: false, type: 'mouse' };
+  const ptr = { x: 0, y: 0, ox: 0, oy: 0, active: false, type: touchMode ? 'touch' : 'mouse', id: null };
   const KEYMAP = { ArrowUp: [0, -1], KeyW: [0, -1], ArrowDown: [0, 1], KeyS: [0, 1], ArrowLeft: [-1, 0], KeyA: [-1, 0], ArrowRight: [1, 0], KeyD: [1, 0] };
+
+  function syncTouchUi() {
+    renderer.touchBias = touchMode ? 0.16 : 0;
+    if (touchPad) touchPad.hidden = !(touchMode && (phase === 'playing' || phase === 'paused'));
+  }
+
+  function setKnob(nx, ny) {
+    if (!touchKnob) return;
+    const maxK = 28;
+    touchKnob.style.transform = `translate(${(nx * maxK).toFixed(1)}px, ${(ny * maxK).toFixed(1)}px)`;
+  }
+
+  function startTouchAt(x, y, id = null) {
+    audio.unlock();
+    touchMode = true;
+    syncTouchUi();
+    ptr.type = 'touch';
+    ptr.id = id;
+    ptr.x = x;
+    ptr.y = y;
+    ptr.ox = x;
+    ptr.oy = y;
+    if (touchPad && !touchPad.hidden) {
+      const ring = touchPad.querySelector('.touch-ring') || touchPad;
+      const r = ring.getBoundingClientRect();
+      if (r.width > 0) {
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const d = Math.hypot(x - cx, y - cy);
+        if (d <= r.width * 0.75 && d >= 6) { ptr.ox = cx; ptr.oy = cy; }
+      }
+    }
+    ptr.active = true;
+  }
+
+  function moveTouchAt(x, y) {
+    touchMode = true;
+    syncTouchUi();
+    ptr.type = 'touch';
+    ptr.x = x;
+    ptr.y = y;
+    if (!ptr.active) { ptr.ox = x; ptr.oy = y; ptr.active = true; }
+    const maxR = Math.max(42, Math.min(window.innerWidth, window.innerHeight) * 0.13);
+    const dx = ptr.x - ptr.ox, dy = ptr.y - ptr.oy, d = Math.hypot(dx, dy);
+    if (d > maxR) {
+      ptr.ox = ptr.x - dx / d * maxR;
+      ptr.oy = ptr.y - dy / d * maxR;
+    }
+  }
+
+  function endTouch() {
+    ptr.active = false;
+    ptr.id = null;
+    setKnob(0, 0);
+  }
+
   window.addEventListener('keydown', e => {
-    if (KEYMAP[e.code] && phase === 'playing') { keys.add(e.code); e.preventDefault(); }
+    if (eraseDialog.open) return;
+    if (KEYMAP[e.code] && phase === 'playing') { touchMode = false; syncTouchUi(); keys.add(e.code); e.preventDefault(); }
     if (e.code === 'KeyP' || e.code === 'Escape') { if (phase === 'playing') pause(); else if (phase === 'paused') resume(); }
-    if ((e.code === 'Enter' || e.code === 'Space') && phase === 'menu' && document.activeElement === document.body) { e.preventDefault(); startRun(); }
+    if ((e.code === 'Enter' || e.code === 'Space') && phase === 'menu' && document.activeElement === document.body) { e.preventDefault(); playFromMenu(); }
   });
   window.addEventListener('keyup', e => keys.delete(e.code));
-  window.addEventListener('blur', () => { keys.clear(); ptr.active = ptr.type === 'mouse' ? ptr.active : false; });
-  canvas.addEventListener('pointerdown', e => { audio.unlock(); ptr.type = e.pointerType; ptr.x = e.clientX; ptr.y = e.clientY; ptr.active = true; });
-  canvas.addEventListener('pointermove', e => { ptr.type = e.pointerType; ptr.x = e.clientX; ptr.y = e.clientY; if (e.pointerType === 'mouse') ptr.active = true; });
-  const release = e => { if (e.pointerType !== 'mouse') ptr.active = false; };
-  canvas.addEventListener('pointerup', release);
-  canvas.addEventListener('pointercancel', release);
+  window.addEventListener('blur', () => { keys.clear(); if (ptr.type !== 'mouse') endTouch(); });
+
+  const onPtrDown = e => {
+    if (e.pointerType === 'mouse') {
+      audio.unlock();
+      touchMode = false; syncTouchUi();
+      ptr.type = 'mouse'; ptr.x = e.clientX; ptr.y = e.clientY; ptr.active = true;
+    } else {
+      startTouchAt(e.clientX, e.clientY, e.pointerId);
+    }
+  };
+  const onPtrMove = e => {
+    if (e.pointerType === 'mouse') {
+      if (touchMode && ptr.active && ptr.type !== 'mouse') return;
+      touchMode = false; syncTouchUi();
+      ptr.type = 'mouse'; ptr.x = e.clientX; ptr.y = e.clientY; ptr.active = true;
+    } else if (ptr.active && (ptr.id === null || ptr.id === e.pointerId)) {
+      moveTouchAt(e.clientX, e.clientY);
+    }
+  };
+  const onPtrUp = e => {
+    if (e.pointerType !== 'mouse' && (ptr.id === null || ptr.id === e.pointerId)) endTouch();
+  };
+
+  for (const surf of [canvas, touchPad]) {
+    if (!surf) continue;
+    surf.addEventListener('pointerdown', onPtrDown);
+    surf.addEventListener('pointermove', onPtrMove);
+    surf.addEventListener('pointerup', onPtrUp);
+    surf.addEventListener('pointercancel', onPtrUp);
+    if (window.PointerEvent) continue;
+    surf.addEventListener('touchstart', e => {
+      if (e.changedTouches && e.changedTouches.length) {
+        const tc = e.changedTouches[0];
+        startTouchAt(tc.clientX, tc.clientY, tc.identifier);
+      }
+    }, { passive: true });
+    surf.addEventListener('touchmove', e => {
+      if (e.changedTouches && e.changedTouches.length) {
+        const tc = e.changedTouches[0];
+        moveTouchAt(tc.clientX, tc.clientY);
+      }
+    }, { passive: true });
+    surf.addEventListener('touchend', () => endTouch(), { passive: true });
+    surf.addEventListener('touchcancel', () => endTouch(), { passive: true });
+  }
+  window.addEventListener('pointermove', e => {
+    if (e.pointerType !== 'mouse' && ptr.active && (ptr.id === null || ptr.id === e.pointerId)) moveTouchAt(e.clientX, e.clientY);
+  });
+  window.addEventListener('pointerup', onPtrUp);
+  window.addEventListener('pointercancel', onPtrUp);
   document.addEventListener('pointerleave', () => { if (ptr.type === 'mouse') ptr.active = false; });
-  document.documentElement.addEventListener('mouseleave', () => { ptr.active = false; });
+  document.documentElement.addEventListener('mouseleave', () => { if (ptr.type === 'mouse') ptr.active = false; });
 
   function steer() {
     let x = 0, z = 0;
     for (const k of keys) { x += KEYMAP[k][0]; z += KEYMAP[k][1]; }
-    if (x || z) return [x, z];
-    if (!ptr.active) return [0, 0];
+    if (x || z) { setKnob(x, z); return [x, z]; }
+    if (!ptr.active) { setKnob(0, 0); return [0, 0]; }
+    if (ptr.type !== 'mouse') {
+      const dx = ptr.x - ptr.ox, dy = ptr.y - ptr.oy, d = Math.hypot(dx, dy);
+      const dead = 5;
+      if (d < dead) { setKnob(0, 0); return [0, 0]; }
+      const full = Math.max(30, Math.min(window.innerWidth, window.innerHeight) * 0.10);
+      const mag = Math.min(1, (d - dead) / full);
+      const nx = dx / d * mag, nz = dy / d * mag;
+      setKnob(nx, nz);
+      return [nx, nz];
+    }
     const h = renderer.project(world.hole.x, world.hole.z);
     const dx = ptr.x - h.x, dy = ptr.y - h.y, d = Math.hypot(dx, dy);
     const dead = 6;
@@ -145,21 +325,67 @@ async function boot() {
     $('best-line').textContent = b ? `Best time on ${map.name}: ${formatTime(b)}` : `${map.name}: no best time yet`;
     $('best-small').textContent = b ? `Best ${formatTime(b)}` : '';
   }
+  function syncMenuButtons() {
+    const canContinue = hasSavedRun && run && run.map === map.id && world.left > 0 && world.left < world.total;
+    $('play').textContent = canContinue
+      ? `Continue ${map.name} (${formatTime(watch.elapsed)})`
+      : `Play ${map.name}`;
+    const newRunBtn = $('new-run');
+    if (newRunBtn) newRunBtn.hidden = !canContinue;
+  }
+  function selectMap(d) {
+    def = d;
+    seed = calcSeed(def);
+    store.set('map', d.id);
+    map = generateMap(seed, def);
+    mapSig = buildMapSig(map);
+    const saved = store.get('run', null);
+    if (saved && saved.map === d.id && saved.seed === seed) {
+      const candidate = new World(map);
+      if (candidate.restore(saved)) {
+        world = candidate;
+        watch.reset();
+        watch.acc = (typeof saved.elapsed === 'number' && isFinite(saved.elapsed) && saved.elapsed >= 0 ? saved.elapsed : world.t) * 1000;
+        run = {
+          map: map.id,
+          maxTier: world.stats.maxTier,
+          people: world.stats.people,
+          cleared: false,
+          beatPrevious: false,
+          time: 0,
+          eats: typeof saved.eats === 'number' ? saved.eats : saved.eaten.length,
+          unlocked: Array.isArray(saved.unlocked) ? saved.unlocked.slice() : [],
+          clears: +store.get('clears', 0) || 0,
+          abyssAt: typeof saved.abyssAt === 'number' ? saved.abyssAt : 0,
+        };
+        hasSavedRun = true;
+      } else {
+        world = new World(map);
+        hasSavedRun = false;
+      }
+    } else {
+      world = new World(map);
+      hasSavedRun = false;
+    }
+    renderer.setWorld(world);
+    renderer.rv = world.hole.r;
+    leftoversAt = -1;
+    renderMaps();
+    renderBest();
+  }
   function renderMaps() {
     const row = $('map-picker'); row.innerHTML = '';
     for (const d of Object.values(MAPS)) {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'map-choice'; b.dataset.map = d.id;
       b.style.setProperty('--map-colour', d.colour); b.setAttribute('aria-pressed', String(d.id === map.id));
-      const time = bests.get(d.id, seed);
+      const dSeed = calcSeed(d);
+      const time = bests.get(d.id, dSeed);
       const cleared = store.get(`cleared.${d.id}`, false) || !!time || (d.id === 'downtown' && legacyDowntownClear);
       b.innerHTML = `<span class="map-picture ${d.id}" aria-hidden="true"><span>${d.icon}</span></span><span class="map-info"><strong>${d.name}</strong><small>${time ? `Best ${formatTime(time)}` : 'No best time yet'}</small><small>${cleared ? '✓ Cleared' : '○ Not cleared'}</small></span>`;
       b.addEventListener('click', () => {
         if (phase !== 'menu') return;
-        def = d; seed = seedParam !== null && seedParam !== '' && isFinite(+seedParam) ? (Math.floor(+seedParam) >>> 0) : def.defaultSeed;
-        map = generateMap(seed, def); mapSig = 0;
-        for (const o of map.objects) mapSig = (Math.imul(mapSig, 31) + Math.round(o.x * 100) * 7 + Math.round(o.z * 100) + o.type) | 0;
-        world = new World(map); renderer.setWorld(world); leftoversAt = -1;
-        renderMaps(); renderBest(); row.querySelector(`[data-map="${d.id}"]`).focus();
+        selectMap(d);
+        row.querySelector(`[data-map="${d.id}"]`).focus();
       });
       b.addEventListener('keydown', e => {
         const buttons = [...row.children], i = buttons.indexOf(b);
@@ -169,52 +395,149 @@ async function boot() {
       row.appendChild(b);
     }
     $('map-description').textContent = def.description;
-    $('play').textContent = `Play ${map.name}`;
+    syncMenuButtons();
   }
   renderLooks(); renderBest(); renderMaps();
 
-  $('play').addEventListener('click', () => { audio.unlock(); startRun(); });
+  function playFromMenu() {
+    audio.unlock();
+    const canContinue = hasSavedRun && run && run.map === map.id && world.left > 0 && world.left < world.total;
+    if (canContinue) resumeSavedRun();
+    else startRun();
+  }
+
+  function resumeSavedRun() {
+    audio.unlock();
+    renderer.dist = renderer.viewDistance(world.hole.r);
+    phase = 'playing';
+    watch.resume();
+    audio.duck(false);
+    show(null);
+    leftoversAt = -1; keys.clear(); endTouch(); lastTier = -1; hintTarget = null; hintTimer = 0;
+    endgameAnnounced = world.left <= ENDGAME_LEFT;
+    last = performance.now();
+    updateHud(true);
+    saveRunState();
+  }
+
+  function resetAllProgress() {
+    audio.unlock();
+    watch.reset();
+    store.clear();
+    bests.clear();
+    owned = ['classic'];
+    look = 'classic';
+    Object.assign(settings, { music: true, sfx: true, calm: false });
+    audio.setMusic(settings.music);
+    audio.setSfx(settings.sfx);
+    renderer.setCalm(settings.calm);
+    document.body.classList.toggle('calm', settings.calm);
+    syncToggles();
+    def = Object.hasOwn(MAPS, params.get('map')) ? MAPS[params.get('map')] : MAPS.downtown;
+    seed = calcSeed(def);
+    map = generateMap(seed, def);
+    mapSig = buildMapSig(map);
+    world = new World(map);
+    run = null;
+    hasSavedRun = false;
+    leftoversAt = -1;
+    keys.clear();
+    endTouch();
+    renderer.setWorld(world);
+    renderer.setLook(look);
+    renderer.rv = world.hole.r;
+    renderer.dist = renderer.viewDistance(world.hole.r);
+    phase = 'menu';
+    audio.duck(false);
+    renderLooks();
+    renderBest();
+    renderMaps();
+    updateHud(true);
+    show('menu');
+    toast('Saved progress cleared. Ready for a fresh start!');
+  }
+
+  $('play').addEventListener('click', () => playFromMenu());
+  if ($('new-run')) $('new-run').addEventListener('click', () => { audio.unlock(); startRun(); });
+  function requestErase() {
+    eraseConfirmation.request();
+    eraseDialog.showModal();
+    $('erase-cancel').focus();
+  }
+  $('start-over').addEventListener('click', requestErase);
+  $('pause-start-over').addEventListener('click', requestErase);
+  $('erase-cancel').addEventListener('click', () => { eraseConfirmation.cancel(); eraseDialog.close(); });
+  eraseDialog.addEventListener('cancel', () => eraseConfirmation.cancel());
+  eraseDialog.addEventListener('close', () => eraseConfirmation.cancel());
+  $('erase-confirm').addEventListener('click', () => {
+    if (!eraseDialog.open) return;
+    eraseConfirmation.confirm();
+    eraseDialog.close();
+  });
   $('resume').addEventListener('click', () => resume());
   $('restart').addEventListener('click', () => startRun());
   $('to-menu').addEventListener('click', () => toMenu());
   $('again').addEventListener('click', () => startRun());
   $('done-menu').addEventListener('click', () => toMenu());
   $('pause-btn').addEventListener('click', () => { if (phase === 'playing') pause(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden && phase === 'playing') pause(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (phase === 'playing') pause();
+      else if (phase === 'paused') saveRunState();
+    }
+  });
+  window.addEventListener('pagehide', () => { if (phase === 'playing' || phase === 'paused') saveRunState(); });
+  window.addEventListener('beforeunload', () => { if (phase === 'playing' || phase === 'paused') saveRunState(); });
 
   function show(screen) {
     for (const id of ['menu', 'pause', 'done']) $(id).hidden = id !== screen;
     $('hud').hidden = !(phase === 'playing' || phase === 'paused');
+    syncTouchUi();
   }
 
   function startRun() {
     audio.unlock();
+    store.del('run');
+    store.set('map', map.id);
+    hasSavedRun = false;
     world = new World(map);
     renderer.setWorld(world);
+    renderer.rv = world.hole.r;
     renderer.dist = renderer.viewDistance(world.hole.r) * 1.6;
     run = { map: map.id, maxTier: 0, people: 0, cleared: false, beatPrevious: false, time: 0, eats: 0, unlocked: [], clears: 0, abyssAt: 0 };
     phase = 'playing';
     watch.start();
     audio.duck(false);
     show(null);
-    leftoversAt = -1; keys.clear(); ptr.active = false; lastTier = -1; hintTarget = null; hintTimer = 0; endgameAnnounced = false;
+    leftoversAt = -1; keys.clear(); endTouch(); lastTier = -1; hintTarget = null; hintTimer = 0; endgameAnnounced = false;
     updateHud(true);
+    saveRunState();
   }
   function pause() {
     if (phase !== 'playing') return;
-    phase = 'paused'; watch.pause(); keys.clear(); audio.duck(true); show('pause');
+    phase = 'paused'; watch.pause(); keys.clear(); endTouch(); audio.duck(true);
+    saveRunState();
+    show('pause');
   }
   function resume() {
     if (phase !== 'paused') return;
     phase = 'playing'; watch.resume(); audio.duck(false); show(null); last = performance.now();
   }
   function toMenu() {
-    phase = 'menu'; watch.reset(); audio.duck(false);
-    world = new World(map); renderer.setWorld(world);
+    if (phase === 'playing' || phase === 'paused') {
+      watch.pause();
+      saveRunState();
+    } else {
+      watch.reset();
+      world = new World(map);
+      renderer.setWorld(world);
+    }
+    phase = 'menu'; audio.duck(false);
     renderLooks(); renderBest(); renderMaps(); show('menu');
   }
 
   function grant(ids) {
+    if (!ids.length) return;
     for (const id of ids) {
       if (owned.includes(id)) continue;
       owned.push(id); run.unlocked.push(id);
@@ -225,6 +548,8 @@ async function boot() {
 
   function finish() {
     watch.stop();
+    store.del('run');
+    hasSavedRun = false;
     updateHud(true);
     const time = watch.elapsed;
     const res = bests.submit(map.id, seed, time);
@@ -241,6 +566,7 @@ async function boot() {
       : `Best: ${formatTime(res.best)} (${formatTime(time - res.best)} slower)`;
     $('done-unlocks').innerHTML = run.unlocked.map(id => `<div>Unlocked look: ${LOOKS.find(l => l.id === id).name}</div>`).join('');
     renderBest();
+    syncMenuButtons();
     setTimeout(() => { if (phase === 'cleared') show('done'); }, 1400);
   }
 
@@ -482,6 +808,7 @@ async function boot() {
       const [ix, iz] = steer();
       const n = dt > 1 / 40 ? 2 : 1;
       for (let i = 0; i < n && phase === 'playing'; i++) handle(world.step(dt / n, ix, iz));
+      if (phase === 'playing') saveRunState(false);
     } else if (phase === 'menu') {
       for (const m of world.movers) if (m.alive) world.moveMover(m, dt);
     }
@@ -512,7 +839,13 @@ async function boot() {
     get looks() { return owned.slice(); },
     get hole() { return { x: world.hole.x, z: world.hole.z }; },
     get mapSignature() { return mapSig; },
+    get hasSavedRun() { return hasSavedRun; },
     holeScreen() { return screenOf(world.hole); },
+    touchPadScreen() {
+      if (!touchPad || touchPad.hidden) return null;
+      const r = touchPad.getBoundingClientRect();
+      return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+    },
     diagnostics() { return { ...renderer.diagnostics(), pins: guide.pins, arrows: guide.arrows, radar: guide.radar, endgame: guide.endgame, pr: renderer.pr }; },
     nearestEdibleScreen() { return screenOf(world.nearestAlive(true)); },
   });

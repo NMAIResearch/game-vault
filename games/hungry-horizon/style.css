@@ -31,7 +31,21 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; }
 .hud-r { position: absolute; right: max(64px, calc(env(safe-area-inset-right) + 64px)); top: max(10px, env(safe-area-inset-top)); min-width: 120px; text-align: right; }
 #left { font-size: 18px; font-weight: 800; font-variant-numeric: tabular-nums; }
 #pause-btn { position: absolute; right: max(10px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top));
-  width: 46px; height: 46px; padding: 0; font-size: 16px; pointer-events: auto; }
+  width: 48px; height: 48px; padding: 0; font-size: 16px; pointer-events: auto; }
+#touch-pad { position: absolute; left: 50%; bottom: max(76px, calc(env(safe-area-inset-bottom) + 76px)); transform: translateX(-50%);
+  width: 116px; height: 116px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  pointer-events: auto; touch-action: none; }
+#touch-pad .touch-ring { position: relative; width: 96px; height: 96px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(180, 140, 255, 0.16) 0%, rgba(22, 16, 40, 0.48) 72%);
+  border: 2px solid rgba(230, 212, 255, 0.42); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.28); }
+#touch-knob { position: absolute; left: 50%; top: 50%; width: 38px; height: 38px; margin: -19px 0 0 -19px;
+  border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe08a, #b48cff);
+  border: 2px solid rgba(255, 255, 255, 0.85); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transform: translate(0px, 0px); pointer-events: none; }
+#touch-pad .touch-lbl { margin-top: 4px; font-size: 11px; font-weight: 700; color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); white-space: nowrap; pointer-events: none; }
+.menu-actions { margin: 2px 0 8px; }
+.menu-actions button { font-size: 13px; padding: 8px 14px; }
 
 #hint-arrow { position: fixed; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
 #hint-arrow .tri { position: absolute; left: -16px; top: -14px; width: 0; height: 0; border-top: 14px solid transparent;
@@ -96,8 +110,13 @@ h2 { margin: 0 0 12px; font-size: 30px; font-weight: 900; }
 .big { display: block; width: 100%; padding: 16px; font-size: 24px; font-weight: 900; border-radius: 16px;
   background: linear-gradient(180deg, #a77bff, #7446e0); box-shadow: 0 4px 0 #4a268f; margin: 6px 0 12px; }
 .big:active { transform: translateY(2px); box-shadow: 0 2px 0 #4a268f; }
-.row { display: flex; gap: 10px; justify-content: center; margin-bottom: 10px; }
+.row { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 10px; }
 .row button, .tog { padding: 10px 14px; border-radius: 12px; background: rgba(255, 255, 255, 0.12); font-weight: 700; }
+#erase-dialog { color: #fff; border: 2px solid #b48cff; max-height: calc(100dvh - 32px); overflow: auto; }
+#erase-dialog::backdrop { background: rgba(10, 6, 20, 0.8); }
+#erase-dialog button { min-width: 48px; min-height: 48px; }
+#erase-confirm { background: #a7314a; }
+#erase-cancel { outline: 2px solid #b48cff; }
 .toggles { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
 .tog[aria-pressed="false"] { opacity: 0.6; }
 #best-line { font-weight: 700; margin-bottom: 8px; }
@@ -144,6 +163,8 @@ h2 { margin: 0 0 12px; font-size: 30px; font-weight: 900; }
   #radar-box { top: auto; bottom: max(10px, env(safe-area-inset-bottom)); width: 92px; }
   #radar { width: 80px; height: 80px; }
   .big { padding: 10px; font-size: 20px; }
+  #touch-pad { bottom: max(10px, env(safe-area-inset-bottom)); width: 100px; height: 100px; }
+  #touch-pad .touch-ring { width: 82px; height: 82px; }
 }
 
 /* Map selection uses native buttons for pointer, touch and keyboard activation. */

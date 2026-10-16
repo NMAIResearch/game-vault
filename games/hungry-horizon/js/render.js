@@ -573,7 +573,7 @@ export class Renderer {
     const want = mode === 'menu' ? 46 : this.viewDistance(h.r);
     this.dist += (want - this.dist) * (1 - Math.exp(-dt * (this.calm ? 1.2 : 2.2)));
     if (mode === 'menu') this.menuAngle += dt * (this.calm ? 0.03 : 0.06);
-    frameCamera(this.camera, h, this.dist, w.map.edge, mode, this.menuAngle);
+    frameCamera(this.camera, h, this.dist, w.map.edge, mode, this.menuAngle, this.touchBias || 0);
     this.scene.fog.near = this.dist * 1.6; this.scene.fog.far = this.dist * 5.5 + 60;
     // Tall things right in front of the lens fade out in a fine stipple instead of filling the screen or being sliced.
     cutU.value = mode === 'menu' ? 0 : this.dist * CUT_RANGE;

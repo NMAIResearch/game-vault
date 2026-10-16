@@ -29,6 +29,10 @@
     <div class="bar small" id="left-bar"><i></i></div>
   </div>
   <button id="pause-btn" class="pill" aria-label="Pause">&#10074;&#10074;</button>
+  <div id="touch-pad" hidden aria-label="Touch steering area">
+    <div class="touch-ring"><i id="touch-knob"></i></div>
+    <span class="touch-lbl">Drag here to steer</span>
+  </div>
 </div>
 
 <div id="pins"></div>
@@ -48,6 +52,10 @@
     <div id="map-picker" role="group" aria-label="Choose a map"></div>
     <p id="map-description"></p>
     <button id="play" class="big">Play</button>
+    <div class="row menu-actions">
+      <button id="new-run" type="button" hidden>New game</button>
+      <button id="start-over" type="button">Erase progress</button>
+    </div>
     <div id="best-line"></div>
     </div><div class="menu-options">
     <div class="looks">
@@ -60,8 +68,8 @@
       <button class="tog" data-set="sfx"></button>
       <button class="tog" data-set="calm"></button>
     </div>
-    <p class="controls">Steer towards the mouse or a held finger. Arrow keys and WASD work too. P or Esc pauses.</p>
-    <p class="credit">Made with Opus 5.5 (Claude Code CLI) and GPT-6 Astra (Codex CLI).</p>
+    <p class="controls">Steer with the lower thumb pad or by dragging on touch screens, or with the mouse, arrow keys, or WASD. P or Esc pauses.</p>
+    <p class="credit">Made with Opus 5.5 (Claude Code CLI), GPT-6 Astra (Codex CLI) and Gemini 4 Argon (Antigravity CLI).</p>
     </div>
   </div>
 </div>
@@ -70,7 +78,7 @@
   <div class="card">
     <h2>Paused</h2>
     <button id="resume" class="big">Resume</button>
-    <div class="row"><button id="restart">Restart</button><button id="to-menu">Menu</button></div>
+    <div class="row"><button id="restart">Restart</button><button id="to-menu">Menu</button><button id="pause-start-over" type="button">Erase progress</button></div>
     <div class="toggles">
       <button class="tog" data-set="music"></button>
       <button class="tog" data-set="sfx"></button>
@@ -89,6 +97,15 @@
     <div class="row"><button id="done-menu">Menu</button></div>
   </div>
 </div>
+
+<dialog id="erase-dialog" class="card" aria-labelledby="erase-title" aria-describedby="erase-description">
+  <h2 id="erase-title">Erase all progress?</h2>
+  <p id="erase-description">This erases your best times, unlocked looks, settings and saved run on this device. This cannot be undone.</p>
+  <div class="row">
+    <button id="erase-cancel" type="button" autofocus>Cancel</button>
+    <button id="erase-confirm" type="button">Erase all progress</button>
+  </div>
+</dialog>
 
 <div id="selftest" hidden></div>
 <script type="module" src="js/main.js"></script>

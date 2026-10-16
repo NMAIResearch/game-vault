@@ -2,6 +2,7 @@
 import {
   START_R, GROWTH_K, TIERS, TYPES, grow, fits, tierForSize, tierOfObject, tierProgress, captureDistance, pullReach,
   MAPS, generateMap, generateCity, World, Stopwatch, Store, BestTimes, LOOKS, newUnlocks, formatTime, insideSolid,
+  EraseConfirmation, SaveThrottle,
 } from './logic.js';
 import * as THREE from '../three.module.min.js';
 import { ENDGAME_LEFT, CUT_NEAR, SPECK_IN, SPECK_OUT, speckMode, screenSize, viewDistance, depthRange, frameCamera, viewFrustum, shouldDraw, inView } from './view.js';
@@ -190,6 +191,31 @@ function sweepToClear(seed, capSeconds = 900, mapId = 'downtown') {
 }
 
 CHECKS.push(
+  ['erase progress: request and cancel preserve data; only a pending confirmation erases once', () => {
+    let erasures = 0;
+    const progress = { best: 100, looks: ['classic', 'googly'], settings: { music: false }, run: { eaten: [1] } };
+    const before = JSON.stringify(progress);
+    const confirmation = new EraseConfirmation(() => { erasures++; for (const key of Object.keys(progress)) delete progress[key]; });
+    assert(!confirmation.confirm() && erasures === 0, 'unrequested erasure');
+    confirmation.request();
+    assert(JSON.stringify(progress) === before, 'request erased data');
+    confirmation.cancel();
+    assert(!confirmation.confirm() && JSON.stringify(progress) === before, 'cancel did not preserve data');
+    confirmation.request();
+    assert(confirmation.confirm() && erasures === 1 && Object.keys(progress).length === 0, 'confirmed erasure missing');
+    assert(!confirmation.confirm() && erasures === 1, 'duplicate erasure');
+  }],
+  ['run saves: at most once per second during play, with immediate lifecycle flushes', () => {
+    const throttle = new SaveThrottle();
+    assert(throttle.due(0), 'first save missing');
+    for (let now = 1; now < 1000; now++) assert(!throttle.due(now), 'saved too often');
+    assert(throttle.due(1000), 'one-second save missing');
+    assert(throttle.due(1001, true), 'pause/menu/pagehide/hidden flush suppressed');
+    assert(!throttle.due(2000) && throttle.due(2001), 'flush did not reset interval');
+    const blocked = new Store({ setItem() { throw new Error('storage unavailable'); } });
+    assert(!blocked.set('run', {}), 'blocked storage should fail without throwing');
+    assert(!throttle.due(2002), 'storage failure must not cause a frame-by-frame retry');
+  }],
   ['reachability: every object starts inside the play area and outside every building', () => {
     for (const seed of [7, 123, 5]) {
       const map = generateCity(seed), lim = map.edge - 1, top = TIERS[TIERS.length - 1].r;
@@ -338,6 +364,51 @@ for (const id of ['harbour', 'farm', 'fair']) {
     }],
   );
 }
+
+CHECKS.push(
+  ['touch framing: touchBias shifts the hole into the upper half of the screen above the thumb area', () => {
+    const w = new World(generateCity(7));
+    const cam = new THREE.PerspectiveCamera(50, 390 / 844, 0.3, 3000);
+    const dist = viewDistance(w.hole.r, cam.aspect);
+    frameCamera(cam, w.hole, dist, w.map.edge, 'play', 0, 0);
+    const pBase = new THREE.Vector3(w.hole.x, 0, w.hole.z).project(cam);
+    const yBase = (-pBase.y * 0.5 + 0.5) * 844;
+    frameCamera(cam, w.hole, dist, w.map.edge, 'play', 0, 0.16);
+    const pTouch = new THREE.Vector3(w.hole.x, 0, w.hole.z).project(cam);
+    const yTouch = (-pTouch.y * 0.5 + 0.5) * 844;
+    assert(yTouch < yBase - 80, `touch hole y ${yTouch.toFixed(1)} not shifted well above base ${yBase.toFixed(1)}`);
+    assert(yTouch < 844 * 0.45, `touch hole y ${yTouch.toFixed(1)} not in upper half of screen`);
+  }],
+  ['persistence: World.snapshot and World.restore preserve in-progress run state and Store.clear resets it', () => {
+    const mem = new Map();
+    const backend = {
+      getItem: k => mem.get(k) ?? null,
+      setItem: (k, v) => mem.set(k, v),
+      removeItem: k => mem.delete(k),
+      get length() { return mem.size; },
+      key: i => [...mem.keys()][i] ?? null,
+    };
+    const store = new Store(backend);
+    const map = generateMap(7, 'harbour');
+    const w1 = new World(map);
+    for (let i = 0; i < 60; i++) {
+      const t = w1.nearestAlive(true);
+      const dx = t.x - w1.hole.x, dz = t.z - w1.hole.z, d = Math.hypot(dx, dz) || 1;
+      w1.step(1 / 20, dx / d, dz / d);
+    }
+    assert(w1.left < w1.total && w1.hole.r > START_R, 'w1 should have eaten objects');
+    const snap = w1.snapshot({ elapsed: 14.2, eats: w1.total - w1.left });
+    store.set('run', snap);
+    store.set('map', 'harbour');
+    const w2 = new World(generateMap(7, 'harbour'));
+    assert(w2.restore(store.get('run')), 'restore should succeed');
+    assert(w2.left === w1.left, `left mismatch ${w2.left} vs ${w1.left}`);
+    assert(Math.abs(w2.hole.r - w1.hole.r) < 1e-3, 'hole radius mismatch');
+    assert(Math.abs(w2.hole.x - w1.hole.x) < 1e-2 && Math.abs(w2.hole.z - w1.hole.z) < 1e-2, 'hole position mismatch');
+    store.clear();
+    assert(store.get('run') === null && store.get('map') === null, 'Store.clear should remove saved keys');
+  }],
+);
 
 export function runChecks() {
   return CHECKS.map(([name, fn]) => {

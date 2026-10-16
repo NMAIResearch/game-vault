@@ -624,6 +624,55 @@ export class World {
     return best;
   }
   remaining() { return this.objs.filter(o => o.alive); }
+
+  snapshot(extra = {}) {
+    const eaten = [];
+    for (let i = 0; i < this.objs.length; i++) if (!this.objs[i].alive) eaten.push(i);
+    return {
+      map: this.map.id,
+      seed: this.map.seed,
+      x: +this.hole.x.toFixed(3),
+      z: +this.hole.z.toFixed(3),
+      r: +this.hole.r.toFixed(4),
+      tier: this.hole.tier,
+      t: +this.t.toFixed(2),
+      eaten,
+      stats: {
+        people: this.stats.people,
+        cars: this.stats.cars,
+        maxTier: this.stats.maxTier,
+      },
+      ...extra,
+    };
+  }
+
+  restore(snap) {
+    if (!snap || snap.map !== this.map.id || snap.seed !== this.map.seed || !Array.isArray(snap.eaten)) return false;
+    const lim = this.map.edge - 1;
+    if (typeof snap.x === 'number' && isFinite(snap.x)) this.hole.x = Math.max(-lim, Math.min(lim, snap.x));
+    if (typeof snap.z === 'number' && isFinite(snap.z)) this.hole.z = Math.max(-lim, Math.min(lim, snap.z));
+    if (typeof snap.r === 'number' && isFinite(snap.r) && snap.r >= START_R) this.hole.r = snap.r;
+    for (const id of snap.eaten) {
+      const o = this.objs[id];
+      if (!o || !o.alive) continue;
+      o.alive = false;
+      this.grid.remove(o);
+      this.left--;
+      this.stats.byType[o.type]++;
+    }
+    this.hole.tier = 0;
+    while (this.hole.tier < TIERS.length - 1 && this.hole.r >= TIERS[this.hole.tier + 1].r) this.hole.tier++;
+    if (typeof snap.tier === 'number' && snap.tier > this.hole.tier && snap.tier < TIERS.length) this.hole.tier = snap.tier;
+    if (typeof snap.t === 'number' && isFinite(snap.t) && snap.t >= 0) { this.t = snap.t; this.lastEat = snap.t; }
+    if (snap.stats && typeof snap.stats === 'object') {
+      if (typeof snap.stats.people === 'number') this.stats.people = snap.stats.people;
+      if (typeof snap.stats.cars === 'number') this.stats.cars = snap.stats.cars;
+      this.stats.maxTier = Math.max(this.hole.tier, snap.stats.maxTier || 0);
+    } else {
+      this.stats.maxTier = this.hole.tier;
+    }
+    return this.left > 0;
+  }
 }
 
 // ---------------------------------------------------------------- stopwatch, storage, best times, looks
@@ -645,6 +694,27 @@ export function formatTime(sec) {
   return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`;
 }
 
+export class EraseConfirmation {
+  constructor(erase) { this.erase = erase; this.pending = false; }
+  request() { this.pending = true; }
+  cancel() { this.pending = false; }
+  confirm() {
+    if (!this.pending) return false;
+    this.pending = false;
+    this.erase();
+    return true;
+  }
+}
+
+export class SaveThrottle {
+  constructor(interval = 1000) { this.interval = interval; this.last = -Infinity; }
+  due(now, force = false) {
+    if (!force && now - this.last < this.interval) return false;
+    this.last = now;
+    return true;
+  }
+}
+
 // Every storage access sits in try/catch: the game must run when storage is blocked.
 export class Store {
   constructor(backend, prefix = 'snackhole.') {
@@ -658,6 +728,22 @@ export class Store {
   set(key, value) {
     try { if (!this.backend) return false; this.backend.setItem(this.prefix + key, JSON.stringify(value)); return true; }
     catch { return false; }
+  }
+  del(key) {
+    try { if (!this.backend) return false; this.backend.removeItem(this.prefix + key); return true; }
+    catch { return false; }
+  }
+  clear(keep = []) {
+    try {
+      if (!this.backend) return false;
+      const rm = [];
+      for (let i = 0; i < this.backend.length; i++) {
+        const k = this.backend.key(i);
+        if (k && k.startsWith(this.prefix) && !keep.includes(k.slice(this.prefix.length))) rm.push(k);
+      }
+      for (const k of rm) this.backend.removeItem(k);
+      return true;
+    } catch { return false; }
   }
 }
 
@@ -677,6 +763,7 @@ export class BestTimes {
     if (isNew) { const k = this.key(mapId, seed); this.mem[k] = time; this.store.set(k, time); }
     return { prev, best: isNew ? time : prev, isNew, beatPrevious: isNew && prev !== null };
   }
+  clear() { this.mem = {}; }
 }
 
 export const LOOKS = [
