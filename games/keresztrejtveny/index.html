@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Egy kis csend, egy jó rejtvény. Magyar és angol svédrejtvények, rejtett megfejtéssel.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Keresztrejtvény | Game Vault</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="core.js"></script>
+  <script defer src="puzzles.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#grid" data-text="skip">Ugrás a rejtvényhez</a>
+  <div class="page">
+    <header class="masthead">
+      <div class="topline">
+        <a class="vault-link" href="../../index.html">← Game Vault</a>
+        <div class="preferences">
+          <div class="languages" role="group" aria-label="Nyelv / Language">
+            <button id="lang-hu" type="button" lang="hu" aria-pressed="true">Magyar</button>
+            <button id="lang-en" type="button" lang="en" aria-pressed="false">English</button>
+          </div>
+          <button id="theme" type="button" class="theme-button" aria-label="Sötét téma">◐</button>
+        </div>
+      </div>
+      <div class="title-row">
+        <div><p class="eyebrow" data-text="eyebrow">A JÁTÉKOS MELLÉKLET</p><h1 data-text="title">Keresztrejtvény</h1></div>
+        <div class="edition" aria-hidden="true"><span id="edition-label">NAPPALI KIADÁS</span><strong id="edition-number">01</strong></div>
+      </div>
+      <div class="strapline"><p data-text="subtitle">Egy kis csend. Egy jó rejtvény.</p><button id="help-open" type="button" data-text="how">Hogyan játsszak?</button></div>
+    </header>
+    <main id="main">
+      <section class="puzzle-nav" aria-label="Rejtvényválasztó" id="puzzle-nav">
+        <div class="picker"><label for="puzzle" data-text="puzzle">Rejtvény</label><select id="puzzle"></select></div>
+        <button id="previous-puzzle" type="button" class="square-button" aria-label="Előző rejtvény">‹</button>
+        <button id="next-puzzle" type="button" class="square-button" aria-label="Következő rejtvény">›</button>
+      </section>
+      <div class="workspace">
+        <section class="board-panel" aria-label="Rejtvény" id="board-panel">
+          <div class="board-heading"><span id="difficulty" class="eyebrow"></span><span id="progress"></span><button type="button" id="zoom" aria-pressed="false" data-text="zoom">Nagyítás</button></div>
+          <div class="grid-guide" id="grid-guide">
+            <p data-text="guide">Koppints a szürke meghatározásra. A nyíl után írd a választ.</p>
+            <div class="guide-key"><span><i class="sample-clue" aria-hidden="true">→</i><span data-text="guideClue">Meghatározás</span></span><span><i class="sample-letter" aria-hidden="true">A</i><span data-text="guideWrite">Ide írsz</span></span><span><i class="sample-shade" aria-hidden="true">1</i><span data-text="guidePhrase">Megfejtés, számsorrendben</span></span></div>
+          </div>
+          <div class="clue-bar" aria-live="polite" aria-atomic="true">
+            <span id="clue-direction" class="clue-direction" aria-hidden="true">→</span>
+            <div><span id="clue-meta"></span><p id="clue-text"></p></div>
+            <button id="switch-direction" type="button" aria-label="Másik irány" title="Másik irány">↕</button>
+          </div>
+          <div class="grid-scroll" id="grid-scroll"><div id="grid" role="grid" aria-label="Rejtvényrács" aria-describedby="grid-instructions"></div></div>
+          <p id="grid-instructions" class="sr-only" data-text="gridInstructions">A nyilakkal lépkedhetsz. Enter: másik szó a kereszteződésben. Szóköz: következő mező. Tab: kilépés a rácsból.</p>
+          <p id="compose" class="compose" role="status"></p>
+          <p class="pan-hint" data-text="panHint">Húzd a rácsot a többi mezőhöz. A sávban a teljes meghatározás látszik.</p>
+        </section>
+        <div class="solution-wrap">
+          <section class="solution-panel" aria-labelledby="solution-title">
+            <div class="solution-heading"><h2 id="solution-title" data-text="solution">A rejtett megfejtés</h2><span class="number-key" aria-hidden="true">1 2 3 →</span></div>
+            <p id="phrase-hint"></p>
+            <div id="phrase" class="phrase"></div>
+            <p class="fine" data-text="phraseHelp">A számozott, árnyalt mezők betűit olvasd számsorrendben.</p>
+          </section>
+          <section id="solved" class="solved" role="status" aria-live="polite" hidden><h2 data-text="solved">Megfejtetted!</h2><p id="solved-phrase"></p><p id="solved-detail"></p><button id="another" type="button" data-text="another">Jöhet a következő →</button></section>
+        </div>
+        <aside class="tools-panel">
+          <div class="tools-heading"><h2 data-text="yourPencil">A ceruzád mellé</h2><span aria-hidden="true">✎</span></div>
+          <div class="tools">
+            <button type="button" id="check" class="primary" data-text="check">Ellenőrzés</button>
+            <button type="button" id="reveal-letter" data-text="revealLetter">Egy betű</button>
+            <button type="button" id="reveal-word" data-text="revealWord">A teljes szó</button>
+            <button type="button" id="clear-open" data-text="clear">Újrakezdés</button>
+          </div>
+          <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+          <p id="save-status" class="save-status" role="status"></p>
+          <details class="clue-list"><summary data-text="allClues">Minden meghatározás</summary><ol id="clue-list"></ol></details>
+          <div class="pencil-note"><span aria-hidden="true">✦</span><p data-text="note">Nincs időmérő. Csak te, a betűk és egy kis kíváncsiság.</p></div>
+        </aside>
+        <section class="keyboard-panel" aria-label="Képernyő-billentyűzet" id="keyboard-panel">
+          <div class="keyboard-heading"><span data-text="keyboard">Betűk</span><button type="button" id="keyboard-toggle" aria-expanded="true" data-text="hideKeys">Elrejtés</button></div>
+          <div id="keyboard-keys">
+            <div id="keyboard"></div>
+            <details id="multigraphs" class="multigraphs"><summary data-text="multiKeys">CS, GY, SZ… egy mezőbe</summary><div id="multigraph-keys" class="key-row"></div></details>
+            <div class="key-footer"><button type="button" id="previous-word" data-text="prevWord">‹ Előző szó</button><button type="button" id="advance" data-text="advance">Tovább →</button><button type="button" id="next-word" data-text="nextWord">Következő ›</button></div>
+          </div>
+        </section>
+      </div>
+    </main>
+    <footer><span data-text="privacy">A haladásod ezen az eszközön marad.</span><span>Built with GPT-6 Astra (Codex CLI)</span></footer>
+  </div>
+  <dialog id="help" aria-labelledby="help-title">
+    <div class="dialog-top"><h2 id="help-title" data-text="how">Hogyan játsszak?</h2><button type="button" id="help-close" data-text="close">Bezárás</button></div>
+    <ol class="instructions"><li data-text="help1"></li><li data-text="help2"></li><li data-text="help3"></li><li data-text="help4"></li><li data-text="help5"></li></ol>
+    <p class="help-callout" data-text="helpKeyboard"></p>
+    <p class="fine" data-text="helpStorage"></p>
+  </dialog>
+  <dialog id="clear-dialog" aria-labelledby="clear-title"><h2 id="clear-title" data-text="clearTitle">Újrakezded ezt a rejtvényt?</h2><p data-text="clearBody">Csak ennek a rejtvénynek a betűi és segítségjelölései törlődnek. A többi rejtvény megmarad.</p><div class="dialog-actions"><button type="button" id="clear-cancel" autofocus data-text="cancel">Mégse</button><button type="button" id="clear-confirm" class="primary" data-text="clearConfirm">Igen, újrakezdem</button></div></dialog>
+  <noscript><p class="noscript">A játékhoz engedélyezd a JavaScriptet. / Enable JavaScript to play.</p></noscript>
+</body>
+</html>

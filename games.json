@@ -36,5 +36,12 @@
     "vibe": "be a small, hungry black hole: swallow your way through a town, a harbour, a farm and a fairground, growing with every bite",
     "tags": ["arcade", "physics", "casual"],
     "built_with": "Codex (GPT-6 Astra)"
+  },
+  {
+    "id": "keresztrejtveny",
+    "title": "Keresztrejtvény / Arrowwords",
+    "vibe": "a quiet newspaper break: Hungarian and English arrowwords, clues inside the grid and a hidden phrase to uncover",
+    "tags": ["puzzle", "words", "calm"],
+    "built_with": "GPT-6 Astra (Codex CLI)"
   }
 ]
