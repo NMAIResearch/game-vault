@@ -71,7 +71,13 @@ select { width: 100%; min-height: 44px; background: var(--paper); border: 1px so
 .board-heading { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; min-height: 32px; }
 .board-heading .eyebrow { margin-right: auto; }
 #progress { font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-#zoom { padding: 3px 9px; min-height: 32px; font-size: .73rem; }
+.zoom-controls { display: flex; align-items: center; gap: 4px; }
+.zoom-controls button { width: 32px; min-height: 32px; padding: 0; font-size: 20px; }
+#zoom-label { min-width: 68px; text-align: center; font-size: 10px; }
+#play-exit { display: none; }
+.music-title { text-align: right; font: italic .75rem/1.5 var(--serif); padding-top: 3px; }
+.music-credit { flex-basis: 100%; }
+#music[aria-pressed="true"] { background: var(--heading); color: var(--bg); }
 .grid-guide { padding: 10px 0 12px; border-top: 1px solid var(--heading); }
 .grid-guide > p { font: 15px/1.4 var(--serif); }
 .guide-key { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 8px; font-size: 11px; color: var(--muted); }
@@ -86,11 +92,10 @@ select { width: 100%; min-height: 44px; background: var(--paper); border: 1px so
 #clue-meta { display: block; font-size: .68rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: 3px; }
 #clue-text { font: 17px/1.35 var(--serif); }
 #switch-direction { padding: 0; width: 36px; min-height: 38px; flex: 0 0 36px; }
-.grid-scroll { width: 100%; overflow: auto; overscroll-behavior: contain; padding: 2px; border: 1px solid var(--grid-line); background: var(--bg); scrollbar-color: var(--muted) var(--raised); scrollbar-width: auto; }
-#grid { --columns: 11; display: grid; grid-template-columns: repeat(var(--columns), minmax(min-content, 1fr)); width: 100%; border-top: 1px solid var(--grid-line); border-left: 1px solid var(--grid-line); background: var(--grid-line); isolation: isolate; }
-.grid-scroll.zoomed #grid { min-width: 660px; }
+.grid-scroll { width: 100%; overflow: auto; overscroll-behavior: contain; padding: 2px; border: 1px solid var(--grid-line); background: var(--bg); scrollbar-color: var(--muted) var(--raised); scrollbar-width: auto; touch-action: pan-x pan-y; }
+#grid { --columns: 11; --cell-size: 60px; display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); grid-auto-rows: var(--cell-size); width: calc(var(--columns) * var(--cell-size) + 1px); border-top: 1px solid var(--grid-line); border-left: 1px solid var(--grid-line); background: var(--grid-line); isolation: isolate; }
 .grid-row { display: contents; }
-.grid-cell { position: relative; aspect-ratio: 1; align-self: stretch; min-width: 0; min-height: min-content; border-right: 1px solid var(--grid-line); border-bottom: 1px solid var(--grid-line); }
+.grid-cell { position: relative; aspect-ratio: 1; align-self: stretch; min-width: 0; min-height: 0; border-right: 1px solid var(--grid-line); border-bottom: 1px solid var(--grid-line); }
 .grid-cell.block { background: var(--block); }
 .grid-cell.clue { display: grid; z-index: 2; }
 button.letter { position: relative; display: flex; justify-content: center; align-items: center; width: 100%; height: 100%; min-height: 0; padding: 4px 0 0; border: 0; border-radius: 0; line-height: 1; background: var(--answer, var(--paper)); }
@@ -108,22 +113,28 @@ button.letter { position: relative; display: flex; justify-content: center; alig
 .revealed .cell-value { font: 600 27px/1.15 var(--serif); color: var(--answer-revealed, var(--muted)); transform: none; }
 .revealed.multi .cell-value { font-size: 20px; }
 .letter.revealed::after { content: ""; position: absolute; top: 0; right: 0; border-top: 8px solid var(--text); border-left: 8px solid transparent; }
-.clue-cell { display: grid; grid-auto-rows: minmax(min-content, 1fr); }
-button.clue { position: relative; display: flex; align-items: center; justify-content: center; min-height: min-content; min-width: 0; border: 0; border-radius: 0; padding: 3px 5px; background: var(--clue); font: 600 13px/1.3 var(--condensed); text-align: center; overflow: visible; }
+.clue-cell { display: grid; min-width: 0; min-height: 0; grid-auto-rows: minmax(0, 1fr); }
+button.clue { position: relative; display: flex; align-items: center; justify-content: center; min-height: 0; min-width: 0; border: 0; border-radius: 0; padding: 3px 5px; background: var(--clue); font: 600 var(--clue-font-size, 13px)/1.3 var(--condensed); text-align: center; overflow: visible; }
 .clue + .clue { border-top: 1px solid var(--grid-line); }
 .clue-text { display: block; overflow: visible; overflow-wrap: normal; word-break: normal; hyphens: manual; padding-block: .08em; }
 :root[data-theme="dark"] button.clue { box-shadow: inset 0 0 0 1px var(--line); }
 .clue-arrow { position: absolute; z-index: 3; color: var(--arrow); background: currentColor; font-size: 0; pointer-events: none; }
-.clue[data-direction="across"] .clue-arrow { top: calc(50% - 2px); right: -10px; width: 17px; height: 4px; }
-.clue[data-direction="down"] .clue-arrow { left: calc(50% - 2px); bottom: -10px; width: 4px; height: 17px; }
+.clue[data-direction="across"] .clue-arrow { top: calc(50% - 2px); right: -11px; width: 11px; height: 4px; }
+.clue[data-direction="down"] .clue-arrow { left: calc(50% - 2px); bottom: -11px; width: 4px; height: 11px; }
 .clue-arrow::after { content: ""; position: absolute; width: 0; height: 0; border: 6px solid transparent; }
 .clue[data-direction="across"] .clue-arrow::after { right: -6px; top: -4px; border-left-color: currentColor; }
 .clue[data-direction="down"] .clue-arrow::after { bottom: -6px; left: -4px; border-top-color: currentColor; }
 .clue.chosen { background: var(--heading); color: var(--bg); }
 .clue:focus-visible { outline-offset: -3px; z-index: 3; }
-.clue-cell.split .clue { font-size: 11.5px; }
-button.clue[data-direction="across"] { padding-right: 10px; }
-button.clue[data-direction="down"] { padding-bottom: 10px; }
+.clue-cell.split .clue { --clue-font-size: 11.5px; line-height: 1.1; padding: 1px 3px; }
+button.clue[data-direction="across"] { padding-right: 3px; }
+button.clue[data-direction="down"] { padding-bottom: 3px; }
+.grid-scroll[data-zoom="compact"] button.clue { --clue-font-size: 11px; line-height: 1.1; padding: 1px 3px; }
+.grid-scroll[data-zoom="compact"] .split .clue { --clue-font-size: 10px; }
+.grid-scroll[data-clue-text="hidden"] .clue-text { display: none; }
+.grid-scroll[data-zoom="overview"] .cell-value { font-size: clamp(12px, calc(var(--cell-size) * .55), 34px); }
+.grid-scroll[data-zoom="overview"] .multi .cell-value { font-size: clamp(8px, calc(var(--cell-size) * .37), 25px); }
+.grid-scroll[data-zoom="overview"] .cell-number { width: 11px; height: 11px; font-size: 7px; top: 1px; left: 1px; }
 .compose { min-height: 26px; padding: 5px 0 1px; font-size: .71rem; color: var(--muted); }
 .pan-hint { display: none; font-size: .72rem; color: var(--muted); padding: 2px 0; }
 .solution-wrap { grid-area: solution; min-width: 0; }
@@ -189,8 +200,7 @@ dialog::backdrop { background: #161711bb; }
   .page { max-width: 720px; padding: 0 18px; }
   .workspace { grid-template-columns: minmax(0, 1fr); grid-template-areas: "board" "keyboard" "tools" "solution"; grid-template-rows: auto; row-gap: 12px; }
   .clue-bar { position: sticky; top: 0; z-index: 4; margin-bottom: 8px; }
-  .grid-scroll { max-height: min(35svh, 330px); }
-  .grid-scroll:not(.zoomed) { max-height: none; }
+  .grid-scroll { height: min(55svh, 480px); }
   .pan-hint { display: block; }
   .tools-panel { padding-top: 0; }
   .tools-heading, .pencil-note { display: none; }
@@ -230,14 +240,6 @@ dialog::backdrop { background: #161711bb; }
   #clue-text { font-size: 16px; }
   #clue-meta { font-size: .64rem; }
   .clue-direction { font-size: 28px; }
-  .grid-scroll:not(.zoomed) .clue { font-size: 9px; padding: 1px 2px; }
-  .grid-scroll:not(.zoomed) .split .clue { font-size: 8px; }
-  .grid-scroll:not(.zoomed) .clue[data-direction="across"] { padding-right: 8px; }
-  .grid-scroll:not(.zoomed) .clue[data-direction="down"] { padding-bottom: 8px; }
-  .grid-scroll:not(.zoomed) .cell-value { font-size: 23px; }
-  .grid-scroll:not(.zoomed) .multi .cell-value { font-size: 15px; }
-  .grid-scroll:not(.zoomed) .cell-number { width: 11px; height: 11px; font-size: 7px; top: 1px; left: 1px; }
-  .grid-scroll:not(.zoomed) .clue-arrow { transform: scale(.8); }
   h2 { font-size: 1.2rem; }
   .phrase { gap: 9px; margin: 12px 0 8px; }
   .phrase-cell { width: 29px; height: 43px; }
@@ -246,14 +248,54 @@ dialog::backdrop { background: #161711bb; }
   footer { margin-top: 20px; }
   dialog { padding: 18px; }
 }
+@media screen and (max-width: 1100px) {
+  :root[data-playing="true"] body { overflow: hidden; }
+  :root[data-playing="true"] .page { height: 100svh; height: 100dvh; padding: max(4px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); display: flex; flex-direction: column; }
+  :root[data-playing="true"] .masthead,
+  :root[data-playing="true"] .puzzle-nav,
+  :root[data-playing="true"] .grid-guide,
+  :root[data-playing="true"] .pan-hint,
+  :root[data-playing="true"] .tools-panel,
+  :root[data-playing="true"] .solution-wrap,
+  :root[data-playing="true"] footer,
+  :root[data-playing="true"] .keyboard-heading { display: none; }
+  :root[data-playing="true"] #main { flex: 1; min-height: 0; }
+  :root[data-playing="true"] .workspace { height: 100%; grid-template-areas: "board" "keyboard"; grid-template-rows: minmax(0, 1fr) auto; gap: 4px; }
+  :root[data-playing="true"] .board-panel { min-height: 0; height: 100%; display: flex; flex-direction: column; }
+  :root[data-playing="true"] .board-heading { flex: 0 0 32px; margin-bottom: 4px; gap: 5px; }
+  :root[data-playing="true"] #difficulty { display: none; }
+  :root[data-playing="true"] #play-exit { display: block; margin-right: auto; padding: 0 4px; min-height: 32px; font-size: 11px; white-space: nowrap; }
+  :root[data-playing="true"] #progress { font-size: 10px; white-space: nowrap; }
+  :root[data-playing="true"] #zoom-label { min-width: 58px; font-size: 9px; }
+  :root[data-playing="true"] .clue-bar { position: static; flex: 0 0 auto; min-height: 58px; padding: 5px 7px; gap: 6px; margin-bottom: 4px; }
+  :root[data-playing="true"] #clue-meta { font-size: 9px; margin-bottom: 1px; }
+  :root[data-playing="true"] #clue-text { font-size: 14px; line-height: 1.2; }
+  :root[data-playing="true"] .clue-direction { font-size: 24px; }
+  :root[data-playing="true"] #switch-direction { width: 30px; min-height: 32px; flex-basis: 30px; }
+  :root[data-playing="true"] .grid-scroll { flex: 1 1 0; height: auto; min-height: 40svh; min-height: 40dvh; }
+  :root[data-playing="true"] .compose { flex: 0 0 auto; min-height: 18px; padding: 1px 0 0; font-size: 10px; line-height: 1.3; }
+  :root[data-playing="true"] .music-title { flex: 0 0 auto; padding: 0; font-size: 10px; line-height: 1.3; }
+  :root[data-playing="true"] .keyboard-panel { padding: 2px 0 0; align-self: stretch; }
+  :root[data-playing="true"] .key-row { margin: 2px 0; gap: 3px; }
+  :root[data-playing="true"] .key { min-height: 32px; font-size: 13px; }
+  :root[data-playing="true"] .multigraphs summary { min-height: 22px; padding: 1px 0; font-size: 11px; }
+  :root[data-playing="true"] .multigraphs .key { min-height: 28px; font-size: 11px; }
+  :root[data-playing="true"] .key-footer { margin-top: 3px; gap: 4px; }
+  :root[data-playing="true"] .key-footer button { min-height: 30px; padding: 2px; font-size: 11px; }
+}
+@media screen and (max-width: 1100px) and (max-height: 700px) {
+  :root[data-playing="true"] .key { min-height: 30px; }
+  :root[data-playing="true"] .multigraphs .key { min-height: 26px; }
+  :root[data-playing="true"] .key-footer button { min-height: 28px; }
+}
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
 @media print {
   :root, :root[data-theme="dark"] { --bg: #fff; --paper: #fff; --text: #000; --heading: #000; --muted: #333; --grid-line: #000; --clue: #eee; --block: #222; --shade: #ddd; --word: #fff; --active: #fff; --selection: #fff; --ink: #172f4b; --arrow: #000; --answer: #fff; --answer-shade: #ddd; --answer-word: #fff; --answer-active: #fff; --answer-error: #fff0ee; --answer-error-ink: #a11926; --answer-revealed: #333; }
-  .preferences, .tools-panel, .keyboard-panel, .strapline button, footer, #zoom, .pan-hint, .compose { display: none; }
+  .preferences, .tools-panel, .keyboard-panel, .strapline button, footer, .zoom-controls, #play-exit, .pan-hint, .compose { display: none; }
   .workspace { display: block; }
   .page { max-width: 740px; padding: 0; }
-  .grid-scroll { max-height: none; overflow: visible; }
-  .grid-scroll.zoomed #grid { min-width: 0; }
+  .grid-scroll { height: auto; max-height: none; overflow: visible; }
+  #grid { --cell-size: 60px !important; }
   .clue-bar { position: static; }
   .letter.in-word, .letter.selected { box-shadow: none; }
   .clue.chosen { background: var(--clue); color: var(--text); }

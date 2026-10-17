@@ -4,12 +4,22 @@
   const puzzles = window.CROSSWORD_PUZZLES;
   const $ = id => document.getElementById(id);
   const PREFS = C.PREFIX + 'preferences:v1';
+  const ZOOM_KEY = C.PREFIX + 'zoom:v1';
+  const ZOOM_LEVELS = ['overview', 'compact', 'reading'];
+  const PLAYLIST = [
+    { src: 'music/beautiful-interference.mp3', title: 'Beautiful Interference' },
+    { src: 'music/csillagosveny.mp3', title: 'Csillagösvény' },
+    { src: 'music/hangsulyvaltas.mp3', title: 'Hangsúlyváltás' }
+  ];
   const strings = {
     hu: {
       title: 'Keresztrejtvény', eyebrow: 'A JÁTÉKOS MELLÉKLET', edition: 'KIS SZÜNET',
       subtitle: 'Egy kis csend. Egy jó rejtvény.', how: 'Hogyan játsszak?', skip: 'Ugrás a rejtvényhez',
       puzzle: 'Rejtvény', puzzleNav: 'Rejtvényválasztó', previousPuzzle: 'Előző rejtvény', nextPuzzle: 'Következő rejtvény',
-      easy: 'Könnyű', medium: 'Közepes', zoom: 'Olvasóméret', zoomOff: 'Áttekintés',
+      easy: 'Könnyű', medium: 'Közepes', overview: 'Áttekintés', compact: 'Közepes', reading: 'Olvasóméret',
+      zoomOut: 'Kicsinyítés', zoomIn: 'Nagyítás', zoomLabel: 'Rácsméret', backToPage: '← Vissza a laphoz',
+      musicPlay: 'Zene indítása', musicPause: 'Zene szüneteltetése', musicUnavailable: 'A zene most nem játszható le. Újrapróbáláshoz nyomd meg a zenegombot.',
+      musicCredit: 'Zene: az NM AI Research Beautiful Interference, Csillagösvény és Hangsúlyváltás című dalai, Suno standard v6 Pro modellel generálva. A felvételek licence: CC BY-NC 4.0.',
       dayEdition: 'NAPPALI KIADÁS', nightEdition: 'ÉJSZAKAI KIADÁS',
       guide: 'Koppints a szürke meghatározásra. A nyíl után írd a választ.',
       guideClue: 'Meghatározás', guideWrite: 'Ide írsz', guidePhrase: 'Megfejtés, számsorrendben',
@@ -28,7 +38,7 @@
       help2: 'A CS, DZ, DZS, GY, LY, NY, SZ, TY és ZS egy-egy mezőt foglal. Gépeld sorban a betűiket, időkorlát nélkül, vagy használd a külön gombjaikat. Ha egy összetett betű betűit külön mezőbe szánod, nyomj köztük szóközt. Például: S, Z → SZ egy mezőben; S, szóköz, Z → két mező.',
       help3: 'Az ékezetes és ékezet nélküli bevitel is jó: például O helyett Ó, Ö vagy Ő is elfogadható. A megfejtés végén az eredeti írásmódot mutatjuk.',
       help4: 'Az Ellenőrzés felkiáltójellel jelöli a hibás betűket, a helyes választ nem írja be. Az Egy betű és A teljes szó segítséget ad; a megadott mezőket kis sarokjel mutatja. Az Újrakezdés megerősítést kér.',
-      help5: 'A számozott, szürke mezők adják a rejtett kifejezést. Olvasd őket számsorrendben; alul össze is gyűjtjük őket. A játék akkor gratulál, ha a teljes rács helyes. Telefonon nagy mezőkkel indulunk: húzd a rácsot a többi mezőhöz. Az Áttekintés a teljes rácsot mutatja; az Olvasóméret visszanagyítja.',
+      help5: 'A számozott, szürke mezők adják a rejtett kifejezést. Olvasd őket számsorrendben; alul össze is gyűjtjük őket. A játék akkor gratulál, ha a teljes rács helyes. Telefonon egy mezőre koppintva a meghatározás, a rács és a billentyűzet együtt látszik. A Vissza a laphoz gombbal éred el a többi vezérlőt. A − és + gombbal három rácsméret közül választhatsz; a középsővel indulunk. Az Áttekintés az egész rácsot mutatja. Ha a szöveg túl kicsi lenne vagy nem férne el, csak a szürke mező és a nyíl látszik. Koppints rá vagy a szóra: a teljes meghatározás a felső sávban olvasható. A rács húzással mozgatható.',
       helpKeyboard: 'Billentyűzettel: nyilak = mozgás a rácsban; Enter = másik szó a kereszteződésben; szóköz = következő mező; Home / End = a szó eleje / vége; Backspace = törlés; Delete = a kijelölt mező törlése. A Tab szabadon kilép a rácsból. A Minden meghatározás listából is választhatsz szót.',
       helpStorage: 'Automatikus mentés ebben a böngészőben. Másik eszközre nem kerül át. A böngésző adatainak törlése vagy a privát ablak bezárása elveszítheti a mentést. Ha menteni nem tudunk, külön jelezzük; a játék akkor is folytatható.',
       gridInstructions: 'A nyilakkal lépkedhetsz. Enter: másik szó a kereszteződésben. Szóköz: következő mező. Tab: kilépés a rácsból.',
@@ -47,7 +57,10 @@
       title: 'Arrowwords', eyebrow: 'THE PUZZLE SUPPLEMENT', edition: 'A LITTLE PAUSE',
       subtitle: 'A quiet moment. A good puzzle.', how: 'How to play', skip: 'Skip to the puzzle',
       puzzle: 'Puzzle', puzzleNav: 'Choose a puzzle', previousPuzzle: 'Previous puzzle', nextPuzzle: 'Next puzzle',
-      easy: 'Easy', medium: 'Medium', zoom: 'Reading size', zoomOff: 'Overview',
+      easy: 'Easy', medium: 'Medium', overview: 'Overview', compact: 'Compact', reading: 'Reading size',
+      zoomOut: 'Zoom out', zoomIn: 'Zoom in', zoomLabel: 'Grid size', backToPage: '← Back to page',
+      musicPlay: 'Play music', musicPause: 'Pause music', musicUnavailable: 'Music is unavailable. Press the music button to try again.',
+      musicCredit: 'Music: Beautiful Interference, Csillagösvény and Hangsúlyváltás by NM AI Research, generated with Suno standard v6 Pro. Recordings licensed CC BY-NC 4.0.',
       dayEdition: 'DAY EDITION', nightEdition: 'NIGHT EDITION',
       guide: 'Choose a grey clue. Write its answer after the arrow.',
       guideClue: 'Clue', guideWrite: 'Write here', guidePhrase: 'Shaded numbers spell the phrase',
@@ -66,7 +79,7 @@
       help2: 'English puzzles use one letter per cell. Hungarian puzzles also use CS, DZ, DZS, GY, LY, NY, SZ, TY and ZS as single cells. In Hungarian, type those letters in sequence without a time limit, or use their dedicated keys. Use Space between letters that would otherwise combine but belong in separate cells.',
       help3: 'Letters with or without accents count as matches. For example, O, Ó, Ö and Ő are treated alike. The final phrase is shown with its original spelling.',
       help4: 'Check marks incorrect letters with an exclamation mark without entering the answer. Reveal letter and Reveal word add help; small corner marks identify revealed cells. Start again asks for confirmation.',
-      help5: 'The numbered grey cells spell a hidden phrase. Read them in numerical order; we also collect them below the grid. The whole grid must be correct before the puzzle is confirmed. On a phone, cells start large: pan the grid to see more. Overview fits the whole grid; Reading size enlarges it again.',
+      help5: 'The numbered grey cells spell a hidden phrase. Read them in numerical order; we also collect them below the grid. The whole grid must be correct before the puzzle is confirmed. On a phone, tapping a cell brings the clue, grid and keyboard into one view. Back to page returns to the other controls. Use − and + to choose from three grid sizes, starting at Compact. Overview shows the whole grid. If text would be too small or would not fit, the grey clue cell shows only its arrow. Tap it or its word to read the full clue in the bar above. Pan the grid to see more cells.',
       helpKeyboard: 'Keyboard: arrows = move around the grid; Enter = switch word at a crossing; Space = next cell; Home / End = start / end of the word; Backspace = erase; Delete = erase the selected cell. Tab leaves the grid freely. You can also select a word from All the clues.',
       helpStorage: 'Progress saves automatically in this browser. It does not move between devices. Clearing browser data or closing a private window may remove saves. If saving is unavailable, we show a warning; you can still play.',
       gridInstructions: 'Use arrow keys to move. Enter switches word at a crossing. Space moves to the next cell. Tab leaves the grid.',
@@ -93,7 +106,12 @@
   let game, currentLanguage = prefs.language, nodes = [], phraseNodes = [], clueNodes = [], listNodes = [];
   let keysVisible = true, saveOK = prefRead.ok, completedBefore = false;
   const smallScreen = window.matchMedia('(max-width: 1100px)');
-  if (smallScreen.matches) $('grid-scroll').classList.add('zoomed');
+  const zoomRead = C.readStorage(storage, ZOOM_KEY);
+  let zoom = ZOOM_LEVELS.includes(zoomRead.value) ? zoomRead.value : smallScreen.matches ? 'compact' : 'reading';
+  let playing = false;
+  const player = $('music-player');
+  let musicWanted = false, musicPlaying = false, musicIndex = 0, musicAttempt = 0, musicUnavailable = false;
+  const failedTracks = new Set();
   const t = key => strings[currentLanguage][key];
   const text = (node, value) => { if (node.textContent !== value) node.textContent = value; };
   function notice(message, error = false) { text($('feedback'), message); $('feedback').classList.toggle('error', error); }
@@ -122,8 +140,7 @@
     $('switch-direction').title = t('switchDirection');
     $('multigraphs').hidden = currentLanguage !== 'hu';
     text($('keyboard-toggle'), t(keysVisible ? 'hideKeys' : 'showKeys'));
-    text($('zoom'), t($('grid-scroll').classList.contains('zoomed') ? 'zoomOff' : 'zoom'));
-    $('zoom').setAttribute('aria-pressed', String($('grid-scroll').classList.contains('zoomed')));
+    zoomLabels(); musicLabels();
     applyTheme();
   }
   function loadPuzzle(id, language = currentLanguage) {
@@ -146,10 +163,111 @@
     text($('difficulty'), t(puzzle.difficulty));
     text($('phrase-hint'), puzzle.hint);
     buildGrid(); buildPhrase(); buildKeyboard(); buildClueList();
-    render(); keepCellInView();
+    render(); sizeGrid(); keepCellInView();
     notice(!saved.ok && saved.reason === 'corrupt' || game.restoreStatus === 'invalid' ? t('corrupt') : t('intro'));
     save(); savePrefs();
   }
+  function zoomLabels() {
+    const at = ZOOM_LEVELS.indexOf(zoom);
+    $('grid-scroll').dataset.zoom = zoom;
+    $('zoom-out').disabled = at === 0;
+    $('zoom-in').disabled = at === ZOOM_LEVELS.length - 1;
+    $('zoom-controls').setAttribute('aria-label', t('zoomLabel'));
+    for (const [id, label] of [['zoom-out', 'zoomOut'], ['zoom-in', 'zoomIn']]) {
+      $(id).setAttribute('aria-label', t(label)); $(id).title = t(label);
+    }
+    text($('zoom-label'), t(zoom));
+  }
+  function sizeGrid() {
+    if (!game) return;
+    const scroll = $('grid-scroll'), p = game.puzzle;
+    const width = Math.max(1, scroll.clientWidth - 5);
+    const fit = Math.min(width / p.width, smallScreen.matches ? Math.max(1, scroll.clientHeight - 5) / p.height : Infinity);
+    const cell = zoom === 'overview' ? Math.min(42, fit) : zoom === 'compact' ? 54 : Math.max(60, smallScreen.matches ? 60 : width / p.width);
+    $('grid').style.setProperty('--cell-size', cell + 'px');
+    scroll.dataset.clueText = cell < 48 ? 'hidden' : 'fit';
+    for (const button of clueNodes) {
+      const label = button.querySelector('.clue-text');
+      label.hidden = cell < 48;
+      if (label.hidden) continue;
+      const split = button.parentElement.classList.contains('split');
+      let font = zoom === 'compact' ? (split ? 10 : 11) : (split ? 11.5 : 13);
+      button.style.setProperty('--clue-font-size', font + 'px');
+      // Measure visible type with the current font, including its authored optional hyphens.
+      const fits = () => {
+        const b = button.getBoundingClientRect(), r = label.getBoundingClientRect();
+        return label.scrollWidth <= label.clientWidth + 0.5 && label.scrollHeight <= label.clientHeight + 0.5 &&
+          r.left >= b.left + 1 && r.right <= b.right - 1 && r.top >= b.top + 0.5 && r.bottom <= b.bottom - 0.5;
+      };
+      while (!fits() && font > 10) { font = Math.max(10, font - 0.5); button.style.setProperty('--clue-font-size', font + 'px'); }
+      label.hidden = !fits();
+    }
+  }
+  function changeZoom(step) {
+    const at = ZOOM_LEVELS.indexOf(zoom), next = Math.max(0, Math.min(ZOOM_LEVELS.length - 1, at + step));
+    if (next === at) return;
+    zoom = ZOOM_LEVELS[next]; zoomLabels(); sizeGrid(); keepCellInView();
+    if (!C.writeStorage(storage, ZOOM_KEY, zoom)) { saveOK = false; saveStatus(); }
+  }
+  function setKeys(visible) {
+    keysVisible = visible; $('keyboard-keys').hidden = !visible;
+    $('keyboard-toggle').setAttribute('aria-expanded', String(visible));
+    text($('keyboard-toggle'), t(visible ? 'hideKeys' : 'showKeys'));
+  }
+  function playView(active) {
+    const next = active && smallScreen.matches, changed = next !== playing;
+    playing = next;
+    document.documentElement.dataset.playing = String(playing);
+    if (playing) { setKeys(true); if (changed) window.scrollTo(0, 0); }
+    if (changed) sizeGrid();
+  }
+  function musicLabels() {
+    $('music').setAttribute('aria-pressed', String(musicWanted));
+    $('music').setAttribute('aria-label', t(musicWanted ? 'musicPause' : 'musicPlay'));
+    $('music').title = t(musicWanted ? 'musicPause' : 'musicPlay');
+    $('music-title').hidden = !musicPlaying;
+    text($('music-title'), musicPlaying ? PLAYLIST[musicIndex].title : '');
+    text($('music-status'), musicUnavailable ? t('musicUnavailable') : '');
+  }
+  function stopMusic(unavailable = false) {
+    musicAttempt++; musicWanted = false; musicPlaying = false; musicUnavailable = unavailable;
+    player.pause(); musicLabels();
+  }
+  function nextTrack() {
+    for (let step = 1; step <= PLAYLIST.length; step++) {
+      const next = (musicIndex + step) % PLAYLIST.length;
+      if (!failedTracks.has(next)) { musicIndex = next; playMusic(); return; }
+    }
+    stopMusic(true);
+  }
+  function trackFailed(attempt) {
+    if (!musicWanted || attempt !== musicAttempt || failedTracks.has(musicIndex)) return;
+    failedTracks.add(musicIndex); nextTrack();
+  }
+  function playMusic() {
+    const attempt = ++musicAttempt;
+    musicPlaying = false; musicLabels();
+    // Assign a source only after a user has requested playback.
+    if (player.getAttribute('src') !== PLAYLIST[musicIndex].src) player.src = PLAYLIST[musicIndex].src;
+    const rejected = error => {
+      if (!musicWanted || attempt !== musicAttempt) return;
+      if (error?.name === 'NotAllowedError' || error?.name === 'AbortError') stopMusic(true);
+      else trackFailed(attempt);
+    };
+    try { const pending = player.play(); if (pending) pending.catch(rejected); } catch (error) { rejected(error); }
+  }
+  $('music').addEventListener('click', () => {
+    if (musicWanted) { stopMusic(); return; }
+    if (failedTracks.size === PLAYLIST.length) { failedTracks.clear(); musicIndex = 0; }
+    musicWanted = true; musicUnavailable = false; playMusic();
+  });
+  player.addEventListener('playing', () => {
+    if (!musicWanted) { player.pause(); return; }
+    musicPlaying = true; musicLabels();
+  });
+  player.addEventListener('pause', () => { musicPlaying = false; musicLabels(); });
+  player.addEventListener('ended', () => { if (musicWanted) nextTrack(); });
+  player.addEventListener('error', () => { if (player.error) trackFailed(musicAttempt); });
   function cellLabel(i) {
     const p = game.puzzle, c = p.cells[i];
     const parts = [t('row') + ' ' + (Math.floor(i / p.width) + 1), t('column') + ' ' + (i % p.width + 1), game.values[i] || t('empty')];
@@ -274,7 +392,7 @@
     if (complete) {
       text($('solved-phrase'), p.phrase);
       text($('solved-detail'), t('confirmed') + ' ' + (game.revealed.size ? t('hintsUsed') + ': ' + game.revealed.size + '.' : t('noHints')));
-      if (!completedBefore) notice(t('allCorrect'));
+      if (!completedBefore) { notice(t('allCorrect')); playView(false); }
     }
     completedBefore = complete;
   }
@@ -285,11 +403,12 @@
     if (box.top < bounds.top) scroll.scrollTop -= bounds.top - box.top + 4;
     else if (box.bottom > bounds.bottom) scroll.scrollTop += box.bottom - bounds.bottom + 4;
   }
-  function focusCell() {
+  function focusCell(enterPlay = true) {
+    if (enterPlay && !game.complete) playView(true);
     nodes[game.cell].button.focus({ preventScroll: true });
     keepCellInView();
   }
-  function act(fn, message = '') { fn(); notice(message); render(); save(); focusCell(); }
+  function act(fn, message = '', enterPlay = true) { fn(); notice(message); render(); save(); focusCell(enterPlay); }
   function chooseEntry(id) { act(() => game.select(id)); }
   function changePuzzle(step) {
     const group = puzzles.filter(p => p.lang === currentLanguage), index = group.findIndex(p => p.id === game.puzzle.id);
@@ -336,10 +455,10 @@
     notice(result.complete ? t('allCorrect') : result.wrong
       ? t('wrongCount') + ': ' + result.wrong + '. ' + t('emptyCount') + ': ' + result.empty + '.'
       : t('noErrors') + ' ' + t('emptyCount') + ': ' + result.empty + '.', result.wrong > 0);
-    render(); save(); focusCell();
+    render(); save(); focusCell(false);
   });
-  $('reveal-letter').addEventListener('click', () => act(() => game.reveal(), t('letterGiven')));
-  $('reveal-word').addEventListener('click', () => act(() => game.reveal('word'), t('wordGiven')));
+  $('reveal-letter').addEventListener('click', () => act(() => game.reveal(), t('letterGiven'), false));
+  $('reveal-word').addEventListener('click', () => act(() => game.reveal('word'), t('wordGiven'), false));
   $('switch-direction').addEventListener('click', () => act(() => game.selectCell(game.cell, undefined, true)));
   $('advance').addEventListener('click', () => act(() => game.move(1)));
   $('previous-word').addEventListener('click', () => act(() => game.nextWord(-1)));
@@ -356,15 +475,22 @@
   $('help-close').addEventListener('click', () => $('help').close());
   $('clear-open').addEventListener('click', () => $('clear-dialog').showModal());
   $('clear-cancel').addEventListener('click', () => $('clear-dialog').close());
-  $('clear-confirm').addEventListener('click', () => { $('clear-dialog').close(); act(() => game.clear(), t('cleared')); });
-  $('zoom').addEventListener('click', () => {
-    const zoomed = $('grid-scroll').classList.toggle('zoomed'); $('zoom').setAttribute('aria-pressed', String(zoomed)); text($('zoom'), t(zoomed ? 'zoomOff' : 'zoom'));
-    keepCellInView();
+  $('clear-confirm').addEventListener('click', () => { $('clear-dialog').close(); act(() => game.clear(), t('cleared'), false); });
+  $('zoom-out').addEventListener('click', () => changeZoom(-1));
+  $('zoom-in').addEventListener('click', () => changeZoom(1));
+  $('play-exit').addEventListener('click', () => { playView(false); $('puzzle').focus({ preventScroll: true }); });
+  $('keyboard-toggle').addEventListener('click', () => { setKeys(!keysVisible); sizeGrid(); });
+  $('multigraphs').addEventListener('toggle', () => { sizeGrid(); keepCellInView(); });
+  document.querySelector('.skip').addEventListener('click', event => {
+    event.preventDefault(); focusCell();
+    if (!playing) $('grid-scroll').scrollIntoView({ block: 'center' });
   });
-  $('keyboard-toggle').addEventListener('click', () => {
-    keysVisible = !keysVisible; $('keyboard-keys').hidden = !keysVisible;
-    $('keyboard-toggle').setAttribute('aria-expanded', String(keysVisible)); text($('keyboard-toggle'), t(keysVisible ? 'hideKeys' : 'showKeys'));
-  });
-  document.querySelector('.skip').addEventListener('click', event => { event.preventDefault(); focusCell(); $('grid-scroll').scrollIntoView({ block: 'center' }); });
+  const resized = () => {
+    if (!smallScreen.matches) playView(false);
+    sizeGrid(); keepCellInView();
+  };
+  window.addEventListener('resize', resized);
+  if (window.ResizeObserver) new ResizeObserver(() => { sizeGrid(); keepCellInView(); }).observe($('grid-scroll'));
+  document.fonts?.ready.then(() => { sizeGrid(); keepCellInView(); });
   loadPuzzle(prefs.last[currentLanguage]);
 })();
