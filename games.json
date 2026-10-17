@@ -43,5 +43,12 @@
     "vibe": "a quiet newspaper break: Hungarian and English arrowwords, clues inside the grid and a hidden phrase to uncover",
     "tags": ["puzzle", "words", "calm"],
     "built_with": "GPT-6 Astra (Codex CLI)"
+  },
+  {
+    "id": "szokereso",
+    "title": "Szókereső / Word Search",
+    "vibe": "a newspaper pause: find the Hungarian or English words, then read a hidden message in the letters left behind",
+    "tags": ["puzzle", "words", "calm"],
+    "built_with": "GPT-6.1 Sol (Codex CLI)"
   }
 ]

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Magyar és angol szókeresők, egy rejtett mondattal a sorok között.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; font-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Szókereső | Game Vault</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="core.js"></script>
+  <script defer src="puzzles.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#grid" data-text="skip">Ugrás a rejtvényhez</a>
+  <div class="page">
+    <header class="masthead">
+      <div class="topline">
+        <a class="vault-link" href="../../index.html">← Game Vault</a>
+        <div class="preferences">
+          <div class="languages" role="group" aria-label="Nyelv / Language">
+            <button id="lang-hu" type="button" lang="hu" aria-pressed="true">Magyar</button>
+            <button id="lang-en" type="button" lang="en" aria-pressed="false">English</button>
+          </div>
+          <button id="theme" class="theme-button" type="button" aria-label="Éjszakai kiadás">◐</button>
+        </div>
+      </div>
+      <div class="title-row">
+        <div><p class="eyebrow" data-text="eyebrow">A JÁTÉKOS MELLÉKLET</p><h1 data-text="title">Szókereső</h1></div>
+        <div class="edition"><span id="edition-label">NAPPALI KIADÁS</span><strong id="edition-number" aria-hidden="true">01</strong></div>
+      </div>
+      <div class="strapline"><p data-text="subtitle">Szavak között egy rejtett mondat.</p><button id="help-open" type="button" data-text="how">Útmutató</button></div>
+    </header>
+    <main>
+      <nav class="puzzle-nav" id="puzzle-nav" aria-label="Rejtvényválasztó">
+        <label class="sr-only" for="puzzle" data-text="puzzle">Rejtvény</label>
+        <select id="puzzle"></select>
+        <button id="previous-puzzle" class="square-button" type="button" aria-label="Előző rejtvény">‹</button>
+        <button id="next-puzzle" class="square-button" type="button" aria-label="Következő rejtvény">›</button>
+      </nav>
+      <div class="workspace">
+        <section class="board-panel" aria-label="Szókereső" id="board-panel">
+          <div class="board-heading"><span id="difficulty" class="eyebrow"></span><span id="progress"></span></div>
+          <p id="directions" class="directions"></p>
+          <div class="board" id="board">
+            <div id="grid" role="grid" aria-label="Betűrács" aria-describedby="grid-instructions"></div>
+            <svg id="marks" aria-hidden="true" focusable="false"></svg>
+          </div>
+          <p id="grid-instructions" class="sr-only" data-text="keyboardHelp"></p>
+          <p class="gesture-hint" data-text="gesture">Húzd végig, vagy koppints a szó két végére.</p>
+        </section>
+        <aside class="word-panel" aria-labelledby="words-title">
+          <div class="section-heading"><h2 id="words-title" data-text="words">Keresd meg!</h2><span aria-hidden="true">✎</span></div>
+          <ul id="word-list" class="word-list"></ul>
+          <p id="feedback" class="feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+          <div class="actions"><button id="reset-open" type="button" data-text="reset">Újrakezdés</button><button id="cancel-selection" type="button" data-text="cancelSelection" hidden>Kijelölés elvetése</button></div>
+          <p id="save-status" class="save-status" role="status"></p>
+          <p class="pencil-note" data-text="note">Egy ceruzányi figyelem, egy mondatnyi meglepetés.</p>
+        </aside>
+        <section class="solution-panel" aria-labelledby="solution-title">
+          <div class="section-heading"><h2 id="solution-title" data-text="solution">Megfejtés</h2><span aria-hidden="true">↳</span></div>
+          <p id="solution-instruction" data-text="solutionHelp">A megmaradó betűk soronként, balról jobbra adják a megfejtést.</p>
+          <div id="solution-result" hidden role="status" aria-live="polite"><p data-text="solved">Minden szó megvan!</p><p id="solution-phrase"></p><button id="another" type="button" data-text="another">Következő rejtvény →</button></div>
+        </section>
+      </div>
+    </main>
+    <footer><span data-text="privacy">A haladásod ezen az eszközön marad.</span><span>Built with GPT-6.1 Sol (Codex CLI)</span></footer>
+  </div>
+  <dialog id="help" aria-labelledby="help-title">
+    <div class="dialog-top"><h2 id="help-title" data-text="how">Útmutató</h2><button id="help-close" type="button" data-text="close">Bezárás</button></div>
+    <ol class="instructions"><li data-text="help1"></li><li data-text="help2"></li><li data-text="help3"></li><li data-text="help4"></li></ol>
+    <p class="help-callout" data-text="keyboardHelp"></p><p class="fine" data-text="storageHelp"></p>
+  </dialog>
+  <dialog id="reset-dialog" aria-labelledby="reset-title"><h2 id="reset-title" data-text="resetTitle">Újrakezded ezt a rejtvényt?</h2><p data-text="resetBody">Csak ennek a rejtvénynek a jelölései törlődnek. A többi rejtvény megmarad.</p><div class="dialog-actions"><button id="reset-cancel" type="button" autofocus data-text="cancel">Mégse</button><button id="reset-confirm" class="primary" type="button" data-text="resetConfirm">Igen, újrakezdem</button></div></dialog>
+  <noscript><p class="noscript">A játékhoz engedélyezd a JavaScriptet. / Enable JavaScript to play.</p></noscript>
+</body>
+</html>
