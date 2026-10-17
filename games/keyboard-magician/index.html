@@ -108,9 +108,10 @@
       <label class="opt">Speed <input type="range" id="optSpeed" min="1" max="5" step="1"> <output id="speedOut"></output></label>
       <label class="opt">Volume <input type="range" id="optVol" min="0" max="100" step="5"> <output id="volOut"></output></label>
       <label class="opt">Bass <input type="range" id="optBass" min="0" max="12" step="1"> <output id="bassOut"></output></label>
-      <label class="opt">Timing <input type="range" id="optOffset" min="-300" max="300" step="5"> <output id="offsetOut"></output></label>
+      <label class="opt">Audio offset <input type="range" id="optOffset" min="-300" max="300" step="1"> <output id="offsetOut"></output></label>
     </div>
-    <div class="buttons"><button type="button" class="btn" id="calibrateBtn">Calibrate timing</button></div>
+    <div class="buttons"><button type="button" class="btn" id="calibrateBtn">Calibrate timing</button><button type="button" class="btn" id="resetTiming">Reset timing</button></div>
+    <p class="note">Positive offset corrects presses that register late. Saved in this browser; recalibrate when changing headphones or speakers.</p>
     <div class="start">
       <div id="bestLine" class="best" aria-live="polite"></div>
       <button type="button" class="btn primary" id="playBtn">Play</button>
@@ -126,8 +127,8 @@
 <div id="calibration" class="overlay" hidden>
   <div class="panel small" role="dialog" aria-labelledby="calTitle">
     <h2 id="calTitle">Find your timing</h2>
-    <p class="note">Listen to four clicks, then tap with each click. Use Space or the button below. Follow the sound, not the screen.</p>
-    <p class="note">This estimates your personal timing offset. Keep the same headphones or speakers when playing. You can fine-tune it with the Timing slider.</p>
+    <p class="note">Tap with each click using Space or the button below. The first four taps are a warm-up, then keep tapping until the sound stops. Follow the sound.</p>
+    <p class="note">This estimates your personal timing offset. Keep the same headphones or speakers when playing. You can fine-tune it with the Audio offset slider.</p>
     <p id="calStatus" aria-live="polite">Ready</p>
     <button type="button" class="btn primary" id="calTap" style="min-height:90px;width:100%;touch-action:none">Tap with the click</button>
     <div class="buttons">
@@ -159,6 +160,7 @@
     <div class="buttons">
       <button type="button" class="btn primary" id="againBtn">Play again</button>
       <button type="button" class="btn" id="tracksBtn">Tracks</button>
+      <button type="button" class="btn" id="usePlayTiming" disabled>Set offset from this play</button>
     </div>
     <p class="note keys-only"><kbd>R</kbd> plays again, <kbd>Esc</kbd> returns to the tracks.</p>
   </div>
@@ -372,7 +374,6 @@ if (TEST) SONGS.push({
 
 /* ---------- charts ---------- */
 
-const { okay: W_OK, good: W_GOOD, excellent: W_EXC } = KM_CORE.WINDOWS;
 function makeChart(song, built, mode, diff) {
   return KM_CORE.chart(song, built, mode, diff, song.track ? window.KM_TIMINGS[song.id] : null);
 }
@@ -383,6 +384,13 @@ let ctx = null, master = null, shelf = null, noise = null;
 function audioInit() {
   if (ctx) return;
   ctx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: "interactive" });
+  ctx.addEventListener("statechange", () => {
+    KM_CORE.resetClock(ctx, performance.now()); lastT = null;
+    if (ctx.state !== "running") {
+      if (calibration) closeCalibration();
+      if (run && !run.paused && !run.ended) togglePause();
+    }
+  });
   const comp = ctx.createDynamicsCompressor();
   comp.threshold.value = -18; comp.ratio.value = 3; comp.attack.value = 0.01; comp.release.value = 0.25;
   master = ctx.createGain(); master.gain.value = settings.vol / 100;
@@ -587,10 +595,12 @@ function drumEvents(song, built) {
 const STORE = "midnight-strings";
 const defaults = { song: "canon", mode: "jam", diff: "normal", beat: false, guide: true, speed: 3, vol: 80, bass: 6, offset: 0 };
 const settings = Object.assign({}, defaults, read(STORE + ":settings"));
+settings.offset = Number.isFinite(settings.offset) ? Math.max(-300, Math.min(300, settings.offset)) : 0;
 function read(key) { try { return JSON.parse(localStorage.getItem(key) || "null") || {}; } catch (e) { return {}; } }
 function write(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {} }
 const best = read(STORE + ":best");
-const bestKey = () => `beat-grid-v2|${settings.song}|${settings.mode}|${settings.diff}`;
+const SCORE_VERSION = "audio-grid-v3";
+const bestKey = () => `${SCORE_VERSION}|${settings.song}|${settings.mode}|${settings.diff}`;
 const LEADS = [2.6, 2.2, 1.8, 1.5, 1.25];
 const leadTime = () => LEADS[settings.speed - 1] || 1.8;
 
@@ -629,9 +639,10 @@ async function startRun() {
     const guideBus = ctx.createGain(); guideBus.gain.value = saved.vol / 100; guideBus.connect(ctx.destination);
     events.sort((a, b) => a.t - b.t);
     run = {
-      beats, guideBus, song, mode: saved.mode, diff: saved.diff, scoreKey: `beat-grid-v2|${song.id}|${saved.mode}|${saved.diff}`, spb, chart, bus, events, ei: 0, length: recording ? window.KM_TIMINGS[song.id].duration : built.beats * spb,
+      beats, guideBus, song, mode: saved.mode, diff: saved.diff, scoreKey: `${SCORE_VERSION}|${song.id}|${saved.mode}|${saved.diff}`, spb, chart, bus, events, ei: 0, length: recording ? window.KM_TIMINGS[song.id].duration : built.beats * spb,
       startAt: ctx.currentTime + Math.max(LEAD_IN, leadTime() + 0.3), next: 0, held: new Array(6).fill(false), holds: [],
-      score: 0, streak: 0, maxStreak: 0, breaks: 0, counts: { Excellent: 0, Good: 0, Okay: 0, Miss: 0 }, weight: 0, judged: 0,
+      score: 0, streak: 0, maxStreak: 0, breaks: 0, counts: { Perfect: 0, Great: 0, Good: 0, Okay: 0, Miss: 0 }, weight: 0, judged: 0,
+      audioOffset: saved.offset,
       paused: false, ended: false, judge: null, strumFlash: 0, grace: null, timingErrors: [], droppedHolds: 0, laneFeedback: new Array(6).fill(null),
       voices: samplesOK ? Object.assign({}, DEFAULT_VOICES, song.voices || {}) : {}
     };
@@ -643,6 +654,7 @@ async function startRun() {
       src.connect(gain); gain.connect(ctx.destination); src.start(run.startAt + Math.max(0, -skip), Math.max(0, skip));
       run.recording = { src, gain };
     }
+    KM_CORE.resetClock(ctx, performance.now());
     pointers.clear(); keyboardHeld.clear(); fx.length = 0; lastT = null; layout();
     schedTimer = setInterval(schedule, 25); schedule();
     showOnly(null);
@@ -663,11 +675,15 @@ function schedule() {
     if (e.drum) INST[e.inst](run.bus, at, e.vel); else play(e.inst, run.bus, at, e.dur, e.f, e.vel);
   }
 }
-function songTime(stamp) {
-  if (!run || !ctx) return 0;
-  if (run.paused) return run.pauseTime;
+function heardTime(stamp) {
   const now = performance.now();
-  return KM_CORE.audibleTime(ctx, now) - (now - KM_CORE.eventNow(stamp, now)) / 1000 - run.startAt - settings.offset / 1000;
+  return KM_CORE.audibleTime(ctx, KM_CORE.eventNow(stamp, now, performance.timeOrigin), now);
+}
+function songTime(stamp, calibrated = true) {
+  if (!run || !ctx) return 0;
+  const offset = (run.audioOffset ?? settings.offset) / 1000;
+  if (run.paused) return run.pauseTime + (calibrated ? 0 : offset);
+  return heardTime(stamp) - run.startAt - (calibrated ? offset : 0);
 }
 function stopRun(immediate) {
   if (!run) return;
@@ -690,13 +706,14 @@ const accuracy = () => (run && run.judged ? run.weight / run.judged : 1);
 
 function hit(n, T) {
   if (n.state !== 0) return;
-  const d = T - n.t, j = KM_CORE.judgement(d);
+  const d = T - n.t, j = KM_CORE.judgement(d, run.diff);
   if (!j) return;
   run.timingErrors.push(d);
   n.state = 1; run.counts[j]++; run.judged++;
-  run.weight += j === "Excellent" ? 1 : j === "Good" ? 0.7 : 0.4;
+  const weight = { Perfect: 1, Great: .85, Good: .7, Okay: .4 }[j];
+  run.weight += weight;
   run.streak++; run.maxStreak = Math.max(run.maxStreak, run.streak);
-  run.score += (j === "Excellent" ? 100 : j === "Good" ? 70 : 40) * multiplier() * n.lanes.length;
+  run.score += weight * 100 * multiplier() * n.lanes.length;
   if (run.recording) feedbackSound(true);
   else play("pluck", run.bus, ctx.currentTime + 0.002, Math.max(0.3, n.end - n.t), hz(n.pitch), 0.95);
   if (n.hold) { n.sus = run.recording ? { stop() {} } : sustain(run.bus, hz(n.pitch)); n.scoredUntil = Math.max(n.t, T); run.holds.push(n); }
@@ -712,7 +729,7 @@ function miss(n) {
   run.streak = 0;
   run.judge = { text: "Miss", t0: performance.now(), late: "" };
 }
-function pending(lane, T) { return KM_CORE.nearest(run.chart, run.next, lane, T); }
+function pending(lane, T) { return KM_CORE.nearest(run.chart, run.next, lane, T, run.diff); }
 // Quiet neutral feedback avoids adding an unverified melody to a recording.
 function feedbackSound(ok) {
   const now = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
@@ -751,7 +768,7 @@ function update(T, dt) {
   graceCheck(T);
   for (let i = run.next; i < chart.length; i++) {
     const n = chart[i];
-    if (n.t > T - W_OK) break;
+    if (T - n.t <= KM_CORE.lastWindow(run.diff) + 1e-9) break;
     if (n.state === 0 && !(run.grace && run.grace.n === n && T - run.grace.T <= GRACE)) miss(n);
   }
   while (run.next < chart.length && chart[run.next].state !== 0) run.next++;
@@ -787,9 +804,17 @@ function finish() {
   $("#resStars").setAttribute("aria-label", `${stars} of 5 stars`);
   $("#resBest").textContent = isBest ? "New best for this track, mode and difficulty" : `Best: ${prev.score.toLocaleString("en-GB")}`;
   const full = r.counts.Miss === 0 && r.breaks === 0;
+  const timing = KM_CORE.timingStats(r.timingErrors);
+  r.playOffset = timing && timing.count >= 50 && timing.spread <= .045
+    ? Math.round((r.audioOffset ?? settings.offset) + timing.median * 1000) : null;
+  if (r.playOffset !== null && Math.abs(r.playOffset) > 300) r.playOffset = null;
+  $("#usePlayTiming").disabled = r.playOffset === null;
+  $("#usePlayTiming").textContent = "Set offset from this play";
   const stats = [
     [Math.round(r.score).toLocaleString("en-GB"), "Score"], [(acc * 100).toFixed(1) + "%", "Accuracy"], [r.maxStreak, full ? "Streak, full combo" : "Best streak"],
-    [r.counts.Excellent, "Excellent"], [r.counts.Good, "Good"], [r.counts.Okay, "Okay"], [r.counts.Miss, "Missed"], [r.droppedHolds, "Released holds"], [r.timingErrors.length ? Math.round(r.timingErrors.reduce((a, b) => a + b, 0) / r.timingErrors.length * 1000) + " ms" : "No hits", "Mean timing (+ late)"]
+    [r.counts.Perfect, "Perfect"], [r.counts.Great, "Great"], [r.counts.Good, "Good"], [r.counts.Okay, "Okay"], [r.counts.Miss, "Missed"], [r.droppedHolds, "Released holds"],
+    [timing ? Math.round(timing.mean * 1000) + " ms" : "No hits", "Mean timing (+ late)"],
+    [timing ? Math.round(timing.spread * 1000) + " ms" : "No hits", "Timing spread (SD)"], [r.timingErrors.length, "Hits measured"]
   ];
   $("#resStats").replaceChildren(...stats.map(([v, l]) => { const d = document.createElement("div"); d.className = "stat"; const b = document.createElement("b"); b.textContent = v; const s = document.createElement("span"); s.textContent = l; d.append(b, s); return d; }));
   showOnly("#results");
@@ -803,6 +828,7 @@ async function togglePause() {
     if (active.paused) {
       await ctx.resume();
       if (run !== active) return;
+      KM_CORE.resetClock(ctx, performance.now());
       active.paused = false; active.regripUntil = songTime() + 0.25;
       for (const h of active.holds) h.sus = active.recording ? { stop() {} } : sustain(active.bus, hz(h.pitch));
       showOnly(null); lastT = null;
@@ -811,6 +837,7 @@ async function togglePause() {
       active.pauseTime = songTime(); active.paused = true;
       await ctx.suspend();
       if (run !== active) return;
+      KM_CORE.resetClock(ctx, performance.now());
       for (const h of active.holds) h.sus.stop();
       active.held.fill(false); active.grace = null; pointers.clear(); keyboardHeld.clear();
       showOnly("#pause"); $("#resumeBtn").focus();
@@ -917,7 +944,12 @@ function syncBeatPads() {
   }
   syncHeldPads();
 }
-document.addEventListener("visibilitychange", () => { if (document.hidden && calibration) closeCalibration(); if (document.hidden && run && !run.paused && !run.ended) togglePause(); });
+document.addEventListener("visibilitychange", () => {
+  if (ctx) KM_CORE.resetClock(ctx, performance.now());
+  lastT = null;
+  if (document.hidden && calibration) closeCalibration();
+  if (document.hidden && run && !run.paused && !run.ended) togglePause();
+});
 
 /* ---------- drawing ---------- */
 
@@ -993,7 +1025,7 @@ function drawBackdrop(now) {
   }
   g.globalAlpha = 1;
 }
-function drawHighway(T) {
+function drawHighway(T, heard = T) {
   const L = geo.L, lead = leadTime(), spb = run.spb;
   for (const [a, b] of groups()) {
     const left = laneF(a) - 0.5, right = laneF(b) + 0.5;
@@ -1008,8 +1040,8 @@ function drawHighway(T) {
       g.strokeStyle = "rgba(170,190,255,0.10)"; seg(lx, ly, rx, ly);
     }
   }
-  const bi = KM_CORE.beatIndex(run.beats || [], T);
-  const pulse = settings.beat && bi >= 0 ? Math.max(0, 1 - (T - run.beats[bi]) / .16) : 0;
+  const bi = KM_CORE.beatIndex(run.beats || [], heard);
+  const pulse = settings.beat && bi >= 0 ? Math.max(0, 1 - (heard - run.beats[bi]) / .16) : 0;
   if (pulse > 0) {
     const [left, y] = P(laneF(0) - .5, 0), [right] = P(laneF(L - 1) + .5, 0);
     g.strokeStyle = `rgba(210,235,255,${pulse * .65})`; g.lineWidth = reduceMotion ? 2 : 2 + pulse * 3;
@@ -1066,7 +1098,7 @@ function drawNotes(T) {
 function burst(lane, j) {
   const [x, y] = P(laneF(lane), 0), col = COLS[lane], now = performance.now();
   fx.push({ k: "ring", x, y, col, t0: now, r: geo.laneW * 0.3 });
-  const n = reduceMotion ? 3 : j === "Excellent" ? 12 : 8;
+  const n = reduceMotion ? 3 : j === "Perfect" ? 12 : 8;
   for (let i = 0; i < n; i++) {
     const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.6, sp = 60 + Math.random() * 140;
     fx.push({ k: "spark", x, y, col, t0: now, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp });
@@ -1100,7 +1132,7 @@ function drawHud(T, now) {
   if (j) {
     const age = (now - j.t0) / 1000;
     if (age < 0.7) {
-      const col = j.text === "Excellent" ? "#bff3ff" : j.text === "Good" ? "#c8f7d8" : j.text === "Okay" ? "#ffe7a8" : "#c9cde0";
+      const col = j.text === "Perfect" ? "#bff3ff" : j.text === "Great" || j.text === "Good" ? "#c8f7d8" : j.text === "Okay" ? "#ffe7a8" : "#c9cde0";
       g.globalAlpha = 1 - age / 0.7; g.fillStyle = col; g.font = "600 22px system-ui, sans-serif";
       const y = geo.yB - geo.laneW * 1.15 - age * 18;
       g.fillText(j.text, W / 2, y);
@@ -1113,13 +1145,13 @@ function frame(now) {
   requestAnimationFrame(frame);
   drawBackdrop(now);
   if (!run) return;
-  const T = songTime();
+  const T = songTime(now);
   if (!run.paused && !run.ended) {
     const dt = lastT === null ? 0 : Math.max(0, Math.min(0.1, T - lastT));
     lastT = T; update(T, dt);
   }
   if (!run) return;
-  drawHighway(T); drawNotes(T); drawFx(now); drawHud(T, now);
+  drawHighway(T, songTime(now, false)); drawNotes(T); drawFx(now); drawHud(T, now);
 }
 
 /* ---------- calibration and beat guide ---------- */
@@ -1146,11 +1178,13 @@ async function startCalibration() {
   $("#calApply").disabled = true;
   try {
     audioInit();
-    showOnly("#calibration"); $("#calStatus").textContent = "Listen first…";
+    showOnly("#calibration"); $("#calStatus").textContent = "Tap to the sound. The first four taps are a warm-up.";
+    $("#calTap").textContent = "Tap with the click";
     if (ctx.state !== "running") await ctx.resume();
     if (serial !== calibrationSerial) return;
     const bus = ctx.createGain(); bus.gain.value = settings.vol / 100; bus.connect(ctx.destination);
-    calibration = {bus, start: ctx.currentTime + .7, period: .65, count: 20, next: 0, taps: new Map(), done: false};
+    KM_CORE.resetClock(ctx, performance.now());
+    calibration = {bus, start: ctx.currentTime + .7, period: .65, count: 24, next: 0, taps: new Map(), seen: new Set(), done: false, scheduled: new Set()};
     calibration.timer = setInterval(calibrationTick, 25); calibrationTick();
     $("#calTap").focus();
   } catch (err) { stopCalibration(); showOnly("#menu"); $("#bestLine").textContent = "Calibration could not start: " + err.message; }
@@ -1159,28 +1193,27 @@ function calibrationTick() {
   const c = calibration; if (!c || c.done) return;
   while (c.next < c.count && c.start + c.next * c.period <= ctx.currentTime + .15) {
     const at = c.start + c.next++ * c.period;
-    if (at >= ctx.currentTime) softClick(c.bus, at);
+    if (at >= ctx.currentTime) { softClick(c.bus, at); c.scheduled.add(c.next - 1); }
   }
-  const elapsed = KM_CORE.audibleTime(ctx, performance.now()) - c.start;
-  if (elapsed >= 3.5 * c.period && !c.prompted) { c.prompted = true; $("#calStatus").textContent = "Tap along to the sound."; }
+  const elapsed = heardTime() - c.start;
   if (elapsed > (c.count - 1) * c.period + .35) {
     c.done = true; clearInterval(c.timer);
     c.result = KM_CORE.calibrationResult([...c.taps.values()]);
     if (c.result.ok) {
-      $("#calStatus").textContent = `Suggested timing: ${c.result.offset > 0 ? "+" : ""}${c.result.offset} ms. Tap variation: ${c.result.spread} ms. Apply it, then try the beat guide in a song.`;
+      $("#calStatus").textContent = `Suggested timing: ${c.result.offset > 0 ? "+" : ""}${c.result.offset} ms. Typical spread: ${c.result.spread} ms (${c.result.used} steady taps). Apply it, then try the beat guide in a song.`;
       $("#calApply").disabled = false;
     } else $("#calStatus").textContent = c.result.reason;
   }
 }
 function calibrationTap(stamp) {
   const c = calibration; if (!c || c.done) return;
-  const now = performance.now();
-  const at = KM_CORE.audibleTime(ctx, now) - (now - KM_CORE.eventNow(stamp, now)) / 1000;
+  const at = heardTime(stamp);
   const index = Math.round((at - c.start) / c.period);
   const delta = at - (c.start + index * c.period);
-  if (index < 4 || index >= c.count || Math.abs(delta) > .3 || c.taps.has(index)) return;
+  if (index < 0 || index >= c.count || Math.abs(delta) > .3 || c.seen.has(index) || !c.scheduled.has(index)) return;
+  c.seen.add(index);
+  if (c.seen.size <= 4) return;
   c.taps.set(index, delta);
-  $("#calTap").textContent = `${c.taps.size} taps recorded`;
 }
 $("#calibrateBtn").addEventListener("click", startCalibration);
 $("#calRetry").addEventListener("click", () => { $("#calTap").textContent = "Tap with the click"; startCalibration(); });
@@ -1191,6 +1224,16 @@ $("#calApply").addEventListener("click", () => {
   settings.offset = calibration.result.offset;
   settings.calibration = {offset: settings.offset, spread: calibration.result.spread, taps: calibration.result.used};
   save(); closeCalibration();
+});
+$("#resetTiming").addEventListener("click", () => {
+  settings.offset = 0; delete settings.calibration; save(); renderMenu();
+});
+$("#usePlayTiming").addEventListener("click", () => {
+  if (!run?.ended || run.playOffset === null || run.playOffset === undefined) return;
+  settings.offset = run.playOffset; delete settings.calibration; save();
+  run.playOffset = null;
+  $("#usePlayTiming").disabled = true;
+  $("#usePlayTiming").textContent = `Offset saved: ${settings.offset > 0 ? "+" : ""}${settings.offset} ms`;
 });
 
 /* ---------- menus ---------- */
@@ -1222,7 +1265,8 @@ function renderMenu() {
   $("#optBass").value = settings.bass; $("#bassOut").textContent = "+" + settings.bass + " dB";
   $("#optOffset").value = settings.offset; $("#offsetOut").textContent = (settings.offset > 0 ? "+" : "") + settings.offset + " ms";
   const b = best[bestKey()];
-  $("#bestLine").textContent = b ? `Best here: ${b.score.toLocaleString("en-GB")}, ${b.acc}% accuracy` : "";
+  const legacy = best[`beat-grid-v2|${settings.song}|${settings.mode}|${settings.diff}`];
+  $("#bestLine").textContent = b ? `Best here: ${b.score.toLocaleString("en-GB")}, ${b.acc}% accuracy` : legacy ? `Previous timing rules: ${legacy.score.toLocaleString("en-GB")} (saved)` : "";
   $("#how").innerHTML = document.body.classList.contains("touch")
     ? "Tap the lower beat pads as notes reach their rings, and keep your finger down through long notes. In Jam a tap is the fret and the strum together. The <b>II</b> button pauses. Timing: positive values move notes later; negative values move them earlier. Use this if audio still feels out of time."
     : settings.mode === "jam"
