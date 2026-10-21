@@ -192,80 +192,110 @@ function holeMeshes() {
 
 function buildLook(id) {
   const g = new THREE.Group();
-  const L = (c, e = 0) => new THREE.MeshLambertMaterial({ color: c, emissive: e });
+  const L = c => new THREE.MeshLambertMaterial({ color: c });
   const B = c => new THREE.MeshBasicMaterial({ color: c });
   const parts = {};
+  // A low annular body keeps the theme on the rim and the centre open.
+  const ring = (radius, tube, colour, height = 0.08) => {
+    const mesh = new THREE.Mesh(new THREE.TorusGeometry(radius, tube, 8, 40), L(colour));
+    mesh.rotation.x = Math.PI / 2; mesh.position.y = height; g.add(mesh); return mesh;
+  };
   if (id === 'googly') {
+    ring(1.18, .17, 0x778ee0);
     for (const sx of [-1, 1]) {
-      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 12), B(0xffffff));
-      eye.position.set(sx * 0.42, 0.34, -0.98); eye.scale.set(1, 1, 0.55);
-      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), B(0x111111));
-      pupil.position.set(0, 0, 0.3); eye.add(pupil);
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(.34, 16, 12), B(0xffffff));
+      eye.position.set(sx * .42, .34, -.98); eye.scale.set(1, 1, .55);
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(.16, 12, 10), B(0x111111));
+      pupil.position.set(0, 0, .3); eye.add(pupil);
       g.add(eye); (parts.eyes ||= []).push({ eye, pupil });
     }
   } else if (id === 'chomp') {
     parts.teeth = [];
     for (let i = 0; i < 12; i++) {
       const a = i / 12 * Math.PI * 2;
-      const t = new THREE.Mesh(new THREE.ConeGeometry(0.15, 0.46, 4), L(0xfdfbf2));
+      const t = new THREE.Mesh(new THREE.ConeGeometry(.15, .46, 4), L(0xfdfbf2));
       const piv = new THREE.Group(); piv.position.set(Math.cos(a) * 1.02, 0, Math.sin(a) * 1.02); piv.rotation.y = -a;
-      t.position.set(0, 0.12, 0); t.rotation.z = 0.5; piv.add(t); g.add(piv); parts.teeth.push(piv);
+      t.position.set(0, .12, 0); t.rotation.z = .5; piv.add(t); g.add(piv); parts.teeth.push(piv);
     }
   } else if (id === 'duck') {
-    const duck = new THREE.Group();
-    const y = L(0xffd23f);
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.26, 14, 10), y); body.scale.set(1, 0.75, 1.25); body.position.y = 0.16;
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 12, 10), y); head.position.set(0, 0.42, 0.2);
-    const beak = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.16, 6), L(0xff8a1a)); beak.rotation.x = Math.PI / 2; beak.position.set(0, 0.4, 0.38);
-    const eye = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6), B(0x111111)); eye.position.set(0.09, 0.47, 0.32);
-    const eye2 = eye.clone(); eye2.position.x = -0.09;
+    ring(1.2, .18, 0x67cfdd); ring(1.08, .045, 0xe5fbff, .24);
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      const rivet = new THREE.Mesh(new THREE.IcosahedronGeometry(.075, 0), B(0xffe783));
+      rivet.position.set(Math.cos(a) * 1.2, .25, Math.sin(a) * 1.2); g.add(rivet);
+    }
+    const duck = new THREE.Group(), yellow = L(0xffd23f);
+    const body = new THREE.Mesh(new THREE.SphereGeometry(.26, 14, 10), yellow); body.scale.set(1, .75, 1.25); body.position.y = .16;
+    const head = new THREE.Mesh(new THREE.SphereGeometry(.16, 12, 10), yellow); head.position.set(0, .42, .2);
+    const beak = new THREE.Mesh(new THREE.ConeGeometry(.07, .16, 6), L(0xff8a1a)); beak.rotation.x = Math.PI / 2; beak.position.set(0, .4, .38);
+    const eye = new THREE.Mesh(new THREE.SphereGeometry(.03, 6, 6), B(0x111111)); eye.position.set(.09, .47, .32);
+    const eye2 = eye.clone(); eye2.position.x = -.09;
     duck.add(body, head, beak, eye, eye2); duck.scale.setScalar(1.5); g.add(duck); parts.duck = duck;
   } else if (id === 'burp') {
-    const lips = new THREE.Mesh(new THREE.TorusGeometry(1.06, 0.13, 8, 48), L(0xf06292)); lips.rotation.x = Math.PI / 2; lips.position.y = 0.06;
-    g.add(lips); parts.lips = lips;
+    const lips = new THREE.Mesh(new THREE.TorusGeometry(1.06, .13, 8, 48), L(0xf06292)); lips.rotation.x = Math.PI / 2; lips.position.y = .06; g.add(lips); parts.lips = lips;
   } else if (id === 'donut') {
-    const dough = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.26, 10, 48), L(0xd9a066)); dough.rotation.x = Math.PI / 2; dough.position.y = 0.08;
-    const icing = new THREE.Mesh(new THREE.TorusGeometry(1.2, 0.22, 8, 48, Math.PI * 2), L(0xff8fc0)); icing.rotation.x = Math.PI / 2; icing.position.y = 0.16; icing.scale.z = 0.8;
+    const dough = new THREE.Mesh(new THREE.TorusGeometry(1.2, .26, 10, 48), L(0xd9a066)); dough.rotation.x = Math.PI / 2; dough.position.y = .08;
+    const icing = new THREE.Mesh(new THREE.TorusGeometry(1.2, .22, 8, 48), L(0xff8fc0)); icing.rotation.x = Math.PI / 2; icing.position.y = .16; icing.scale.z = .8;
     g.add(dough, icing);
     const cols = [0xffffff, 0x63c5ff, 0xffd23f, 0x7ed957, 0xb07cff];
     for (let i = 0; i < 40; i++) {
-      const a = i / 40 * Math.PI * 2 + (i % 3) * 0.05, rr = 1.2 + ((i * 7) % 5 - 2) * 0.06;
-      const s = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.12), B(cols[i % cols.length]));
-      s.position.set(Math.cos(a) * rr, 0.36, Math.sin(a) * rr); s.rotation.y = i * 1.7; g.add(s);
+      const a = i / 40 * Math.PI * 2 + (i % 3) * .05, rr = 1.2 + ((i * 7) % 5 - 2) * .06;
+      const s = new THREE.Mesh(new THREE.BoxGeometry(.03, .03, .12), B(cols[i % cols.length]));
+      s.position.set(Math.cos(a) * rr, .36, Math.sin(a) * rr); s.rotation.y = i * 1.7; g.add(s);
     }
   } else if (id === 'hat') {
-    const hat = new THREE.Group();
-    const cone = new THREE.ConeGeometry(0.5, 1.2, 16, 4, true);
-    const cols = []; const pos = cone.attributes.position;
-    for (let i = 0; i < pos.count; i++) { const band = Math.floor((pos.getY(i) + 0.6) / 0.3) % 2; cols.push(...(band ? [1, 0.35, 0.6] : [0.35, 0.8, 1])); }
+    ring(1.2, .18, 0x65cde4);
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      const confetti = new THREE.Mesh(new THREE.BoxGeometry(.11, .06, .24), L(i % 2 ? 0xff75ad : 0xffd356));
+      confetti.position.set(Math.cos(a) * 1.2, .27, Math.sin(a) * 1.2); confetti.rotation.y = -a; g.add(confetti);
+    }
+    const hat = new THREE.Group(), cone = new THREE.ConeGeometry(.5, 1.2, 16, 4, true);
+    const cols = [], pos = cone.attributes.position;
+    for (let i = 0; i < pos.count; i++) { const band = Math.floor((pos.getY(i) + .6) / .3) % 2; cols.push(...(band ? [1, .35, .6] : [.35, .8, 1])); }
     cone.setAttribute('color', new THREE.Float32BufferAttribute(cols, 3));
     const c = new THREE.Mesh(cone, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide, flatShading: true }));
-    const pom = new THREE.Mesh(new THREE.IcosahedronGeometry(0.15, 1), L(0xffd23f)); pom.position.y = 0.66;
-    hat.add(c, pom); hat.scale.setScalar(1.3); hat.position.set(0, 1.6, 0); hat.rotation.z = 0.25; g.add(hat); parts.hat = hat;
+    const pom = new THREE.Mesh(new THREE.IcosahedronGeometry(.15, 1), L(0xffd23f)); pom.position.y = .66;
+    hat.add(c, pom); hat.scale.setScalar(.85); hat.position.set(0, .62, -1.23); hat.rotation.z = .2; g.add(hat); parts.hat = hat;
   } else if (id === 'stache') {
-    const st = new THREE.Group();
-    const m = L(0x2a1a12);
+    ring(1.18, .17, 0x79553d); ring(1.18, .035, 0xe8c050, .26);
+    const st = new THREE.Group(), material = L(0x2a1a12);
     for (const sx of [-1, 1]) {
-      const curl = new THREE.Mesh(new THREE.TorusGeometry(0.28, 0.09, 8, 16, Math.PI * 1.3), m);
-      curl.position.set(sx * 0.3, 0, 0); curl.rotation.z = sx > 0 ? Math.PI * 1.15 : -Math.PI * 0.15 + Math.PI; curl.scale.x = sx;
-      st.add(curl);
+      const curl = new THREE.Mesh(new THREE.TorusGeometry(.28, .09, 8, 16, Math.PI * 1.3), material);
+      curl.position.set(sx * .3, 0, 0); curl.rotation.z = sx > 0 ? Math.PI * 1.15 : -Math.PI * .15 + Math.PI; curl.scale.x = sx; st.add(curl);
     }
-    const mono = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.035, 6, 20), L(0xe8c050)); mono.position.set(0.35, 0.55, 0);
-    const lens = new THREE.Mesh(new THREE.CircleGeometry(0.19, 16), new THREE.MeshBasicMaterial({ color: 0xcfefff, transparent: true, opacity: 0.35 })); lens.position.copy(mono.position);
-    st.add(mono, lens);
-    st.scale.setScalar(1.5); st.position.set(0, 1.1, -0.6); g.add(st); parts.stache = st;
-  }
-  if (id === 'captain') {
-    const hat = new THREE.Mesh(new THREE.CylinderGeometry(.65,.72,.32,12), L(0xffffff)); hat.position.set(0,.75,-.8);
-    const brim = new THREE.Mesh(new THREE.BoxGeometry(1.1,.08,.5),L(0x204c70));brim.position.set(0,.6,-.4);g.add(hat,brim);
-    for(const s of [-1,1]){const claw=new THREE.Mesh(new THREE.TorusGeometry(.23,.1,6,12,Math.PI*1.5),L(0xff6f40));claw.position.set(s*1.05,.3,.1);g.add(claw);}
+    const mono = new THREE.Mesh(new THREE.TorusGeometry(.2, .035, 6, 20), L(0xe8c050)); mono.position.set(.35, .55, 0);
+    const lens = new THREE.Mesh(new THREE.CircleGeometry(.19, 16), new THREE.MeshBasicMaterial({ color: 0xcfefff, transparent: true, opacity: .35 })); lens.position.copy(mono.position);
+    st.add(mono, lens); st.scale.setScalar(1.15); st.position.set(0, .24, -1.2); g.add(st); parts.stache = st;
+  } else if (id === 'captain') {
+    ring(1.2, .18, 0x204c70); ring(1.2, .055, 0xfff3cd, .28);
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4, trim = new THREE.Mesh(new THREE.BoxGeometry(.16, .07, .22), L(0xe9c45d));
+      trim.position.set(Math.cos(a) * 1.2, .3, Math.sin(a) * 1.2); trim.rotation.y = -a; g.add(trim);
+    }
+    const hat = new THREE.Mesh(new THREE.CylinderGeometry(.4, .45, .2, 12), L(0xffffff)); hat.position.set(0, .4, -1.2);
+    const brim = new THREE.Mesh(new THREE.BoxGeometry(.75, .06, .35), L(0x204c70)); brim.position.set(0, .3, -1.05); g.add(hat, brim);
+    for (const s of [-1, 1]) { const claw = new THREE.Mesh(new THREE.TorusGeometry(.23, .1, 6, 12, Math.PI * 1.5), L(0xff6f40)); claw.position.set(s * 1.25, .3, .1); g.add(claw); }
   } else if (id === 'scarecrow') {
-    const brim = new THREE.Mesh(new THREE.CylinderGeometry(.9,.9,.08,12),L(0xeab85d));brim.position.set(0,.8,-.5);
-    const crown = new THREE.Mesh(new THREE.ConeGeometry(.6,.7,8),L(0xf9d374));crown.position.set(0,1.1,-.5);g.add(brim,crown);
-    const band = new THREE.Mesh(new THREE.TorusGeometry(.5,.06,5,12),L(0xea7363));band.rotation.x=Math.PI/2;band.position.set(0,.95,-.5);g.add(band);
+    ring(1.2, .2, 0xeab85d); ring(1.12, .05, 0xea7363, .27);
+    const stalk = new THREE.BoxGeometry(.045, .035, .5), straw = [L(0xf9d374), L(0xd69b42), L(0xffe49a)];
+    for (let i = 0; i < 24; i++) {
+      const a = i / 24 * Math.PI * 2, s = new THREE.Mesh(stalk, straw[i % 3]);
+      s.position.set(Math.cos(a) * 1.25, .22 + (i % 3) * .015, Math.sin(a) * 1.25); s.rotation.y = Math.PI / 2 - a; g.add(s);
+    }
   } else if (id === 'jester') {
-    for(const s of [-1,0,1]){const tip=new THREE.Mesh(new THREE.ConeGeometry(.3,.95,8),L(s===0?0xffca46:s<0?0xff6da8:0x64d8e4));tip.position.set(s*.4,.9,-.7);tip.rotation.z=-s*.45;g.add(tip);
-      const bell=new THREE.Mesh(new THREE.IcosahedronGeometry(.13,0),L(0xffed96));bell.position.set(s*.6,1.35,-.7);g.add(bell);}
+    ring(1.2, .17, 0x9975d9);
+    for (let i = 0; i < 12; i++) {
+      const a = i / 12 * Math.PI * 2;
+      const segment = new THREE.Mesh(new THREE.TorusGeometry(1.2, .19, 8, 4, Math.PI / 6 * .9), L([0xff6da8, 0x64d8e4, 0xffca46][i % 3]));
+      segment.rotation.set(Math.PI / 2, 0, a); segment.position.y = .1; g.add(segment);
+    }
+    for (let i = 0; i < 3; i++) {
+      const a = i / 3 * Math.PI * 2 - Math.PI / 2, pivot = new THREE.Group();
+      pivot.position.set(Math.cos(a) * 1.2, .3, Math.sin(a) * 1.2); pivot.rotation.z = -Math.cos(a) * .35; pivot.rotation.x = Math.sin(a) * .35;
+      const tip = new THREE.Mesh(new THREE.ConeGeometry(.2, .6, 8), L([0xff6da8, 0x64d8e4, 0xffca46][i])); tip.position.y = .25;
+      const bell = new THREE.Mesh(new THREE.IcosahedronGeometry(.11, 0), L(0xffed96)); bell.position.y = .6; pivot.add(tip, bell); g.add(pivot);
+    }
   }
   return { group: g, parts, id };
 }
@@ -372,7 +402,13 @@ export class Renderer {
   }
 
   setLook(id) {
-    if (this.look) this.lookGroup.remove(this.look.group);
+    if (this.look) {
+      this.lookGroup.remove(this.look.group);
+      const geometries = new Set(), materials = new Set();
+      this.look.group.traverse(o => { if (o.isMesh) { geometries.add(o.geometry); for (const m of (Array.isArray(o.material) ? o.material : [o.material])) materials.add(m); } });
+      for (const geometry of geometries) geometry.dispose();
+      for (const material of materials) material.dispose();
+    }
     this.look = buildLook(id || 'classic');
     this.lookGroup.add(this.look.group);
   }
@@ -734,12 +770,12 @@ export class Renderer {
       P.lips.scale.set(1 + b * 0.18, 1 + b * 0.18, 1 + b * 0.6);
     }
     if (P.hat) {
-      P.hat.position.y = 1.6 + Math.sin(t * 2.2) * (calm ? 0.04 : 0.12);
+      P.hat.position.y = .62 + Math.sin(t * 2.2) * (calm ? .025 : .05);
       P.hat.rotation.y = t * (calm ? 0.3 : 1);
     }
     if (P.stache) {
       P.stache.rotation.z = Math.sin(t * 3) * (calm ? 0.03 : 0.08);
-      P.stache.position.y = 1.1 + Math.sin(t * 1.7) * 0.05;
+      P.stache.position.y = .24 + Math.sin(t * 1.7) * .025;
     }
   }
 }
