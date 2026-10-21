@@ -50,5 +50,12 @@
     "vibe": "a newspaper pause: find the Hungarian or English words, then read a hidden message in the letters left behind",
     "tags": ["puzzle", "words", "calm"],
     "built_with": "GPT-6.1 Sol (Codex CLI)"
+  },
+  {
+    "id": "water-sort",
+    "title": "Water Sort",
+    "vibe": "a little colour, a little calm: sort glass tubes one pour at a time, with free hints, undo and no ads",
+    "tags": ["puzzle", "casual", "calm"],
+    "built_with": "OpenAI Codex"
   }
 ]

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="A little colour, a little calm. Pour, sort and unwind with an ad-free water sort puzzle.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Water Sort | Game Vault</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="core.js"></script>
+  <script defer src="levels.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#board">Skip to the puzzle</a>
+  <div class="ambient ambient-one" aria-hidden="true"></div><div class="ambient ambient-two" aria-hidden="true"></div>
+  <div class="page">
+    <header class="topbar">
+      <a class="back" href="../../index.html"><span aria-hidden="true">↖</span> Game Vault</a>
+      <div class="preferences">
+        <button id="symbols" class="quiet" type="button" aria-pressed="false" title="Show a different symbol for each colour"><span aria-hidden="true">◈</span> Symbols</button>
+        <button id="sound" class="quiet" type="button" aria-pressed="false"><span aria-hidden="true">♫</span> Sound off</button>
+        <button id="help-open" class="help-button" type="button" aria-label="How to play">?</button>
+      </div>
+    </header>
+    <main>
+      <div class="intro">
+        <p class="eyebrow"><span class="small-drop" aria-hidden="true"></span> A MOMENT OF COLOUR</p>
+        <h1>Water <em>Sort.</em></h1>
+        <p class="subtitle">A little order. A little calm. One pour at a time.</p>
+      </div>
+      <section class="game-panel" aria-label="Water sort puzzle">
+        <div class="game-top">
+          <div class="level-label"><span class="overline" id="chapter">FIRST DROPS</span><h2 id="level-title">Level 01</h2></div>
+          <div class="counters"><div><span class="overline">MOVES</span><strong id="moves">0</strong></div><div><span class="overline">SORTED</span><strong><span id="sorted">0</span><span class="counter-total" id="total"> / 2</span></strong></div></div>
+          <button id="levels-open" class="level-picker" type="button"><span aria-hidden="true">▦</span> Levels</button>
+        </div>
+        <div class="board-wrap">
+          <div class="board" id="board" tabindex="-1" role="group" aria-label="Tubes" aria-describedby="instructions status"></div>
+          <p class="instruction" id="instructions">Choose a tube, then a matching colour or an empty tube.</p>
+          <p class="status" id="status" role="status" aria-live="polite" aria-atomic="true">Take your time. There’s no clock here.</p>
+        </div>
+        <div class="win" id="win" hidden>
+          <div class="win-message"><span class="win-mark" aria-hidden="true">✓</span><div><h3 id="win-title">Beautifully sorted.</h3><p id="win-detail"></p></div></div>
+          <button id="next" class="primary" type="button">Next level <span aria-hidden="true">→</span></button>
+        </div>
+        <div class="actions" aria-label="Puzzle controls">
+          <button id="undo" type="button" aria-keyshortcuts="u" disabled><span class="action-icon" aria-hidden="true">↶</span><span>Undo</span><kbd aria-hidden="true">U</kbd></button>
+          <button id="hint" type="button" aria-keyshortcuts="h"><span class="action-icon" aria-hidden="true">✧</span><span>Hint</span><kbd aria-hidden="true">H</kbd></button>
+          <button id="restart-open" type="button" aria-keyshortcuts="r"><span class="action-icon" aria-hidden="true">↻</span><span>Restart</span><kbd aria-hidden="true">R</kbd></button>
+          <button id="extra" type="button"><span class="action-icon" aria-hidden="true">+</span><span>Spare tube</span></button>
+        </div>
+      </section>
+      <div class="below-board"><span><span class="online-dot" aria-hidden="true"></span> No ads. Just the puzzle.</span><span id="save-status">Progress stays in this browser.</span></div>
+    </main>
+    <footer><span>Made for a quieter kind of screen time.</span><details><summary>About this game</summary><p>Water Sort for Game Vault. Built with OpenAI Codex. Code follows the Vault’s MIT licence. Progress and preferences are saved only in this browser. No account, tracking or external requests.</p></details></footer>
+  </div>
+  <div id="pour-layer" class="pour-layer" aria-hidden="true"></div>
+  <dialog id="help" aria-labelledby="help-title">
+    <div class="dialog-head"><span class="overline">TAKE IT ONE POUR AT A TIME</span><button type="button" data-close="help" aria-label="Close instructions">×</button></div>
+    <h2 id="help-title">Make room for colour.</h2>
+    <ol class="help-steps"><li><strong>Pick a tube.</strong> Tap or click the colour you want to move.</li><li><strong>Choose where it goes.</strong> Pour onto the same top colour, or into an empty tube. Only the top block moves, as far as the space allows.</li><li><strong>Find a little order.</strong> Finish with each colour in its own full tube. Empty tubes can stay empty.</li></ol>
+    <div class="help-note"><p>Undo and hints are always free. Each puzzle also has one free spare tube if you need more room.</p><p>Use <kbd>Tab</kbd> and <kbd>Enter</kbd> or <kbd>Space</kbd> to select tubes. Arrow keys move between them. <kbd>Escape</kbd> clears a selection. With focus inside the puzzle panel, <kbd>U</kbd> undoes, <kbd>H</kbd> gives a hint and <kbd>R</kbd> opens restart.</p><p>Turn on <strong>Symbols</strong> to tell colours apart by shape. Your progress is saved on this browser when storage is available.</p></div>
+    <button type="button" class="primary wide" data-close="help">Let’s play</button>
+  </dialog>
+  <dialog id="levels-dialog" aria-labelledby="levels-title">
+    <div class="dialog-head"><span class="overline">YOUR LITTLE COLOUR COLLECTION</span><button type="button" data-close="levels-dialog" aria-label="Close levels">×</button></div>
+    <h2 id="levels-title">Find your flow.</h2><p class="dialog-description">Start gently, or skip ahead. Every level is open.</p>
+    <div class="level-grid" id="level-grid"></div><p class="fine">A tick marks a puzzle you’ve finished. Switching levels starts a fresh puzzle.</p>
+  </dialog>
+  <dialog id="restart-dialog" aria-labelledby="restart-title">
+    <div class="dialog-head"><span class="overline">A FRESH START</span><button type="button" data-close="restart-dialog" aria-label="Cancel restart">×</button></div>
+    <h2 id="restart-title">Try this one again?</h2><p class="dialog-description">This puzzle returns to its starting colours. Your completed levels stay saved.</p>
+    <div class="dialog-actions"><button type="button" data-close="restart-dialog" autofocus>Keep playing</button><button id="restart-confirm" class="primary" type="button">Restart level</button></div>
+  </dialog>
+  <noscript><p class="noscript">Enable JavaScript to play Water Sort. The game runs entirely in your browser.</p></noscript>
+</body>
+</html>
