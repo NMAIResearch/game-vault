@@ -7,6 +7,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'">
   <title>Water Sort | Game Vault</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <script src="theme.js"></script>
   <link rel="stylesheet" href="style.css">
   <script defer src="core.js"></script>
   <script defer src="levels.js"></script>
@@ -21,6 +22,8 @@
       <div class="preferences">
         <button id="symbols" class="quiet" type="button" aria-pressed="false" title="Show a different symbol for each colour"><span aria-hidden="true">◈</span> Symbols</button>
         <button id="sound" class="quiet" type="button" aria-pressed="false"><span aria-hidden="true">♫</span> Sound off</button>
+        <button id="vibration" class="quiet" type="button" aria-pressed="true" title="A short buzz when you pour, when a pour is refused and when you finish a level" hidden><span aria-hidden="true">∿</span> Vibration on</button>
+        <button id="theme" class="quiet" type="button" aria-label="Switch to day theme" title="Switch to day theme"><span aria-hidden="true">☀</span> Day</button>
         <button id="help-open" class="help-button" type="button" aria-label="How to play">?</button>
       </div>
     </header>
@@ -40,6 +43,7 @@
           <div class="board" id="board" tabindex="-1" role="group" aria-label="Tubes" aria-describedby="instructions status"></div>
           <p class="instruction" id="instructions">Choose a tube, then a matching colour or an empty tube.</p>
           <p class="status" id="status" role="status" aria-live="polite" aria-atomic="true">Take your time. There’s no clock here.</p>
+          <div class="celebration" id="celebration" aria-hidden="true"></div>
         </div>
         <div class="win" id="win" hidden>
           <div class="win-message"><span class="win-mark" aria-hidden="true">✓</span><div><h3 id="win-title">Beautifully sorted.</h3><p id="win-detail"></p></div></div>
@@ -61,7 +65,7 @@
     <div class="dialog-head"><span class="overline">TAKE IT ONE POUR AT A TIME</span><button type="button" data-close="help" aria-label="Close instructions">×</button></div>
     <h2 id="help-title">Make room for colour.</h2>
     <ol class="help-steps"><li><strong>Pick a tube.</strong> Tap or click the colour you want to move.</li><li><strong>Choose where it goes.</strong> Pour onto the same top colour, or into an empty tube. Only the top block moves, as far as the space allows.</li><li><strong>Find a little order.</strong> Finish with each colour in its own full tube. Empty tubes can stay empty.</li></ol>
-    <div class="help-note"><p>Undo and hints are always free. Each puzzle also has one free spare tube if you need more room.</p><p>Use <kbd>Tab</kbd> and <kbd>Enter</kbd> or <kbd>Space</kbd> to select tubes. Arrow keys move between them. <kbd>Escape</kbd> clears a selection. With focus inside the puzzle panel, <kbd>U</kbd> undoes, <kbd>H</kbd> gives a hint and <kbd>R</kbd> opens restart.</p><p>Turn on <strong>Symbols</strong> to tell colours apart by shape. Your progress is saved on this browser when storage is available.</p></div>
+    <div class="help-note"><p>Undo and hints are always free. Each puzzle also has one free spare tube if you need more room.</p><p>Use <kbd>Tab</kbd> and <kbd>Enter</kbd> or <kbd>Space</kbd> to select tubes. Arrow keys move between them. <kbd>Escape</kbd> clears a selection. With focus inside the puzzle panel, <kbd>U</kbd> undoes, <kbd>H</kbd> gives a hint and <kbd>R</kbd> opens restart.</p><p>Turn on <strong>Symbols</strong> to tell colours apart by shape. Your progress is saved on this browser when storage is available.</p><p><strong>Day</strong> and <strong>Night</strong> change the colours; the game starts with your device’s setting. On phones that support it, <strong>Vibration</strong> gives a short buzz when you pour, when a pour is refused and when you finish a level.</p></div>
     <button type="button" class="primary wide" data-close="help">Let’s play</button>
   </dialog>
   <dialog id="levels-dialog" aria-labelledby="levels-title">

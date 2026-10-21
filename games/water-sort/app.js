@@ -3,6 +3,10 @@
   const C = window.WaterSort, levels = window.WaterSortLevels;
   const $ = id => document.getElementById(id);
   const STORAGE = 'game-vault-water-sort-v1';
+  const theme = window.WaterSortTheme;
+  const canVibrate = typeof navigator.vibrate === 'function';
+  const PULSE = {pour: 15, refused: 30, win: 45};
+  const PULSE_GAP = 400;
   const colours = [
     {name:'sea blue', hex:'#7ebbd4', symbol:'●'},
     {name:'coral', hex:'#e79788', symbol:'▲'},
@@ -17,6 +21,7 @@
   let symbols = false, sound = false, selected = null, hinted = null;
   let busy = false, hintPending = false, revision = 0, audio = null;
   let saveAvailable = true, bootMessage = '';
+  let vibration = true, themeFallback = 'system', pulseTimer = 0, lastPulse = -Infinity, celebrationTimer = 0;
   let storedText = null;
   try { storedText = localStorage.getItem(STORAGE); }
   catch (error) {
@@ -29,6 +34,8 @@
     catch (error) { /* An unreadable save does not make storage unavailable. */ }
     const progress = C.restoreProgress(raw, levels);
     const saved = C.restore(raw, levels);
+    const settings = C.restoreSettings(raw);
+    vibration = settings.vibration; themeFallback = settings.theme;
     if (progress) {
       finished = new Set(progress.finished); symbols = progress.symbols; sound = progress.sound;
     }
@@ -43,7 +50,8 @@
   function save() {
     const resumeLimited = session.history.length >= 5000;
     try {
-      localStorage.setItem(STORAGE, JSON.stringify({version:1, session:resumeLimited ? null : session, finished:[...finished], symbols, sound}));
+      localStorage.setItem(STORAGE, JSON.stringify({version:1, session:resumeLimited ? null : session, finished:[...finished], symbols, sound,
+        vibration, theme: theme ? theme.choice() : themeFallback}));
       saveAvailable = true;
     } catch (error) { saveAvailable = false; }
     $('save-status').textContent = !saveAvailable ? 'Saving unavailable. You can still play.'
@@ -55,6 +63,61 @@
 
   function cancelHint() {
     revision++; hinted = null; hintPending = false;
+  }
+
+  // One short pulse per game event, sent after the move has been handled. Pour and refused pulses closer than
+  // PULSE_GAP to the previous pulse are dropped; the win pulse waits for the gap instead, rounded up a millisecond.
+  function pulse(kind) {
+    if (!canVibrate || !vibration) return;
+    if (pulseTimer) { if (kind !== 'win') return; clearTimeout(pulseTimer); }
+    const wait = kind === 'win' ? Math.max(0, Math.ceil(lastPulse + PULSE_GAP - performance.now()) + 1) : 0;
+    pulseTimer = window.setTimeout(() => {
+      pulseTimer = 0;
+      const now = performance.now();
+      if (!vibration || document.hidden || (kind !== 'win' && now - lastPulse < PULSE_GAP)) return;
+      lastPulse = now;
+      try { navigator.vibrate(PULSE[kind]); } catch (error) { /* Vibration is optional. */ }
+    }, wait);
+  }
+
+  function stopPulses() {
+    clearTimeout(pulseTimer); pulseTimer = 0;
+    if (canVibrate && performance.now() - lastPulse < 100) {
+      try { navigator.vibrate(0); } catch (error) { /* Vibration is optional. */ }
+    }
+  }
+
+  // Droplets in the solved colours rise from the finished tubes once, then are removed; none with reduced motion.
+  function celebrate() {
+    stopCelebration();
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const layer = $('celebration'), frame = layer.getBoundingClientRect();
+    const tubes = [...$('board').children].filter(button => C.complete(session.board[Number(button.dataset.tube)]));
+    const each = Math.max(2, Math.min(4, Math.floor(18 / Math.max(1, tubes.length))));
+    const drops = [];
+    tubes.forEach((button, t) => {
+      const glass = button.querySelector('.glass').getBoundingClientRect();
+      const colour = colours[session.board[Number(button.dataset.tube)][0]].hex;
+      for (let k = 0; k < each; k++) {
+        const drop = document.createElement('span'), n = t * each + k;
+        drop.className = 'droplet';
+        drop.style.left = (glass.left - frame.left + glass.width * (k + 1) / (each + 1)) + 'px';
+        drop.style.top = (glass.top - frame.top + 6) + 'px';
+        drop.style.setProperty('--colour', colour);
+        drop.style.setProperty('--drift', ((n * 37) % 41 - 20) + 'px');
+        drop.style.animationDelay = ((n * 53) % 350) + 'ms';
+        drops.push(drop);
+      }
+    });
+    layer.append(...drops);
+    $('win').classList.add('celebrate');
+    celebrationTimer = window.setTimeout(stopCelebration, 1900);
+  }
+
+  function stopCelebration() {
+    clearTimeout(celebrationTimer); celebrationTimer = 0;
+    $('celebration').replaceChildren();
+    $('win').classList.remove('celebrate');
   }
 
   function tone(victory = false) {
@@ -87,6 +150,16 @@
     $('symbols').setAttribute('aria-pressed', String(symbols));
     $('sound').setAttribute('aria-pressed', String(sound));
     $('sound').innerHTML = '<span aria-hidden="true">♫</span> Sound ' + (sound ? 'on' : 'off');
+    $('vibration').hidden = !canVibrate;
+    $('vibration').setAttribute('aria-pressed', String(vibration));
+    $('vibration').innerHTML = '<span aria-hidden="true">∿</span> Vibration ' + (vibration ? 'on' : 'off');
+    $('theme').hidden = !theme;
+    if (theme) {
+      const target = theme.current() === 'day' ? 'night' : 'day';
+      $('theme').innerHTML = target === 'day' ? '<span aria-hidden="true">☀</span> Day' : '<span aria-hidden="true">☾</span> Night';
+      $('theme').setAttribute('aria-label', 'Switch to ' + target + ' theme');
+      $('theme').title = 'Switch to ' + target + ' theme';
+    }
   }
 
   function fillWater(water, tube) {
@@ -191,7 +264,8 @@
     const next = C.step(session, from, index);
     if (!next) {
       const button = $('board').children[index];button.classList.remove('invalid');void button.offsetWidth;button.classList.add('invalid');
-      say(tube.length === 4 ? 'That tube is full. Choose a tube with some space.' : 'The top colours need to match. An empty tube works too.');return;
+      say(tube.length === 4 ? 'That tube is full. Choose a tube with some space.' : 'The top colours need to match. An empty tube works too.');
+      pulse('refused');return;
     }
     const colour = oldBoard[from].at(-1);
     const returnFocus = document.activeElement === $('board').children[index];
@@ -200,6 +274,7 @@
     save(); tone(C.won(session.board));
     $('board').querySelectorAll('button').forEach(b => { b.disabled = true; });
     ['undo','hint','extra','restart-open','levels-open'].forEach(id => { $(id).disabled=true; });
+    if (!C.won(session.board)) pulse('pour');
     try { await animatePour(from,index,colour,oldBoard); }
     finally {
       busy = false; render();
@@ -207,18 +282,19 @@
         (C.won(session.board) ? $('next') : $('board').children[index]).focus({preventScroll:true});
       }
       say(C.won(session.board) ? 'Level complete. Beautifully sorted!' : 'Poured ' + count + ' ' + (count===1?'layer':'layers') + ' of ' + colours[colour].name + '.');
+      if (C.won(session.board)) { celebrate(); pulse('win'); }
     }
   }
 
   function startLevel(index) {
-    cancelHint(); selected = null; session = C.newSession(levels[index],index);
+    stopCelebration(); cancelHint(); selected = null; session = C.newSession(levels[index],index);
     render();save();say('A fresh puzzle. Start with whichever colour catches your eye.');
     $('board').children[0].focus({preventScroll:true});
   }
 
   function openDialog(id) {
     if (busy) return;
-    cancelHint();render();
+    stopCelebration();cancelHint();render();
     if (id === 'levels-dialog') {
       const grid = $('level-grid');grid.replaceChildren();
       levels.forEach((level, i) => {
@@ -276,7 +352,7 @@
     const previous=C.undo(session);if(!previous)return;
     const returnFocus = document.activeElement === $('undo');
     const panelHadFocus = Boolean(document.activeElement?.closest('.game-panel'));
-    cancelHint();selected=null;session=previous;render();save();say('One step back. Take another look.');
+    stopCelebration();cancelHint();selected=null;session=previous;render();save();say('One step back. Take another look.');
     const focusNow = document.activeElement;
     if (panelHadFocus && ((returnFocus && $('undo').disabled) || !focusNow || focusNow === document.body ||
         !focusNow.isConnected || !focusNow.getClientRects().length)) $('board').children[0].focus({preventScroll:true});
@@ -296,6 +372,9 @@
   document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>$(button.dataset.close).close()));
   $('symbols').addEventListener('click',()=>{symbols=!symbols;renderPreferences();save();});
   $('sound').addEventListener('click',()=>{sound=!sound;renderPreferences();save();if(sound)tone();});
+  $('vibration').addEventListener('click',()=>{vibration=!vibration;if(!vibration)stopPulses();renderPreferences();save();});
+  $('theme').addEventListener('click',()=>{if(!theme)return;theme.toggle();renderPreferences();save();});
+  if(theme)theme.follow(renderPreferences);
   document.addEventListener('keydown',event=>{
     if(document.querySelector('dialog[open]')||event.altKey||event.ctrlKey||event.metaKey||event.repeat)return;
     if(event.target.isContentEditable || event.target.closest('input,textarea,select,[role="textbox"]'))return;
@@ -308,8 +387,8 @@
       $('board').children[(Number(event.target.dataset.tube)+delta+session.board.length)%session.board.length].focus();
     }
   });
-  window.addEventListener('pagehide',()=>{save();if(audio)audio.suspend().catch(()=>{});});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden){save();if(audio)audio.suspend().catch(()=>{});}});
+  window.addEventListener('pagehide',()=>{save();stopPulses();if(audio)audio.suspend().catch(()=>{});});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){save();stopPulses();if(audio)audio.suspend().catch(()=>{});}});
   if(C.won(session.board))finished.add(session.level);
   render();
   $('save-status').textContent=saveAvailable?'Progress stays in this browser.':'Saving unavailable. You can still play.';

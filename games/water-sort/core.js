@@ -139,6 +139,13 @@
     return {finished, symbols: raw.symbols === true, sound: raw.sound === true};
   }
 
+  // Vibration stays on unless it was switched off; the theme is a saved day or night choice, otherwise the system's.
+  function restoreSettings(raw) {
+    const valid = Boolean(raw) && raw.version === 1;
+    return {vibration: !(valid && raw.vibration === false),
+      theme: valid && (raw.theme === 'day' || raw.theme === 'night') ? raw.theme : 'system'};
+  }
+
   // Replays the history from the shipped puzzle, never trusts a stored board alone.
   function restore(raw, levels) {
     if (!raw || raw.version !== 1 || !raw.session || !Array.isArray(levels)) return null;
@@ -160,5 +167,5 @@
   }
 
   return {CAPACITY, copy, same, uniform, complete, won, amount, pour, validBoard, moves,
-    search, solve, newSession, step, addTube, undo, restoreProgress, restore};
+    search, solve, newSession, step, addTube, undo, restoreProgress, restoreSettings, restore};
 });
