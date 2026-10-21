@@ -275,8 +275,11 @@
     if(busy)return;
     const previous=C.undo(session);if(!previous)return;
     const returnFocus = document.activeElement === $('undo');
+    const panelHadFocus = Boolean(document.activeElement?.closest('.game-panel'));
     cancelHint();selected=null;session=previous;render();save();say('One step back. Take another look.');
-    if (returnFocus && $('undo').disabled) $('board').children[0].focus({preventScroll:true});
+    const focusNow = document.activeElement;
+    if (panelHadFocus && ((returnFocus && $('undo').disabled) || !focusNow || focusNow === document.body ||
+        !focusNow.isConnected || !focusNow.getClientRects().length)) $('board').children[0].focus({preventScroll:true});
   });
   $('extra').addEventListener('click',()=>{
     if(busy)return;const next=C.addTube(session);if(!next)return;
