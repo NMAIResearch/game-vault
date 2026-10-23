@@ -148,12 +148,12 @@
     }
   }
 
-  // The song plays on repeat from the Music button, separate from the Sound tones. Its source is set on the first
-  // press, so nothing is downloaded before it; the choice lasts for this visit only, as in the crossword's music.
+  // The song plays once from the Music button, separate from the Sound tones, and its end turns the music off. Its
+  // source is set on the first press, so nothing is downloaded before it; the choice lasts for this visit only.
   function renderMusic() {
     $('music').setAttribute('aria-pressed', String(musicWanted));
     $('music').innerHTML = '<span aria-hidden="true">♪</span> Music ' + (musicWanted ? 'on' : 'off');
-    $('music').title = musicWanted ? 'Stop the music' : 'Play ' + MUSIC.title + ' on repeat';
+    $('music').title = musicWanted ? 'Stop the music' : 'Play ' + MUSIC.title + ' once';
     const line = $('music-title');
     const html = musicUnavailable ? 'Music is unavailable. Press the music button to try again.'
       : musicPlaying ? '<span aria-hidden="true">♪</span> <span lang="hu">' + MUSIC.title + '</span>' : '';
@@ -409,7 +409,7 @@
   $('music').addEventListener('click',toggleMusic);
   player.addEventListener('playing',()=>{if(!musicWanted){player.pause();return;}musicPlaying=true;renderMusic();});
   player.addEventListener('pause',()=>{musicPlaying=false;renderMusic();});
-  player.addEventListener('ended',()=>{if(musicWanted)playMusic();});
+  player.addEventListener('ended',()=>{if(musicWanted)stopMusic();});
   player.addEventListener('error',()=>{if(player.error&&musicWanted)stopMusic(true);});
   $('vibration').addEventListener('click',()=>{vibration=!vibration;if(!vibration)stopPulses();renderPreferences();save();});
   $('theme').addEventListener('click',()=>{if(!theme)return;theme.toggle();renderPreferences();save();});

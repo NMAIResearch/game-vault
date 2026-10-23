@@ -22,7 +22,7 @@
       <div class="preferences">
         <button id="symbols" class="quiet" type="button" aria-pressed="false" title="Show a different symbol for each colour"><span aria-hidden="true">◈</span> Symbols</button>
         <button id="sound" class="quiet" type="button" aria-pressed="false"><span aria-hidden="true">♫</span> Sound off</button>
-        <button id="music" class="quiet" type="button" aria-pressed="false" title="Play Egy falka leszünk on repeat"><span aria-hidden="true">♪</span> Music off</button>
+        <button id="music" class="quiet" type="button" aria-pressed="false" title="Play Egy falka leszünk once"><span aria-hidden="true">♪</span> Music off</button>
         <button id="vibration" class="quiet" type="button" aria-pressed="true" title="A short buzz when you pour, when a pour is refused and when you finish a level" hidden><span aria-hidden="true">∿</span> Vibration on</button>
         <button id="theme" class="quiet" type="button" aria-label="Switch to day theme" title="Switch to day theme"><span aria-hidden="true">☀</span> Day</button>
         <button id="help-open" class="help-button" type="button" aria-label="How to play">?</button>
@@ -63,7 +63,7 @@
     <footer><span>Made for a quieter kind of screen time.</span><details><summary>About this game</summary><p>Water Sort for Game Vault. Built with OpenAI Codex. This update: Opus 5.5 (Claude Code CLI). Code follows the Vault’s MIT licence. Progress and preferences are saved only in this browser. No account, tracking or external requests.</p><p class="music-credit">Music: <span lang="hu">Egy falka leszünk</span> by NM AI Research, generated with Suno v6. Recording licensed CC BY-NC 4.0.</p></details></footer>
   </div>
   <div id="pour-layer" class="pour-layer" aria-hidden="true"></div>
-  <audio id="music-player" preload="none" loop></audio>
+  <audio id="music-player" preload="none"></audio>
   <dialog id="help" aria-labelledby="help-title">
     <div class="dialog-head"><span class="overline">TAKE IT ONE POUR AT A TIME</span><button type="button" data-close="help" aria-label="Close instructions">×</button></div>
     <h2 id="help-title">Make room for colour.</h2>
