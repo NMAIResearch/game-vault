@@ -2,6 +2,7 @@
 // tinted parts take the instance colour, the rest keep their own colour.
 import * as THREE from '../three.module.min.js';
 import { placeModel } from './place-models.js';
+import { worldModel } from './world-models.js';
 
 const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
 
@@ -252,6 +253,9 @@ Object.assign(TINTS, {
   barn: [0xf16a50, 0xd84b45, 0xf08250], tractor: [0x77bf4b, 0xffad35],
   balloon: [0xff658f, 0x58caee, 0xffcf43, 0xb488ee], teacup: [0xfc91c0, 0x6ed7e1, 0xae9cf5],
   cart: [0xff8eb4, 0x6acfd8], tent: [0xf471a7, 0x6cc9d8, 0xa78ce8], popcorn: [0xff6785, 0x6acfe5],
+  moonrock: [0xaeb7ce, 0xc8c8d8, 0x9ea7c3], pod: [0xf8b3dc, 0x9ecbf5, 0xc6a2ed],
+  blob: [0x9ee5c3, 0xd8b1f5, 0xffb5d4], mushroom: [0xe6a1eb, 0xafa4f1, 0xf9c287],
+  fish: [0xffce68, 0xffa19c, 0x83d6e6, 0xc6b4f1],
 });
 
 // Colour of the stand-in block for types whose main colour is not the instance tint.
@@ -261,7 +265,10 @@ export function speckModel() { return speck ||= merge([part(box(1, 1, 1), WHITE,
 
 const cache = {};
 export function modelFor(id) {
-  if (!cache[id]) cache[id] = merge(BUILDERS[id] ? BUILDERS[id]() : placeModel(id, { part, box, cyl, cone, ico, wheels, THREE }));
+  if (!cache[id]) {
+    const kit = { part, box, cyl, cone, ico, wheels, THREE };
+    cache[id] = merge(BUILDERS[id] ? BUILDERS[id]() : worldModel(id, kit) || placeModel(id, kit));
+  }
   return cache[id];
 }
 

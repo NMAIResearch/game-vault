@@ -181,6 +181,10 @@ button:focus-visible { outline: 3px solid #ffe08a; outline-offset: 3px; }
 .map-picture.harbour { background: radial-gradient(ellipse at 100% 50%, #34bbda 0 45%, #f7d993 46% 66%, #93ca62 67%); }
 .map-picture.farm { background: linear-gradient(105deg, transparent 0 42%, #56cee0 43% 56%, transparent 57%), repeating-linear-gradient(0deg,#b5d957 0 6px,#83b64d 7px 10px); }
 .map-picture.fair { background: repeating-radial-gradient(circle at 50% 50%, #91d66d 0 12px, #ffe1a1 13px 17px); }
+.map-picture.moonbase { background: radial-gradient(circle at 70% 75%, #77819b 0 14%, #b7bfd5 15% 21%, transparent 22%), linear-gradient(160deg, #172544 0 38%, #a4aec9 39%); }
+.map-picture.jurassic { background: linear-gradient(115deg, transparent 0 42%, #65c7ae 43% 53%, transparent 54%), repeating-linear-gradient(65deg, #7da449 0 13px, #94bb5e 14px 22px); }
+.map-picture.alien { background: radial-gradient(ellipse at 75% 75%, #9ae7d0 0 16%, transparent 17%), linear-gradient(145deg, #49315e, #bc8bcf); }
+.map-picture.atlantis { background: repeating-radial-gradient(circle at 50% 65%, #7bb8ad 0 12px, #c5d9b2 13px 16px, #3d8496 17px 26px); }
 .map-picture span { font-size: 30px; color: #fff; text-shadow: 0 2px 3px #3c4556; }
 #map-description { margin: 8px 0; min-height: 28px; font-size: 12px; color: #e4d9ef; }
 .menu-card .tag { margin: 8px 0 12px; }
@@ -189,9 +193,13 @@ button:focus-visible { outline: 3px solid #ffe08a; outline-offset: 3px; }
 .menu-card .look { width: 40px; height: 40px; }
 .menu-card #looks-row { gap: 7px; }
 .menu-card .credit { font-size: 10px; }
+@media (min-width: 900px) {
+  .menu-card { width: min(1040px,100%); display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px; }
+  .menu-options { align-self: center; }
+}
 @media (max-width: 440px) {
   #menu { padding: 10px; }.menu-card { padding: 16px 12px; }
-  .map-choice { gap: 6px; padding: 6px; }.map-picture { width: 35px; height: 54px; }
+  .map-choice { gap: 6px; padding: 6px; min-height: 72px; }.map-picture { width: 35px; height: 48px; }
   .map-picture span { font-size: 24px; }.map-info strong { font-size: 12px; }.map-info small { font-size: 10px; }
   .menu-card .tog { padding: 9px 10px; font-size: 12px; }
   #toast { white-space: normal; width: max-content; max-width: 92vw; text-align: center; }

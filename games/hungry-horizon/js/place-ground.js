@@ -1,8 +1,10 @@
 // Ground art for the additional maps. A single surface avoids overlapping water and land depth planes.
 import { riverX } from './places.js';
 import { mulberry32 } from './logic.js';
+import { paintWorld } from './world-ground.js';
 export function paintPlace(g, S, map) {
   const k = S / 300, X = x => (x + 150) * k, rnd = mulberry32(map.seed ^ 73421);
+  if (paintWorld(g, S, map, rnd)) return;
   const rect = (x,z,w,h,c) => { g.fillStyle=c; g.fillRect(X(x),X(z),w*k,h*k); };
   const ellipse = (x,z,rx,rz,c) => {g.fillStyle=c;g.beginPath();g.ellipse(X(x),X(z),rx*k,rz*k,0,0,Math.PI*2);g.fill();};
   const line = (points,c,w) => {g.strokeStyle=c;g.lineWidth=w*k;g.lineCap='round';g.beginPath();points.forEach(([x,z],n)=>n?g.lineTo(X(x),X(z)):g.moveTo(X(x),X(z)));g.stroke();};

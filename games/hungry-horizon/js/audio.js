@@ -1,8 +1,10 @@
-// Sound effects made with WebAudio, plus the looping soundtrack. Nothing plays before a tap or click.
+// Sound effects made with WebAudio and a repeating playlist. Playback begins after a tap or click.
+export const MUSIC_TRACKS = ['soundtrack.mp3', 'nowhere-to-be.mp3'];
+
 export class Audio {
   constructor() {
     this.ctx = null; this.sfxOn = true; this.musicOn = true;
-    this.music = null; this.last = {};
+    this.music = null; this.last = {}; this.track = 0;
   }
 
   // Call from a user gesture.
@@ -20,8 +22,13 @@ export class Audio {
     }
     if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
     if (!this.music) {
-      this.music = new window.Audio('soundtrack.mp3');
-      this.music.loop = true; this.music.volume = 0.42; this.music.preload = 'auto';
+      this.music = new window.Audio(MUSIC_TRACKS[this.track]);
+      this.music.loop = false; this.music.volume = 0.42; this.music.preload = 'auto';
+      this.music.addEventListener('ended', () => {
+        this.track = (this.track + 1) % MUSIC_TRACKS.length;
+        this.music.src = MUSIC_TRACKS[this.track];
+        this.syncMusic();
+      });
     }
     this.syncMusic();
   }

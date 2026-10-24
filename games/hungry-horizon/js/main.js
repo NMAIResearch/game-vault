@@ -298,7 +298,7 @@ async function boot() {
   });
   syncToggles();
 
-  const LOOK_ICON = { classic: '', googly: 'oo', chomp: 'VV', duck: 'Q', burp: 'b', donut: 'O', hat: '^', stache: '~', captain: '⚓', scarecrow: '✿', jester: '✦' };
+  const LOOK_ICON = { classic: '', googly: 'oo', chomp: 'VV', duck: 'Q', burp: 'b', donut: 'O', hat: '^', stache: '~', captain: '⚓', scarecrow: '✿', jester: '✦', lunar: '☾', 'fern-crown': '❧', cosmic: '✧', diver: '♆' };
   function renderLooks() {
     const row = $('looks-row'); row.innerHTML = '';
     for (const l of LOOKS) {
@@ -768,7 +768,7 @@ async function boot() {
     if (map.shaped) {
       if (radarMap !== map.id) {
         radarMap = map.id; radarLand = document.createElement('canvas'); radarLand.width = radarLand.height = 64;
-        const bg = radarLand.getContext('2d');bg.fillStyle = '#35a4bd';bg.fillRect(0,0,64,64);bg.fillStyle = map.id === 'harbour' ? '#e6c581' : '#8fc65b';
+        const bg = radarLand.getContext('2d');bg.fillStyle = def.water || '#35a4bd';bg.fillRect(0,0,64,64);bg.fillStyle = def.land || (map.id === 'harbour' ? '#e6c581' : '#8fc65b');
         for(let x=0;x<64;x++) for(let z=0;z<64;z++) if(landAt(map.id,(x/64*2-1)*e,(z/64*2-1)*e)) bg.fillRect(x,z,1,1);
       }
       g.drawImage(radarLand,pad,pad,2*e*k,2*e*k);

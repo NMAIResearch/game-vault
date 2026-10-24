@@ -5,6 +5,9 @@ import {
   EraseConfirmation, SaveThrottle,
 } from './logic.js';
 import * as THREE from '../three.module.min.js';
+import { landAt } from './places.js';
+import { WORLD_TYPES } from './worlds.js';
+import { modelFor } from './models.js';
 import { ENDGAME_LEFT, CUT_NEAR, SPECK_IN, SPECK_OUT, speckMode, screenSize, viewDistance, depthRange, frameCamera, viewFrustum, shouldDraw, inView } from './view.js';
 
 function assert(cond, msg) { if (!cond) throw new Error(msg); }
@@ -152,7 +155,8 @@ export const CHECKS = [
     assert(first.join() === 'googly,chomp,donut', `a slow first clear unlocked ${first.join()}`);
     assert(newUnlocks(first, { ...base, maxTier: 6, cleared: true, clears: 2, time: 285, abyssAt: 195 }).join() === 'duck', 'second clear');
     const all = newUnlocks([], { maxTier: 6, people: 99, cleared: true, beatPrevious: true, time: 200, clears: 2, abyssAt: 150 });
-    assert(all.length === LOOKS.filter(l => !['classic', 'captain', 'scarecrow', 'jester'].includes(l.id)).length, `got ${all.length}`);
+    const mapLooks = Object.values(MAPS).map(m => m.look).filter(Boolean);
+    assert(all.length === LOOKS.filter(l => l.id !== 'classic' && !mapLooks.includes(l.id)).length, `got ${all.length}`);
   }],
 ];
 
@@ -312,7 +316,7 @@ CHECKS.push(['harbour: moving boats keep clear of one another and the liner for 
 }]);
 
 // Each additional map is checked independently, including its real progression to a clear.
-for (const id of ['harbour', 'farm', 'fair']) {
+for (const id of Object.keys(MAPS).filter(id => id !== 'downtown')) {
   CHECKS.push(
     [`${id}: deterministic seeds and a different layout from Downtown`, () => {
       const a = JSON.stringify(generateMap(7, id)), b = JSON.stringify(generateMap(7, id));
@@ -327,6 +331,10 @@ for (const id of ['harbour', 'farm', 'fair']) {
         for (const o of m.objects) {
           assert(Math.abs(o.x)<139 && Math.abs(o.z)<139, 'unreachable object');
           assert(o.s<=14, 'object never fits');
+          if (MAPS[id].landmarks) {
+            assert(landAt(id,o.x,o.z), 'object off land');
+            for(let a=0;a<8;a++) assert(landAt(id,o.x+Math.cos(a*Math.PI/4)*o.s,o.z+Math.sin(a*Math.PI/4)*o.s), `${TYPES[o.type].id} overlaps shore`);
+          }
           for (const b of solids) assert(o === b || !insideSolid(b,o.x,o.z), `${TYPES[o.type].id} inside ${TYPES[b.type].id}`);
         }
       }
@@ -409,6 +417,16 @@ CHECKS.push(
     assert(store.get('run') === null && store.get('map') === null, 'Store.clear should remove saved keys');
   }],
 );
+
+CHECKS.push(['new world models: finite geometry contained by the declared height', () => {
+  for (const t of WORLD_TYPES) {
+    const g = modelFor(t.id);
+    assert(g.attributes.position.count > 0, `empty ${t.id}`);
+    assert(g.attributes.position.array.every(Number.isFinite), `invalid vertices in ${t.id}`);
+    g.computeBoundingBox();
+    assert(g.boundingBox.max.y <= t.h + 1e-6, `${t.id} exceeds its visual height`);
+  }
+}]);
 
 export function runChecks() {
   return CHECKS.map(([name, fn]) => {

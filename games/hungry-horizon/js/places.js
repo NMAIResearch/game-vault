@@ -1,5 +1,6 @@
 // Map definitions, shaped shores and deterministic placement for the additional places.
 // Downtown's generator and type indices are preserved in logic.js.
+import { WORLD_MAPS, WORLD_TYPES, WORLD_FOOD, worldLandAt } from './worlds.js';
 export const MAP_DEFS = {
   harbour: { id: 'harbour', name: 'Sunny Harbour', defaultSeed: 7, colour: '#37c9da', icon: '⚓',
     description: 'A crescent coast and bobbing boats. Your void crosses water.', look: 'captain' },
@@ -7,6 +8,7 @@ export const MAP_DEFS = {
     description: 'Crop rows, wandering sheep and barns across a winding river.', look: 'scarecrow' },
   fair: { id: 'fair', name: 'Whirligig Fair', defaultSeed: 7, colour: '#ff8ab6', icon: '✦',
     description: 'An oval island of candy stalls, teacups and giant fairground rides.', look: 'jester' },
+  ...WORLD_MAPS,
 };
 export const EXTRA_TYPES = [
   { id: 'shell', label: 'shells', s: 0.26, h: 0.22 },
@@ -35,10 +37,13 @@ export const EXTRA_TYPES = [
   { id: 'tent', label: 'striped tents', s: 5.3, h: 7, solid: [3.5, 3.5] },
   { id: 'carousel', label: 'carousels', s: 8.6, h: 10, solid: [5.6, 5.6] },
   { id: 'wheel', label: 'big wheels', s: 13.2, h: 31, solid: [10, 5.5] },
+  ...WORLD_TYPES,
 ];
 
 export function riverX(z) { return 15 * Math.sin(z / 32); }
 export function landAt(id, x, z) {
+  const worldLand = worldLandAt(id, x, z);
+  if (worldLand !== null) return worldLand;
   if (id === 'harbour') return x * x / (135 * 135) + z * z / (133 * 133) < 1 && x < 28 + 0.004 * z * z;
   if (id === 'farm') return Math.abs(x) < 134 && Math.abs(z) < 134 &&
     (Math.abs(x - riverX(z)) > 8 || [-72, 0, 72].some(b => Math.abs(z - b) < 5));
@@ -55,7 +60,7 @@ export function generatePlace(seed, def, TYPES, rnd) {
   const R = (a, b) => a + (b - a) * rnd();
   const index = Object.fromEntries(TYPES.map((t, i) => [t.id, i]));
   const id = def.id, objects = [], occupied = new Map();
-  const start = id === 'harbour' ? { x: -35, z: 24 } : id === 'farm' ? { x: -45, z: 20 } : { x: 0, z: 60 };
+  const start = def.start ? { ...def.start } : id === 'harbour' ? { x: -35, z: 24 } : id === 'farm' ? { x: -45, z: 20 } : { x: 0, z: 60 };
   const key = (x, z) => `${Math.floor(x / 12)},${Math.floor(z / 12)}`;
   function free(x, z, s) {
     for (let i = Math.floor((x - s - 14) / 12); i <= Math.floor((x + s + 14) / 12); i++)
@@ -113,6 +118,12 @@ export function generatePlace(seed, def, TYPES, rnd) {
     scatter('windmill', 16); scatter('barn', 100); scatter('tractor', 40); scatter('bigtree', 20);
     scatter('hay', 160); scatter('tree', 80); scatter('sheep', 120); scatter('person', 60); scatter('lamp', 50); scatter('mailbox', 140);
     scatter('carrot', 50, 'start'); scatter('carrot', 590); scatter('cabbage', 400); scatter('sapling', 250); scatter('chicken', 100); scatter('flower', 220);
+  } else if (WORLD_FOOD[id]) {
+    const food = WORLD_FOOD[id];
+    for (const [x, z] of def.landmarks) add(food[8], x, z, { rot: 0 });
+    scatter(food[7], 16); scatter(food[6], 100); scatter(food[5], 60);
+    scatter(food[4], 200); scatter(food[3], 120); scatter(food[2], 500);
+    scatter(food[0], 50, 'start'); scatter(food[0], 590); scatter(food[1], 600);
   } else {
     for (const [x, z] of [[-80, -65], [80, -65], [-70, 85], [70, 85]]) add('wheel', x, z, { rot: 0 });
     scatter('carousel', 16); scatter('tent', 100); scatter('cart', 50); scatter('fountain', 10);

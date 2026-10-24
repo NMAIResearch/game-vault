@@ -778,6 +778,10 @@ export const LOOKS = [
   { id: 'scarecrow', name: 'Straw Topper', how: 'Clear Riverside Farm', test: r => r.cleared && r.map === 'farm' },
   { id: 'jester', name: 'Jelly Jester', how: 'Clear Whirligig Fair', test: r => r.cleared && r.map === 'fair' },
   { id: 'stache', name: 'Distinguished', how: 'Swallow the whole city in under 4:30', test: r => r.cleared && r.time < 270 },
+  { id: 'lunar', name: 'Lunar Halo', how: 'Clear Moonbase Munch', test: r => r.cleared && r.map === 'moonbase' },
+  { id: 'fern-crown', name: 'Fern Crown', how: 'Clear Jurassic Jungle', test: r => r.cleared && r.map === 'jurassic' },
+  { id: 'cosmic', name: 'Cosmic Antennae', how: 'Clear Alien Bloom', test: r => r.cleared && r.map === 'alien' },
+  { id: 'diver', name: 'Deep-Sea Diver', how: 'Clear Sunken City', test: r => r.cleared && r.map === 'atlantis' },
 ];
 
 export function newUnlocks(owned, run) {

@@ -1,7 +1,7 @@
 // Everything drawn: city ground, instanced objects, the hole, falling animation, markers, particles, looks.
 import * as THREE from '../three.module.min.js';
 import { paintPlace } from './place-ground.js';
-import { TYPES, TIERS } from './logic.js';
+import { TYPES, TIERS, MAPS } from './logic.js';
 import { modelFor, speckModel, makeObjectMaterial, TINTS, SPECK_COLOURS, cutU } from './models.js';
 import { ENDGAME_LEFT, CUT_RANGE, viewDistance, frameCamera, viewFrustum, shouldDraw, inView, speckMode, screenSize } from './view.js';
 
@@ -296,6 +296,24 @@ function buildLook(id) {
       const tip = new THREE.Mesh(new THREE.ConeGeometry(.2, .6, 8), L([0xff6da8, 0x64d8e4, 0xffca46][i])); tip.position.y = .25;
       const bell = new THREE.Mesh(new THREE.IcosahedronGeometry(.11, 0), L(0xffed96)); bell.position.y = .6; pivot.add(tip, bell); g.add(pivot);
     }
+  } else if (['lunar', 'fern-crown', 'cosmic', 'diver'].includes(id)) {
+    const colour = { lunar: 0xe5eafa, 'fern-crown': 0x5c9e55, cosmic: 0xc49ce9, diver: 0xc99e5f }[id];
+    ring(1.2,.18,colour);
+    ring(1.2,.045,id === 'diver' ? 0x77d8cc : 0xffe099,.28);
+    for(let n=0;n<10;n++) {
+      const a=n*Math.PI/5;
+      const geo=id === 'fern-crown' ? new THREE.ConeGeometry(.14,.48,4) : new THREE.IcosahedronGeometry(.09,0);
+      const jewel=new THREE.Mesh(geo,L(id === 'fern-crown' ? 0xb3d96b : id === 'cosmic' ? 0x97f3d3 : 0xffd78b));
+      jewel.position.set(Math.cos(a)*1.2,id === 'fern-crown' ? .38 : .27,Math.sin(a)*1.2);g.add(jewel);
+    }
+    if(id === 'cosmic' || id === 'lunar') for(const s of [-1,1]) {
+      const stem=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.6,6),L(colour));stem.position.set(s*.65,.58,-1);g.add(stem);
+      const tip=new THREE.Mesh(new THREE.IcosahedronGeometry(.16,1),B(0x94efdc));tip.position.set(s*.65,.94,-1);g.add(tip);
+    }
+    if(id === 'diver') {
+      const snorkel=new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,.7,8),L(0x70cbbe));snorkel.position.set(1.18,.55,0);g.add(snorkel);
+      const cap=new THREE.Mesh(new THREE.SphereGeometry(.12,8,6),L(0xffcf70));cap.position.set(1.18,.93,0);g.add(cap);
+    }
   }
   return { group: g, parts, id };
 }
@@ -420,6 +438,9 @@ export class Renderer {
     const map = world.map;
     if (this.mapKey !== `${map.id}:${map.seed}`) {
       this.mapKey = `${map.id}:${map.seed}`;
+      const theme = MAPS[map.id];
+      this.scene.background.setHex(theme.sky ?? 0xbfe6ff);
+      this.scene.fog.color.copy(this.scene.background);
       if (this.ground) {
         this.scene.remove(this.ground, this.outer); this.ground.material.map.dispose();
         this.ground.geometry.dispose(); this.ground.material.dispose(); this.outer.geometry.dispose(); this.outer.material.dispose();
@@ -431,7 +452,7 @@ export class Renderer {
       const sea = new THREE.Shape([[-4000, -4000], [4000, -4000], [4000, 4000], [-4000, 4000]].map(([x, y]) => new THREE.Vector2(x, y)));
       const g = GROUND_SPAN / 2 - 0.5;
       sea.holes.push(new THREE.Path([[-g, -g], [-g, g], [g, g], [g, -g]].map(([x, y]) => new THREE.Vector2(x, y))));
-      this.outer = new THREE.Mesh(new THREE.ShapeGeometry(sea).rotateX(-Math.PI / 2), withHoleCut(new THREE.MeshLambertMaterial({ color: map.shaped ? 0x35bad1 : 0x5fb4d6 })));
+      this.outer = new THREE.Mesh(new THREE.ShapeGeometry(sea).rotateX(-Math.PI / 2), withHoleCut(new THREE.MeshLambertMaterial({ color: theme.outer ?? (map.shaped ? 0x35bad1 : 0x5fb4d6) })));
       this.outer.position.y = -0.05;
       this.scene.add(this.ground, this.outer);
     }
