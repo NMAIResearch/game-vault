@@ -7,7 +7,6 @@
   const canVibrate = typeof navigator.vibrate === 'function';
   const PULSE = {pour: 15, refused: 30, win: 45};
   const PULSE_GAP = 400;
-  const MUSIC = {src: 'music/egy-falka-leszunk.mp3', title: 'Egy falka leszünk'};
   const colours = [
     {name:'sea blue', hex:'#7ebbd4', symbol:'●'},
     {name:'coral', hex:'#e79788', symbol:'▲'},
@@ -24,8 +23,6 @@
   let saveAvailable = true, bootMessage = '';
   let vibration = true, themeFallback = 'system', pulseTimer = 0, lastPulse = -Infinity, celebrationTimer = 0;
   let storedText = null;
-  const player = $('music-player');
-  let musicWanted = false, musicPlaying = false, musicAttempt = 0, musicUnavailable = false;
   try { storedText = localStorage.getItem(STORAGE); }
   catch (error) {
     saveAvailable = false;
@@ -146,37 +143,6 @@
     } catch (error) {
       sound = false; save(); renderPreferences(); say('Sound is unavailable. The puzzle is ready to play.');
     }
-  }
-
-  // The song plays once from the Music button, separate from the Sound tones, and its end turns the music off. Its
-  // source is set on the first press, so nothing is downloaded before it; the choice lasts for this visit only.
-  function renderMusic() {
-    $('music').setAttribute('aria-pressed', String(musicWanted));
-    $('music').innerHTML = '<span aria-hidden="true">♪</span> Music ' + (musicWanted ? 'on' : 'off');
-    $('music').title = musicWanted ? 'Stop the music' : 'Play ' + MUSIC.title + ' once';
-    const line = $('music-title');
-    const html = musicUnavailable ? 'Music is unavailable. Press the music button to try again.'
-      : musicPlaying ? '<span aria-hidden="true">♪</span> <span lang="hu">' + MUSIC.title + '</span>' : '';
-    if (line.innerHTML !== html) line.innerHTML = html;
-    line.hidden = !html;
-  }
-
-  function stopMusic(unavailable = false) {
-    musicAttempt++; musicWanted = false; musicPlaying = false; musicUnavailable = unavailable;
-    player.pause(); renderMusic();
-  }
-
-  function playMusic() {
-    const attempt = ++musicAttempt;
-    musicPlaying = false; renderMusic();
-    if (player.error || player.getAttribute('src') !== MUSIC.src) player.src = MUSIC.src;
-    const failed = () => { if (musicWanted && attempt === musicAttempt) stopMusic(true); };
-    try { const pending = player.play(); if (pending) pending.catch(failed); } catch (error) { failed(); }
-  }
-
-  function toggleMusic() {
-    if (musicWanted) { stopMusic(); return; }
-    musicWanted = true; musicUnavailable = false; playMusic();
   }
 
   function renderPreferences() {
@@ -406,11 +372,6 @@
   document.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>$(button.dataset.close).close()));
   $('symbols').addEventListener('click',()=>{symbols=!symbols;renderPreferences();save();});
   $('sound').addEventListener('click',()=>{sound=!sound;renderPreferences();save();if(sound)tone();});
-  $('music').addEventListener('click',toggleMusic);
-  player.addEventListener('playing',()=>{if(!musicWanted){player.pause();return;}musicPlaying=true;renderMusic();});
-  player.addEventListener('pause',()=>{musicPlaying=false;renderMusic();});
-  player.addEventListener('ended',()=>{if(musicWanted)stopMusic();});
-  player.addEventListener('error',()=>{if(player.error&&musicWanted)stopMusic(true);});
   $('vibration').addEventListener('click',()=>{vibration=!vibration;if(!vibration)stopPulses();renderPreferences();save();});
   $('theme').addEventListener('click',()=>{if(!theme)return;theme.toggle();renderPreferences();save();});
   if(theme)theme.follow(renderPreferences);
@@ -429,7 +390,7 @@
   window.addEventListener('pagehide',()=>{save();stopPulses();if(audio)audio.suspend().catch(()=>{});});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){save();stopPulses();if(audio)audio.suspend().catch(()=>{});}});
   if(C.won(session.board))finished.add(session.level);
-  render();renderMusic();
+  render();
   $('save-status').textContent=saveAvailable?'Progress stays in this browser.':'Saving unavailable. You can still play.';
   if(bootMessage)say(bootMessage);
 })();
