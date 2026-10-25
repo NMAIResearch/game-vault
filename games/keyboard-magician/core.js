@@ -56,10 +56,28 @@
     const spb = 60 / (measured?.beatMeasurement?.tempo_bpm || song.bpm), L = mode === 'jam' ? 4 : 6;
     let src = measured ? measured.notes.map(n => measured.tempoMap ? {...n, t: beatTime(measured.tempoMap, n.grid)} : n) : built.lead.map(n => ({t: n.beat * spb, dur: n.dur * spb, pitch: n.pitch, grid: n.grid ?? n.beat}));
     if (measured?.gridVersion >= 2 && diff !== 'hard') src = src.filter(n => Number.isInteger(n.grid));
+    const riff = song.id === 'wrongturn' && measured?.laneDistribution === 'pitch-class-occurrence';
+    if (riff && diff === 'easy' && measured.easyGrids) {
+      const accents = new Set(measured.easyGrids);
+      src = src.filter(n => accents.has(n.grid));
+    }
     src = src.slice().sort((a, b) => a.t - b.t);
     const pitches = [...new Set(src.map(n => n.pitch))].sort((a, b) => a - b);
     const lanes = diff === 'easy' ? (mode === 'jam' ? [0, 1, 2] : [1, 2, 3, 4]) : Array.from({length: L}, (_, i) => i);
-    const laneOf = p => lanes[Math.min(lanes.length - 1, Math.floor(pitches.indexOf(p) * lanes.length / Math.max(1, pitches.length)))];
+    // Octave-equivalent full-mix peaks share a fret; recurring riff tones get
+    // lane space. The whole measured chart keeps the allocation stable by difficulty.
+    const weighted = riff;
+    const positions = new Map();
+    if (weighted) {
+      const counts = new Map();
+      for (const n of measured.notes) counts.set(n.pitch % 12, (counts.get(n.pitch % 12) || 0) + 1);
+      let below = 0;
+      for (const p of [...counts.keys()].sort((a, b) => a - b)) {
+        positions.set(p, (below + counts.get(p) / 2) / measured.notes.length);
+        below += counts.get(p);
+      }
+    }
+    const laneOf = p => lanes[Math.min(lanes.length - 1, Math.floor((weighted ? positions.get(p % 12) : pitches.indexOf(p) / Math.max(1, pitches.length)) * lanes.length))];
     const gap = measured?.gridVersion >= 2 ? (diff === 'easy' ? spb * 1.8 : diff === 'normal' ? spb * .8 : spb * .4) : diff === 'easy' ? Math.max(0.5, (song.easyEvery || 1) * spb) : diff === 'normal' ? 0.3 : 0.125;
     const out = []; let last = -Infinity;
     for (const n of src) {

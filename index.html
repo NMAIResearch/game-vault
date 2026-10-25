@@ -119,7 +119,6 @@
         const tags = g.tags || [];
         if (tags.length) article.append(make("ul", { className: "tags", "aria-label": "Tags" }, tags.map(t => make("li", { text: "#" + t }))));
         const details = [];
-        if (g.built_with) details.push("built with " + g.built_with);
         const r = ratings[g.id];
         if (r && (r.up + r.heart + r.eyes + r.comments) > 0) details.push(ratingNode(r));
         if (g.full_version_url) details.push(make("span", { className: "paid", text: "demo, full version available" }));
