@@ -1,0 +1,12 @@
+Think Again / Gondold újra
+
+Game code: MIT, see LICENSE.
+
+Recording notice, separate from the code licence:
+The existing game records these recordings as CC BY-NC 4.0, covering rights held by NM AI Research; generated with Suno standard v6 Pro. Preserve that notice separately from the game-code licence.
+
+Optional playlist: Beautiful Interference; Csillagösvény; Hangsúlyváltás.
+Recordings are not included in this prototype.
+
+All robots, claims, devices and outcomes are fictional puzzle scenes; no assessment or cognitive-benefit claim about real AI.
+Minden robot, állítás, eszköz és kimenetel kitalált fejtörőjelenet; nem értékeli a valódi mesterséges intelligenciát, és nem állít kognitív hasznot.

@@ -57,5 +57,16 @@
     "vibe": "a little colour, a little calm: sort glass tubes one pour at a time, with free hints, undo and no ads",
     "tags": ["puzzle", "casual", "calm"],
     "built_with": "OpenAI Codex"
+  },
+  {
+    "id": "think-again",
+    "title": "Think Again / Gondold újra",
+    "vibe": "twenty paper puzzles in English and Hungarian: move, turn and combine what you see",
+    "tags": [
+      "puzzle",
+      "casual",
+      "calm"
+    ],
+    "built_with": "OpenAI Codex"
   }
 ]

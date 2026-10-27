@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Think Again / Gondold újra. A little paper. A different possibility.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; media-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <title>Think Again | Game Vault</title>
+  <link rel="icon" href="icon.svg?v=20" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css?v=20">
+  <script defer src="core.js?v=20"></script>
+  <script defer src="extra-a.js?v=20"></script>
+  <script defer src="extra-b.js?v=20"></script>
+  <script defer src="extra-c.js?v=20"></script>
+  <script defer src="data.js?v=20"></script>
+  <script defer src="render.js?v=20"></script>
+  <script defer src="music.js?v=20"></script>
+  <script defer src="app.js?v=20"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main" data-text="skipLink">Skip to the game</a>
+  <div class="page">
+    <header class="masthead">
+      <div class="topline"><span class="vault">GAME VAULT <span aria-hidden="true">/</span> PAPER PLAY</span><div class="languages" role="group" aria-label="Language / Nyelv"><button type="button" id="lang-en" lang="en" aria-pressed="true">English</button><button type="button" id="lang-hu" lang="hu" aria-pressed="false">Magyar</button></div></div>
+      <div class="title-row"><div><p class="eyebrow" data-text="eyebrow">THE PLAYFUL SUPPLEMENT</p><h1 data-text="title">Think Again</h1></div><span class="paper-mark" aria-hidden="true">✳</span></div>
+      <div class="strapline"><p data-text="subtitle">A little paper. A different possibility.</p><button type="button" id="help-open" data-text="how">How to play</button></div>
+    </header>
+    <main id="main" tabindex="-1">
+      <section id="title-screen" class="title-screen">
+        <div class="intro-copy"><span class="chapter" aria-hidden="true">01 / ✎</span><h2 data-text="levels">The sketchbook</h2><p class="intro" data-text="intro"></p><button type="button" id="start" class="primary" data-text="start">Open the sketchbook →</button></div>
+        <div class="cover-art" aria-hidden="true"><svg viewBox="0 0 400 300"><path d="M65 48 L330 38 L344 252 L53 266 Z" fill="#fff9e7" stroke="#a7a08e" stroke-width="2"/><path d="M120 85 Q75 114 116 155 Q134 168 175 150 L179 207 H204 L212 164 L244 160 L254 194 Q271 208 283 190 L282 128 Q260 88 218 107 Q170 66 120 85" fill="#a7b9ce" stroke="#3d4741" stroke-width="3"/><path d="M183 106 Q137 81 138 129 Q140 159 181 146" fill="#c5d2e1" stroke="#3d4741" stroke-width="3"/><circle cx="252" cy="127" r="3" fill="#3d4741"/><path d="M89 63 Q48 28 51 80 M302 205 L345 224 M313 186 L354 186 M289 225 L311 251" fill="none" stroke="#c39157" stroke-width="3"/><circle cx="51" cy="89" r="3" fill="#c39157"/></svg></div>
+        <p class="fiction" id="fiction"></p>
+      </section>
+      <section id="play-screen" hidden>
+        <div class="scene-top"><button type="button" id="home" class="text-button" data-text="home">← Title page</button><span class="eyebrow" id="page-number"></span></div>
+        <details id="level-picker"><summary data-text="allScenes">Choose a scene</summary><nav id="level-nav"><ol id="level-list"></ol></nav></details>
+        <div class="level-heading"><span class="level-number" id="level-number" aria-hidden="true"></span><div><h2 id="level-title"></h2><p id="objective"></p></div></div>
+        <p id="play-guide" class="play-guide" data-text="playGuide"></p>
+        <div class="workspace">
+          <div class="paper-column">
+            <div class="paper-scroll" id="paper-scroll"><svg id="scene" viewBox="0 0 800 480" role="group" aria-labelledby="level-title objective" aria-describedby="guide" focusable="false"></svg></div>
+
+            <p class="scroll-note" data-text="scroll"></p>
+            <div id="context-controls" class="context-controls" role="group"></div><div class="picture-tools"><button id="zoom-in" type="button" data-text="zoomIn">Enlarge picture</button><button id="zoom-out" type="button" data-text="zoomOut">Fit picture</button></div><details id="access-controls"><summary data-text="moreControls">Keyboard and movement controls</summary><div class="paper-bottom"><span id="selection"></span></div><div id="object-controls" class="object-controls" role="group"><div class="dpad"><button type="button" id="up" data-key="up">↑</button><button type="button" id="left" data-key="left">←</button><button type="button" id="use" data-text="use">Use</button><button type="button" id="right" data-key="right">→</button><button type="button" id="down" data-key="down">↓</button></div><button type="button" id="release" class="text-button" data-text="release">Release selection</button></div>
+            </details><p id="feedback" class="feedback" role="status" aria-live="polite" aria-atomic="true"></p>
+            <section id="success" class="success" hidden aria-labelledby="success-title"><div><h3 id="success-title" data-text="done">That did it!</h3><p id="payoff"></p></div><button type="button" id="next" class="primary" data-text="next">Next scene →</button></section>
+          </div>
+          <aside class="tools"><ol id="hint-list" class="hint-list"></ol><button type="button" id="hint" data-text="hint">A little hint</button><p id="hint-status" class="fine"></p><button type="button" id="reveal" class="text-button" data-text="reveal">Show the solution</button><section id="solution" class="solution" hidden><h3 data-text="solution">The solution</h3><ol id="solution-steps"></ol><button type="button" id="solution-next" data-text="nextStep">Show next step →</button></section><div class="scene-actions"><button type="button" id="restart" data-text="restart">Restart this scene</button><button type="button" id="skip" class="text-button" data-text="skip">Skip this scene →</button></div><div class="legend"><p><i class="ink-sample" aria-hidden="true">a</i><span data-text="legendInk"></span></p><p><i class="loose-sample" aria-hidden="true">a</i><span data-text="legendLoose"></span></p></div></aside>
+        </div>
+      </section>
+      <section id="end-screen" class="end-screen" hidden><span class="chapter" aria-hidden="true">✳</span><h2 data-text="complete"></h2><p data-text="end"></p><div class="end-actions"><button type="button" id="replay" class="primary" data-text="replay"></button><button type="button" id="browse" data-text="finish"></button></div></section>
+    </main>
+    <footer><div class="music-bar"><button type="button" id="music-toggle" aria-pressed="false"><span aria-hidden="true">♫ </span><span id="music-label" data-text="musicPlay">Play music</span></button><span id="music-title"></span><label for="volume" data-text="volume">Music volume</label><input type="range" id="volume" min="0" max="1" step="0.05" value="0.35"></div><p id="music-status" role="status" aria-live="polite"></p><div class="footer-line"><p id="storage-status"></p><a href="CREDITS.txt" data-text="credits">Code and recording notices</a></div></footer>
+  </div>
+  <audio id="music-player" preload="none"></audio>
+  <dialog id="help" aria-labelledby="help-title"><div class="dialog-top"><h2 id="help-title" data-text="how">How to play</h2><button type="button" id="help-close" data-text="close">Close</button></div><p id="guide" data-text="guide"></p><p data-text="legendInk"></p><p data-text="legendLoose"></p><p class="fiction" id="help-fiction"></p></dialog>
+  <noscript>Enable JavaScript to play. / A játékhoz engedélyezd a JavaScriptet.</noscript>
+</body>
+</html>
