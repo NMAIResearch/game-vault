@@ -207,8 +207,8 @@
       "hu": "Ez a böngésző csak a nyelvet, a zeneválasztást és a hangerőt jegyzi meg."
     },
     "storageMissing": {
-      "en": "Preferences cannot be saved here. You can still play.",
-      "hu": "A beállítások itt nem menthetők. A játék folytatható."
+      "en": "Some changes could not be saved. You can still play.",
+      "hu": "Néhány változtatást nem sikerült menteni. A játék folytatható."
     },
     "credits": {
       "en": "Code and recording notices",

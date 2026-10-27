@@ -5,7 +5,7 @@
   let storage = null;
   try { storage = window.localStorage; } catch { /* Preferences are optional. */ }
   const prefs = C.readPrefs(storage);
-  let lang = prefs.language, saveOK = prefs.ok, index = 0, screen = 'title';
+  let lang = prefs.language, saveOK = prefs.ok, progressOK = true, index = 0, screen = 'title';
   const games = D.levels.map(C.initial), hintCounts = D.levels.map(() => 0), demos = D.levels.map(() => 0);
   try {
     const saved=JSON.parse(storage?.getItem('think-again:progress:v2')||'null');
@@ -14,7 +14,7 @@
       const at=D.levels.findIndex(l=>l.id===saved.last);
       if(at>=0)index=at;
     }
-  } catch { saveOK=false; }
+  } catch { progressOK=false; }
   const t = key => D.ui[key][lang];
   const level = () => D.levels[index];
   const state = () => games[index];
@@ -26,12 +26,13 @@
   function persist() {
     try {
       storage.setItem('think-again:progress:v2',JSON.stringify({version:2,last:level().id,levels:Object.fromEntries(D.levels.map((l,i)=>[l.id,games[i]]))}));
-    } catch { saveOK=false; }
-    $('storage-status').textContent=t(saveOK?'saved':'storageMissing');
+      progressOK=true;
+    } catch { progressOK=false; }
+    $('storage-status').textContent=t(saveOK && progressOK?'saved':'storageMissing');
   }
   function save() {
     saveOK = C.writePrefs(storage, { language:lang, music:prefs.music, volume:Number($('volume').value) });
-    $('storage-status').textContent = t(saveOK ? 'saved' : 'storageMissing');
+    $('storage-status').textContent = t(saveOK && progressOK ? 'saved' : 'storageMissing');
   }
   function refreshMusic() {
     $('music-label').textContent = t(music.wanted ? 'musicPause' : 'musicPlay');
@@ -50,7 +51,7 @@
     $('level-nav').setAttribute('aria-label',t('levels'));
     $('object-controls').setAttribute('aria-label',t('controls'));
     for (const key of ['up','down','left','right']) $(key).setAttribute('aria-label',t(key));
-    $('storage-status').textContent = t(saveOK ? 'saved' : 'storageMissing');
+    $('storage-status').textContent = t(saveOK && progressOK ? 'saved' : 'storageMissing');
     $('context-controls').setAttribute('aria-label',t('sceneActions'));
     refreshMusic();
   }
