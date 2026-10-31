@@ -904,16 +904,8 @@
   ],
   "tracks": [
     {
-      "src": "music/beautiful-interference.mp3",
-      "title": "Beautiful Interference"
-    },
-    {
-      "src": "music/csillagosveny.mp3",
-      "title": "Csillagösvény"
-    },
-    {
-      "src": "music/hangsulyvaltas.mp3",
-      "title": "Hangsúlyváltás"
+      "src": "music/long-read.mp3",
+      "title": "Long Read"
     }
   ]
 };
