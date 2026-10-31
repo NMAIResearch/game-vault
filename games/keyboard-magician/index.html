@@ -55,6 +55,7 @@
   .btn.primary { background: linear-gradient(180deg, #c6e9ff, #8fc9f5); color: #071226; border: 0; font-weight: 650; padding: 11px 28px; font-size: 16px; }
   .buttons { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 14px; }
   .how { margin-top: 14px; color: var(--muted); font-size: 13.5px; }
+  .jam-hold { float: right; width: 300px; max-width: 100%; height: auto; margin: 0 0 6px; }
   kbd { display: inline-block; min-width: 1.6em; padding: 0 6px; margin: 0 1px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 6px; background: rgba(255, 255, 255, 0.06); font: 600 12px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace; text-align: center; color: var(--ink); }
   .foot { margin-top: 14px; display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: space-between; color: var(--muted); font-size: 12.5px; }
   .foot a { color: var(--accent); }
@@ -1310,7 +1311,31 @@ function renderMenu() {
   $("#how").innerHTML = document.body.classList.contains("touch")
     ? "Tap the lower beat pads as notes reach their rings, and keep your finger down through long notes. In Jam a tap is the fret and the strum together. The <b>II</b> button pauses. Timing: positive values move notes later; negative values move them earlier. Use this if audio still feels out of time."
     : settings.mode === "jam"
-    ? "Hold the fret keys <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> and strum with <kbd>Backspace</kbd> as each note reaches its ring (<kbd>Enter</kbd> works too). Other frets can stay down, and a fret that lands just after the strum still counts. Keep the fret down through long notes. For JamLegend's two-handed style, tilt the keyboard towards the screen and strum with your thumb. <kbd>Esc</kbd> pauses. Timing: positive values move notes later; negative values move them earlier. Use this if audio still feels out of time."
+    ? `<svg class="jam-hold keys-only" width="300" height="120" viewBox="0 0 360 144" role="img" aria-label="Keyboard held upside down in both hands, keys facing the screen; fingers curl round the bottom onto 1 2 3 4 with the palm behind, and the other hand's thumb strums Backspace.">
+        <g aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M180 32V20m-4 4 4-4 4 4"/>
+          <rect x="24" y="34" width="312" height="66" rx="8"/>
+          <path d="M42 47H318M42 59H318M42 71H318M66 41V71M90 41V71M114 41V71M138 41V71M162 41V71M186 41V71M210 41V71M234 41V71M258 41V71M282 41V71M306 41V71" opacity="0.35"/>
+          <g stroke="var(--accent)">
+            <rect x="52" y="77" width="20" height="18" rx="3"/>
+            <rect x="76" y="77" width="20" height="18" rx="3"/>
+            <rect x="100" y="77" width="20" height="18" rx="3"/>
+            <rect x="124" y="77" width="20" height="18" rx="3"/>
+            <rect x="252" y="77" width="68" height="18" rx="3"/>
+          </g>
+          <path d="M54 132 42 114Q38 107 43 104Q47 102 54 109V99Q54 92 61 92Q68 92 68 99V109H78V99Q78 92 85 92Q92 92 92 99V109H102V99Q102 92 109 92Q116 92 116 99V109H126V99Q126 92 133 92Q140 92 140 99V116Q140 128 128 132"/>
+          <path d="M286 132 263 119 251 100Q246 93 251 90Q257 87 262 94L272 106 285 111V105Q285 99 291 99H310Q321 99 324 112L327 132"/>
+          <g fill="currentColor" stroke="none" font-family="inherit" font-size="12" text-anchor="middle">
+            <text x="180" y="13">Keys face the screen</text>
+            <text x="92" y="143">Fingers curl round</text>
+            <text x="289" y="143">Thumb strums</text>
+          </g>
+          <g fill="var(--accent)" stroke="none" font-family="inherit" font-size="12" text-anchor="middle">
+            <text x="62" y="90">1</text><text x="86" y="90">2</text><text x="110" y="90">3</text><text x="134" y="90">4</text>
+            <text x="286" y="90" font-size="11">Backspace</text>
+          </g>
+        </g>
+      </svg>Play Jam like a guitar. Pick up the keyboard and hold it upside down in both hands. Flip it forward so the keys face the screen. The fingers of one hand curl round the bottom edge onto the fret keys <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd>. Your palm rests on the back of the keyboard. Strum <kbd>Backspace</kbd> with the thumb of your other hand as each note reaches its ring (<kbd>Enter</kbd> works too). Other frets can stay down. A fret that lands just after the strum still counts. Keep the fret down through long notes. <kbd>Esc</kbd> pauses. Timing: positive values move notes later; negative values move them earlier. Use this if audio still feels out of time.`
     : "Tap <kbd>S</kbd> <kbd>D</kbd> <kbd>F</kbd> <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> as each note reaches its ring, and keep holding through long notes. <kbd>Esc</kbd> pauses. Timing: positive values move notes later; negative values move them earlier. Use this if audio still feels out of time.";
 }
 for (const b of $("#modes").children) b.addEventListener("click", () => { settings.mode = b.dataset.mode; save(); renderMenu(); });
