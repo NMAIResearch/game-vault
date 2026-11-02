@@ -3,7 +3,7 @@ Think Again / Gondold újra
 Game code: MIT, see LICENSE.
 
 Recording notice, separate from the code licence:
-Long Read is CC BY-NC 4.0, covering rights held by NM AI Research; generated with Suno v6. Preserve that notice separately from the game-code licence.
+Long Read is CC BY-NC 4.0, covering rights held by NMAI Research; generated with Suno v6. Preserve that notice separately from the game-code licence.
 
 Optional playlist: Long Read.
 

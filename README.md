@@ -12,7 +12,7 @@ A community home for games made with AI, built by describing what you want and s
 
 ## 🕹️ Play the games
 
-Visit the vault at [nmairesearch.com/game-vault](https://nmairesearch.com/game-vault/): **the catalogue lists every game**; click a card to play. Games live in this repo under [`/games/`](games/), one folder each. Hosted by [NM AI Research](https://nmairesearch.com/).
+Visit the vault at [nmairesearch.com/game-vault](https://nmairesearch.com/game-vault/): **the catalogue lists every game**; click a card to play. Games live in this repo under [`/games/`](games/), one folder each. Hosted by [NMAI Research](https://nmairesearch.com/).
 
 ---
 

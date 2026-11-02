@@ -5,7 +5,7 @@
     "vibe": "chess against a bot that talks a big game: check its claims",
     "tags": ["classic", "strategy", "ai"],
     "built_with": "Claude (Opus 5.5)",
-    "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/5"
+    "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/5"
   },
   {
     "id": "keyboard-magician",
@@ -13,7 +13,7 @@
     "vibe": "a calm rhythm game: play the tune on your keyboard or phone, with real piano, strings and recorded songs",
     "tags": ["rhythm", "music", "calm"],
     "built_with": "Claude (Opus 5.5)",
-    "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/6"
+    "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/6"
   },
   {
     "id": "tic-tac-toe",
@@ -21,7 +21,7 @@
     "vibe": "well, it is exactly what you expect",
     "tags": ["classic", "casual"],
     "built_with": "Claude (Sonnet) — by DonatOtvosDev",
-    "discuss_url": "https://github.com/NMAIResearch/vibe-vault/discussions/3"
+    "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/3"
   },
   {
     "id": "tideline",
