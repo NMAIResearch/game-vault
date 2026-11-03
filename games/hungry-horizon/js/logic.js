@@ -690,7 +690,8 @@ export class Stopwatch {
 
 export function formatTime(sec) {
   if (!isFinite(sec)) return '--:--.-';
-  const m = Math.floor(sec / 60), s = sec - m * 60;
+  const tenths = Math.round(sec * 10);
+  const m = Math.floor(tenths / 600), s = (tenths - m * 600) / 10;
   return `${m}:${s < 10 ? '0' : ''}${s.toFixed(1)}`;
 }
 

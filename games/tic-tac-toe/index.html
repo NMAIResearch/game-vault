@@ -215,6 +215,7 @@ let currentPlayer = 'X';
 let gameOver = false;
 let mode = 'pvp';
 let scores = {X: 0, O: 0, D: 0};
+let aiTimer = null;
 
 function setMode(m) {
   mode = m;
@@ -228,7 +229,12 @@ function handleClick(i) {
   if (mode === 'ai' && currentPlayer === 'O') return;
   makeMove(i);
   if (mode === 'ai' && !gameOver && currentPlayer === 'O') {
-    setTimeout(aiMove, 350);
+    const turnBoard = board;
+    aiTimer = setTimeout(() => {
+      if (board !== turnBoard) return;
+      aiTimer = null;
+      aiMove();
+    }, 350);
   }
 }
 
@@ -263,6 +269,7 @@ function checkWin() {
 }
 
 function aiMove() {
+  if (mode !== 'ai' || currentPlayer !== 'O' || gameOver) return;
   const move = getBestMove();
   makeMove(move);
 }
@@ -296,6 +303,8 @@ function updateScores() {
 }
 
 function resetGame() {
+  clearTimeout(aiTimer);
+  aiTimer = null;
   board = Array(9).fill(null);
   currentPlayer = 'X';
   gameOver = false;
