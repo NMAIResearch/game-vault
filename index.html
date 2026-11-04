@@ -103,7 +103,7 @@
     }
 
     function ratingNode(r) {
-        const parts = [["up", "👍", "liked it"], ["heart", "❤️", "loved it"], ["eyes", "👀", "found it unsettling in the intended way"], ["comments", "💬", "comments"]]
+        const parts = [["up", "👍", "liked it"], ["heart", "❤️", "loved it"], ["eyes", "👀", "surprised by it"], ["comments", "💬", "comments"]]
             .filter(([key]) => r[key]);
         const node = make("span", { className: "ratings" });
         node.append(glyph(parts.map(([key, symbol]) => symbol + r[key]).join(" ")));
