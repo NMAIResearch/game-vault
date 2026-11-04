@@ -28,35 +28,40 @@
     "title": "Tideline",
     "vibe": "first-person surf: slide along steep ramps, strafe through the air and carry your speed across four stages",
     "tags": ["action", "speed", "surf"],
-    "built_with": "Codex (GPT-6 Astra)"
+    "built_with": "Codex (GPT-6 Astra)",
+    "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/9"
   },
   {
     "id": "hungry-horizon",
     "title": "Hungry Horizon",
     "vibe": "be a small, hungry black hole: swallow your way through a town, a harbour, a farm and a fairground, growing with every bite",
     "tags": ["arcade", "physics", "casual"],
-    "built_with": "Codex (GPT-6 Astra)"
+    "built_with": "Codex (GPT-6 Astra)",
+    "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/10"
   },
   {
     "id": "keresztrejtveny",
     "title": "Keresztrejtvény / Arrowwords",
     "vibe": "a quiet newspaper break: Hungarian and English arrowwords, clues inside the grid and a hidden phrase to uncover",
     "tags": ["puzzle", "words", "calm"],
-    "built_with": "GPT-6 Astra (Codex CLI)"
+    "built_with": "GPT-6 Astra (Codex CLI)",
+    "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/11"
   },
   {
     "id": "szokereso",
     "title": "Szókereső / Word Search",
     "vibe": "a newspaper pause: find the Hungarian or English words, then read a hidden message in the letters left behind",
     "tags": ["puzzle", "words", "calm"],
-    "built_with": "GPT-6.1 Sol (Codex CLI)"
+    "built_with": "GPT-6.1 Sol (Codex CLI)",
+    "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/12"
   },
   {
     "id": "water-sort",
     "title": "Water Sort",
     "vibe": "a little colour, a little calm: sort glass tubes one pour at a time, with free hints, undo and no ads",
     "tags": ["puzzle", "casual", "calm"],
-    "built_with": "OpenAI Codex"
+    "built_with": "OpenAI Codex",
+    "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/13"
   },
   {
     "id": "think-again",
@@ -67,6 +72,7 @@
       "casual",
       "calm"
     ],
-    "built_with": "OpenAI Codex"
+    "built_with": "OpenAI Codex",
+    "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/14"
   }
 ]

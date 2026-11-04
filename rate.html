@@ -27,7 +27,8 @@
 </div>
 <p class="how">Sign in with GitHub below, then <strong>react to the main post</strong> to rate
    (👍 liked it · ❤️ loved it · 👀 it unsettled me in the intended way), or leave the creator a comment.
-   Ratings appear on the game's card within a few hours.</p>
+   Ratings appear on the game's card within a few hours.
+   <span class="how-email">No GitHub account? Email your feedback to <a id="feedback-email" href="mailto:NMAIResearch@proton.me">NMAIResearch@proton.me</a>.</span></p>
 <div id="giscus-box"></div>
 </main>
 
@@ -69,6 +70,7 @@
     }
     document.title = `${g.title}: rate & discuss | Game Vault`;
     title.textContent = g.title;
+    document.getElementById("feedback-email").href = "mailto:NMAIResearch@proton.me?subject=" + encodeURIComponent("Game Vault feedback: " + g.title);
     vibe.textContent = g.vibe || "";
     document.getElementById("meta").textContent = g.built_with ? `built with ${g.built_with}` : "";
     actions.append(link("btn btn-primary", `games/${encodeURIComponent(g.id)}/`, [glyph("▶"), "Play"]));
