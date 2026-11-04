@@ -61,6 +61,7 @@
     background: #1a1a2e;
     border: 1px solid #2e2e4e;
     border-radius: 12px;
+    font-family: inherit;
     font-size: 2.8rem;
     font-weight: 700;
     cursor: pointer;
@@ -94,7 +95,7 @@
     flex-wrap: wrap;
   }
 
-  button {
+  button:where(:not(.cell)) {
     padding: 0.6rem 1.5rem;
     border-radius: 8px;
     border: 1px solid #3a3a5c;
@@ -108,7 +109,7 @@
     transition: background 0.15s, border-color 0.15s;
   }
 
-  button:hover {
+  button:where(:not(.cell)):hover {
     background: #26264a;
     border-color: #6a5fcf;
   }
@@ -187,18 +188,18 @@
     </div>
   </div>
 
-  <div class="status" id="status">X's turn</div>
+  <div class="status" id="status" role="status" aria-live="polite" aria-atomic="true">X's turn</div>
 
   <div class="board" id="board">
-    <div class="cell" onclick="handleClick(0)"></div>
-    <div class="cell" onclick="handleClick(1)"></div>
-    <div class="cell" onclick="handleClick(2)"></div>
-    <div class="cell" onclick="handleClick(3)"></div>
-    <div class="cell" onclick="handleClick(4)"></div>
-    <div class="cell" onclick="handleClick(5)"></div>
-    <div class="cell" onclick="handleClick(6)"></div>
-    <div class="cell" onclick="handleClick(7)"></div>
-    <div class="cell" onclick="handleClick(8)"></div>
+    <button type="button" class="cell" aria-label="Row 1, column 1: empty" aria-disabled="false" onclick="handleClick(0)"></button>
+    <button type="button" class="cell" aria-label="Row 1, column 2: empty" aria-disabled="false" onclick="handleClick(1)"></button>
+    <button type="button" class="cell" aria-label="Row 1, column 3: empty" aria-disabled="false" onclick="handleClick(2)"></button>
+    <button type="button" class="cell" aria-label="Row 2, column 1: empty" aria-disabled="false" onclick="handleClick(3)"></button>
+    <button type="button" class="cell" aria-label="Row 2, column 2: empty" aria-disabled="false" onclick="handleClick(4)"></button>
+    <button type="button" class="cell" aria-label="Row 2, column 3: empty" aria-disabled="false" onclick="handleClick(5)"></button>
+    <button type="button" class="cell" aria-label="Row 3, column 1: empty" aria-disabled="false" onclick="handleClick(6)"></button>
+    <button type="button" class="cell" aria-label="Row 3, column 2: empty" aria-disabled="false" onclick="handleClick(7)"></button>
+    <button type="button" class="cell" aria-label="Row 3, column 3: empty" aria-disabled="false" onclick="handleClick(8)"></button>
   </div>
 
   <div class="controls">
@@ -242,6 +243,8 @@ function makeMove(i) {
   board[i] = currentPlayer;
   const cells = document.querySelectorAll('.cell');
   cells[i].textContent = currentPlayer;
+  cells[i].setAttribute('aria-label', `Row ${Math.floor(i / 3) + 1}, column ${i % 3 + 1}: ${currentPlayer}`);
+  cells[i].setAttribute('aria-disabled', 'true');
   cells[i].classList.add('taken', currentPlayer.toLowerCase());
 
   const win = checkWin();
@@ -308,8 +311,10 @@ function resetGame() {
   board = Array(9).fill(null);
   currentPlayer = 'X';
   gameOver = false;
-  document.querySelectorAll('.cell').forEach(c => {
+  document.querySelectorAll('.cell').forEach((c, i) => {
     c.textContent = '';
+    c.setAttribute('aria-label', `Row ${Math.floor(i / 3) + 1}, column ${i % 3 + 1}: empty`);
+    c.setAttribute('aria-disabled', 'false');
     c.className = 'cell';
     c.onclick = function() { handleClick([...c.parentElement.children].indexOf(c)); };
   });
