@@ -1,6 +1,6 @@
 import {
   MAPS, TIERS, TYPES, LOOKS, generateMap, World, Stopwatch, Store, BestTimes, newUnlocks, formatTime,
-  tierLabels, tierProgress, EraseConfirmation, SaveThrottle,
+  tierLabels, tierProgress, EraseConfirmation, SaveThrottle, PERKS, RUSH_SECONDS,
 } from './logic.js';
 
 import { landAt } from './places.js';
@@ -29,6 +29,10 @@ async function boot() {
 
   const store = new Store();
   const bests = new BestTimes(store);
+  let mode = store.get('mode', 'rush') === 'classic' ? 'classic' : 'rush';
+  let perk = store.get('perk', 'drift');
+  if (!Object.hasOwn(PERKS, perk)) perk = 'drift';
+  const bestKey = (id = map.id, m = mode, p = perk) => m === 'rush' ? `rush.${p}.${id}` : id;
   const savedMapId = store.get('map', null);
   let def = Object.hasOwn(MAPS, params.get('map'))
     ? MAPS[params.get('map')]
@@ -87,6 +91,8 @@ async function boot() {
     const candidate = new World(map);
     if (candidate.restore(initialSaved)) {
       world = candidate;
+      mode = world.round ? 'rush' : 'classic';
+      if (world.round) perk = world.round.perk;
       const el = typeof initialSaved.elapsed === 'number' && isFinite(initialSaved.elapsed) && initialSaved.elapsed >= 0 ? initialSaved.elapsed : world.t;
       watch.reset();
       watch.acc = el * 1000;
@@ -122,7 +128,7 @@ async function boot() {
   window.addEventListener('resize', resize); resize();
 
   function saveRunState(force = true) {
-    if (!run || world.left <= 0 || phase === 'cleared') return;
+    if (!run || world.left <= 0 || phase === 'cleared' || (world.round && world.round.status !== 'playing')) return;
     if (!saveThrottle.due(performance.now(), force)) return;
     const snap = world.snapshot({
       elapsed: +watch.elapsed.toFixed(2),
@@ -321,26 +327,49 @@ async function boot() {
     $('look-how').textContent = `${cur.name} (wearing). ${owned.length}/${LOOKS.length} found`;
   }
   function renderBest() {
-    const b = bests.get(map.id, seed);
-    $('best-line').textContent = b ? `Best time on ${map.name}: ${formatTime(b)}` : `${map.name}: no best time yet`;
-    $('best-small').textContent = b ? `Best ${formatTime(b)}` : '';
+    const b = bests.get(bestKey(), seed);
+    const label = mode === 'rush' ? `Gold rush, ${PERKS[perk].name}` : 'Free roam';
+    $('best-line').textContent = b ? `${label}: best ${formatTime(b)}` : `${label}: no best time yet`;
+    $('best-small').textContent = world.round ? 'Time left' : (b ? `Best ${formatTime(b)}` : '');
+  }
+  function canContinue() {
+    return hasSavedRun && run && run.map === map.id && world.left > 0
+      && (world.round ? world.round.status === 'playing' : world.left < world.total);
   }
   function syncMenuButtons() {
-    const canContinue = hasSavedRun && run && run.map === map.id && world.left > 0 && world.left < world.total;
-    $('play').textContent = canContinue
-      ? `Continue ${map.name} (${formatTime(watch.elapsed)})`
-      : `Play ${map.name}`;
+    $('play').textContent = canContinue()
+      ? `Continue ${world.round ? 'Gold rush' : 'Free roam'}`
+      : `Play ${mode === 'rush' ? 'Gold rush' : 'Free roam'}`;
     const newRunBtn = $('new-run');
-    if (newRunBtn) newRunBtn.hidden = !canContinue;
+    if (newRunBtn) newRunBtn.hidden = !canContinue();
+  }
+  function renderChoices() {
+    for (const b of document.querySelectorAll('[data-mode]')) b.setAttribute('aria-pressed', String(b.dataset.mode === mode));
+    $('mode-description').textContent = mode === 'rush'
+      ? `Swallow the 3 gold targets before ${formatTime(RUSH_SECONDS)}. Eat smaller things to grow. Filled gold markers fit now.`
+      : 'Swallow the whole map at your own pace. No time limit. Your old saves and best times live here.';
+    $('menu-loadout').hidden = mode !== 'rush';
+    for (const id of ['menu-perks', 'done-perks']) {
+      const row = $(id); row.innerHTML = '';
+      for (const [key, choice] of Object.entries(PERKS)) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'perk-choice'; b.dataset.perk = key;
+        b.setAttribute('aria-pressed', String(key === perk));
+        b.innerHTML = `<strong>${choice.name}</strong><small>${choice.description}</small>`;
+        b.addEventListener('click', () => { perk = key; store.set('perk', perk); renderChoices(); renderBest(); renderMaps(); });
+        row.appendChild(b);
+      }
+    }
   }
   function selectMap(d) {
     def = d;
-    seed = calcSeed(def);
+    const saved = store.get('run', null);
+    const matches = saved && saved.map === d.id && (saved.round ? 'rush' : 'classic') === mode;
+    seed = matches && !params.has('seed') && Number.isFinite(saved.seed) ? (saved.seed >>> 0) : calcSeed(def);
     store.set('map', d.id);
     map = generateMap(seed, def);
     mapSig = buildMapSig(map);
-    const saved = store.get('run', null);
-    if (saved && saved.map === d.id && saved.seed === seed) {
+    run = null;
+    if (matches && saved.seed === seed) {
       const candidate = new World(map);
       if (candidate.restore(saved)) {
         world = candidate;
@@ -379,9 +408,11 @@ async function boot() {
       const b = document.createElement('button'); b.type = 'button'; b.className = 'map-choice'; b.dataset.map = d.id;
       b.style.setProperty('--map-colour', d.colour); b.setAttribute('aria-pressed', String(d.id === map.id));
       const dSeed = calcSeed(d);
-      const time = bests.get(d.id, dSeed);
-      const cleared = store.get(`cleared.${d.id}`, false) || !!time || (d.id === 'downtown' && legacyDowntownClear);
-      b.innerHTML = `<span class="map-picture ${d.id}" aria-hidden="true"><span>${d.icon}</span></span><span class="map-info"><strong>${d.name}</strong><small>${time ? `Best ${formatTime(time)}` : 'No best time yet'}</small><small>${cleared ? '✓ Cleared' : '○ Not cleared'}</small></span>`;
+      const time = bests.get(bestKey(d.id), d.id === map.id ? seed : dSeed);
+      const cleared = mode === 'rush' ? store.get(`rushwon.${d.id}`, false)
+        : store.get(`cleared.${d.id}`, false) || !!time || (d.id === 'downtown' && legacyDowntownClear);
+      const mark = mode === 'rush' ? (cleared ? '✓ Gold rush won' : '○ Gold awaits') : (cleared ? '✓ Cleared' : '○ Not cleared');
+      b.innerHTML = `<span class="map-picture ${d.id}" aria-hidden="true"><span>${d.icon}</span></span><span class="map-info"><strong>${d.name}</strong><small>${time ? `Best ${formatTime(time)}` : 'No best time yet'}</small><small>${mark}</small></span>`;
       b.addEventListener('click', () => {
         if (phase !== 'menu') return;
         selectMap(d);
@@ -397,12 +428,14 @@ async function boot() {
     $('map-description').textContent = def.description;
     syncMenuButtons();
   }
-  renderLooks(); renderBest(); renderMaps();
+  for (const b of document.querySelectorAll('[data-mode]')) b.addEventListener('click', () => {
+    mode = b.dataset.mode; store.set('mode', mode); selectMap(def); renderChoices();
+  });
+  renderLooks(); renderBest(); renderMaps(); renderChoices();
 
   function playFromMenu() {
     audio.unlock();
-    const canContinue = hasSavedRun && run && run.map === map.id && world.left > 0 && world.left < world.total;
-    if (canContinue) resumeSavedRun();
+    if (canContinue()) resumeSavedRun();
     else startRun();
   }
 
@@ -426,6 +459,7 @@ async function boot() {
     store.clear();
     bests.clear();
     owned = ['classic'];
+    mode = 'rush'; perk = 'drift';
     look = 'classic';
     Object.assign(settings, { music: true, sfx: true, calm: false });
     audio.setMusic(settings.music);
@@ -452,6 +486,7 @@ async function boot() {
     renderLooks();
     renderBest();
     renderMaps();
+    renderChoices();
     updateHud(true);
     show('menu');
     toast('Saved progress cleared. Ready for a fresh start!');
@@ -478,6 +513,9 @@ async function boot() {
   $('restart').addEventListener('click', () => startRun());
   $('to-menu').addEventListener('click', () => toMenu());
   $('again').addEventListener('click', () => startRun());
+  $('next-route').addEventListener('click', () => {
+    seed = (seed + 1) >>> 0; map = generateMap(seed, def); mapSig = buildMapSig(map); startRun();
+  });
   $('done-menu').addEventListener('click', () => toMenu());
   $('pause-btn').addEventListener('click', () => { if (phase === 'playing') pause(); });
   document.addEventListener('visibilitychange', () => {
@@ -490,6 +528,7 @@ async function boot() {
   window.addEventListener('beforeunload', () => { if (phase === 'playing' || phase === 'paused') saveRunState(); });
 
   function show(screen) {
+    document.body.classList.toggle('rush', !!world.round);
     for (const id of ['menu', 'pause', 'done']) $(id).hidden = id !== screen;
     $('hud').hidden = !(phase === 'playing' || phase === 'paused');
     syncTouchUi();
@@ -500,7 +539,7 @@ async function boot() {
     store.del('run');
     store.set('map', map.id);
     hasSavedRun = false;
-    world = new World(map);
+    world = new World(map, { mode, perk });
     renderer.setWorld(world);
     renderer.rv = world.hole.r;
     renderer.dist = renderer.viewDistance(world.hole.r) * 1.6;
@@ -511,7 +550,9 @@ async function boot() {
     show(null);
     leftoversAt = -1; keys.clear(); endTouch(); lastTier = -1; hintTarget = null; hintTimer = 0; endgameAnnounced = false;
     updateHud(true);
+    renderBest();
     saveRunState();
+    if (world.round) toast('Eat to grow. Swallow the 3 gold targets before time runs out.');
   }
   function pause() {
     if (phase !== 'playing') return;
@@ -555,6 +596,8 @@ async function boot() {
     const res = bests.submit(map.id, seed, time);
     store.set(`cleared.${map.id}`, true);
     $('done-title').textContent = `${map.name} swallowed!`;
+    $('done-loadout').hidden = true; $('done-detail').hidden = true; $('next-route').hidden = true;
+    $('again').textContent = 'Play again';
     const clears = (+store.get('clears', 0) || 0) + 1; store.set('clears', clears);
     Object.assign(run, { cleared: true, time, beatPrevious: res.beatPrevious, clears });
     grant(newUnlocks(owned, run));
@@ -568,6 +611,28 @@ async function boot() {
     renderBest();
     syncMenuButtons();
     setTimeout(() => { if (phase === 'cleared') show('done'); }, 1400);
+  }
+
+  function finishRush() {
+    watch.stop(); store.del('run'); hasSavedRun = false;
+    const won = world.round.status === 'won';
+    grant(newUnlocks(owned, { ...run, cleared: false, beatPrevious: false }));
+    phase = won ? 'won' : 'lost';
+    $('done-title').textContent = won ? 'Gold rush won!' : 'Time is up!';
+    $('done-time').textContent = formatTime(world.t);
+    if (won) {
+      const res = bests.submit(bestKey(map.id, 'rush', world.round.perk), seed, world.t);
+      store.set(`rushwon.${map.id}`, true);
+      $('done-best').textContent = `${res.isNew ? 'New gold rush best' : 'Gold rush best'}: ${formatTime(res.best)}`;
+      audio.fanfare();
+    } else $('done-best').textContent = `${3 - world.goldLeft}/3 gold targets swallowed`;
+    $('done-detail').textContent = won
+      ? 'Choose a boost and try a new route, or beat your time on this one.'
+      : 'Bigger snacks grow you faster. Filled gold markers fit now. Try another boost or route.';
+    $('done-detail').hidden = false; $('done-loadout').hidden = false; $('next-route').hidden = false;
+    $('again').textContent = 'Try this route again';
+    $('done-unlocks').innerHTML = run.unlocked.map(id => `<div>Unlocked look: ${LOOKS.find(l => l.id === id).name}</div>`).join('');
+    renderChoices(); renderBest(); syncMenuButtons(); show('done');
   }
 
   // ---------------------------------------------------------------- feedback
@@ -606,7 +671,7 @@ async function boot() {
           if (e.tier === TIERS.length - 1) run.abyssAt = watch.elapsed;
           audio.tierUp(e.tier);
           const top = e.tier === TIERS.length - 1;
-          banner(`${TIERS[e.tier].name}!`, top ? `Now everything fits. Clear ${map.name}!` : `Now you can swallow ${tierLabels(e.tier, map).join(', ')}`);
+          banner(`${TIERS[e.tier].name}!`, top ? (world.round ? 'Everything fits. Find the gold targets!' : `Now everything fits. Clear ${map.name}!`) : `Now you can swallow ${tierLabels(e.tier, map).join(', ')}`);
           if (look === 'burp') setTimeout(burp, 500);
           break;
         }
@@ -617,6 +682,8 @@ async function boot() {
         case 'honk': audio.honk(); break;
         case 'flutter': audio.coo(); break;
         case 'cleared': finish(); break;
+        case 'gold': audio.tierUp(1); floater(`${3 - e.left}/3 gold!`); break;
+        case 'round-end': finishRush(); break;
       }
     }
     if (phase === 'playing' || phase === 'cleared') grant(newUnlocks(owned, { ...run, cleared: false, beatPrevious: false, people: world.stats.people }));
@@ -626,7 +693,11 @@ async function boot() {
   let lastTier = -1, hudTimer = 0, hintTarget = null, hintTimer = 0;
   function updateHud(force = false) {
     const h = world.hole;
-    $('clock').textContent = formatTime(watch.elapsed);
+    $('clock').textContent = formatTime(world.round ? Math.max(0, world.round.limit - world.t) : watch.elapsed);
+    $('clock').classList.toggle('urgent', !!world.round && world.round.limit - world.t <= 20);
+    $('goal-hint').hidden = !world.round;
+    if (world.round) $('goal-hint').textContent = world.round.targets.some(id => world.objs[id].alive && world.objs[id].s <= h.r)
+      ? 'A gold target fits. Follow its marker.' : 'Grow, then swallow the gold targets.';
     hudTimer -= 1;
     if (!force && hudTimer > 0) return;
     hudTimer = 6;
@@ -636,14 +707,14 @@ async function boot() {
       $('tier-name').textContent = TIERS[h.tier].name;
       $('tier-next').textContent = top ? 'MAX' : TIERS[h.tier + 1].name;
       $('eats-now').textContent = tierLabels(h.tier, map).join(', ') + (h.tier > 0 ? ' and smaller' : '');
-      $('eats-next').textContent = top ? 'nothing bigger: clear the map!' : tierLabels(h.tier + 1, map).join(', ');
+      $('eats-next').textContent = top ? (world.round ? 'find the gold targets!' : 'nothing bigger: clear the map!') : tierLabels(h.tier + 1, map).join(', ');
     }
     const p = tierProgress(h.r);
     $('tier-bar').querySelector('i').style.width = `${(p * 100).toFixed(1)}%`;
     $('tier-bar').querySelector('span').textContent = h.tier >= TIERS.length - 1 ? 'MAX' : `${Math.floor(p * 100)}%`;
     const eaten = world.total - world.left;
-    $('left').textContent = `${world.left.toLocaleString('en-GB')} left`;
-    $('left-bar').querySelector('i').style.width = `${(eaten / world.total * 100).toFixed(1)}%`;
+    $('left').textContent = world.round ? `${3 - world.goldLeft}/3 gold` : `${world.left.toLocaleString('en-GB')} left`;
+    $('left-bar').querySelector('i').style.width = `${((world.round ? (3 - world.goldLeft) / 3 : eaten / world.total) * 100).toFixed(1)}%`;
   }
 
   function updateYou() {
@@ -686,7 +757,7 @@ async function boot() {
       return arr[i];
     };
   }
-  const pinAt = pool(pinPool, pinsEl, '<i></i>', 'pin');
+  const pinAt = pool(pinPool, pinsEl, '<i></i><span></span>', 'pin');
   const arrowAt = pool(arrowPool, arrowsEl, '<div class="tri"></div><span></span>', 'edge');
   function safeRect() {
     // The part of the screen not covered by the HUD; arrows sit just inside it.
@@ -702,8 +773,8 @@ async function boot() {
     return { l: 26, r: W - 26, t: top + 22, b: bottom - 36, radar: rb && rb.width ? rb : null };
   }
   function updateGuide(dt) {
-    const radarOn = (phase === 'playing' || phase === 'paused') && world.left > 0 && world.left <= RADAR_LEFT;
-    const on = radarOn && world.left <= ENDGAME_LEFT;
+    const radarOn = (phase === 'playing' || phase === 'paused') && world.left > 0 && (!!world.round || world.left <= RADAR_LEFT);
+    const on = radarOn && (!!world.round || world.left <= ENDGAME_LEFT);
     if (radarOn !== guide.radar) { guide.radar = radarOn; radarBox.hidden = !radarOn; document.body.classList.toggle('endgame', radarOn); safe = null; }
     guide.endgame = on;
     if (!on) {
@@ -712,10 +783,10 @@ async function boot() {
       guide.pins = guide.arrows = 0;
     }
     if (!radarOn) return;
-    if (leftoversAt !== world.left) { leftoversAt = world.left; leftovers = world.remaining(); }
+    if (leftoversAt !== world.left) { leftoversAt = world.left; leftovers = world.round ? world.round.targets.map(id => world.objs[id]) : world.remaining(); }
     const h0 = world.hole;
     if (!on) { drawRadar(leftovers.filter(o => o.alive).map(o => [Math.hypot(o.x - h0.x, o.z - h0.z), o]).sort((a, b) => a[0] - b[0])); return; }
-    if (!endgameAnnounced && phase === 'playing') { endgameAnnounced = true; banner('Final sweep!', 'Every leftover is marked. Follow the arrows.'); }
+    if (!world.round && !endgameAnnounced && phase === 'playing') { endgameAnnounced = true; banner('Final sweep!', 'Every leftover is marked. Follow the arrows.'); }
     safeTimer -= dt;
     if (!safe || safeTimer <= 0) { safe = safeRect(); safeTimer = 0.5; }
     const h = world.hole, hs = renderer.project(h.x, h.z);
@@ -731,6 +802,7 @@ async function boot() {
         const el = pinAt(np++);
         el.hidden = false;
         el.classList.toggle('big', o.s > h.r);
+        el.lastChild.textContent = world.round ? String(world.round.targets.indexOf(o.id) + 1) : '';
         el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px)`;
       }
       if (na < 3 && (!onScreen || p.x < safe.l || p.x > safe.r || p.y < safe.t || p.y > safe.b) && d > h.r) {
@@ -750,7 +822,7 @@ async function boot() {
         el.hidden = false;
         el.style.transform = `translate(${ax.toFixed(1)}px, ${ay.toFixed(1)}px)`;
         el.firstChild.style.transform = `rotate(${Math.atan2(dy, dx).toFixed(3)}rad)`;
-        el.lastChild.textContent = `${Math.max(1, Math.round(d - h.r))} m`;
+        el.lastChild.textContent = `${world.round ? `${world.round.targets.indexOf(o.id) + 1}: ` : ''}${Math.max(1, Math.round(d - h.r))} m`;
       }
     }
     for (let i = np; i < pinPool.length; i++) pinPool[i].hidden = true;
@@ -784,7 +856,7 @@ async function boot() {
       if (o.s <= h.r) { g.fillStyle = '#ffe08a'; g.fill(); g.stroke(); } else { g.strokeStyle = '#ffe08a'; g.stroke(); }
       if (i === 0) { g.beginPath(); g.arc(X(o.x), X(o.z), r + 3 * dpr, 0, Math.PI * 2); g.strokeStyle = '#ffffff'; g.lineWidth = dpr; g.stroke(); }
     });
-    $('radar-cap').textContent = `${world.left} left`;
+    $('radar-cap').textContent = world.round ? 'Gold targets' : `${world.left} left`;
   }
   window.addEventListener('resize', () => { safe = null; });
 
@@ -840,6 +912,7 @@ async function boot() {
     get hole() { return { x: world.hole.x, z: world.hole.z }; },
     get mapSignature() { return mapSig; },
     get hasSavedRun() { return hasSavedRun; },
+    get round() { return world.round ? { ...world.round, targets: world.round.targets.slice(), left: world.goldLeft, remaining: Math.max(0, world.round.limit - world.t) } : null; },
     holeScreen() { return screenOf(world.hole); },
     touchPadScreen() {
       if (!touchPad || touchPad.hidden) return null;

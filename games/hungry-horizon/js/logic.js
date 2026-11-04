@@ -109,6 +109,31 @@ export const MAPS = {
   ...MAP_DEFS,
 };
 
+export const RUSH_SECONDS = 120;
+export const PERKS = {
+  drift: { name: 'Quick drift', description: 'Move faster. Normal growth.', speed: 1.3, growth: 1 },
+  feast: { name: 'Big bites', description: 'Grow faster. Normal speed.', speed: 1, growth: 1.5 },
+};
+const GOLD_TYPES = {
+  downtown: ['tree', 'kiosk', 'house'], harbour: ['parasol', 'dinghy', 'beachhut'],
+  farm: ['hay', 'tractor', 'barn'], fair: ['teacup', 'cart', 'tent'],
+  moonbase: ['solar', 'rover', 'habitat'], jurassic: ['fern', 'triceratops', 'stegosaurus'],
+  alien: ['mushroom', 'saucer', 'nest'], atlantis: ['coral', 'chest', 'column'],
+};
+
+// Objectives refer to existing objects, so map layouts and old save indices stay stable.
+export function rushRound(map, perk = 'drift') {
+  const rnd = mulberry32(map.seed ^ 0x72617368);
+  const targets = GOLD_TYPES[map.id].map(type => {
+    const pool = map.objects.map((o, id) => ({ o, id })).filter(({o}) => TYPES[o.type].id === type);
+    const nearby = pool.filter(({o}) => Math.hypot(o.x-map.start.x, o.z-map.start.z) <= 115);
+    const choices = nearby.length ? nearby : pool;
+    if (!choices.length) throw new Error(`Missing gold target: ${type}`);
+    return choices[Math.floor(rnd() * choices.length)].id;
+  });
+  return { version: 1, perk: Object.hasOwn(PERKS, perk) ? perk : 'drift', targets, limit: RUSH_SECONDS, status: 'playing' };
+}
+
 export function generateMap(seed, def = MAPS.downtown) {
   if (typeof def === 'string') def = Object.hasOwn(MAPS, def) ? MAPS[def] : MAPS.downtown;
   return def.id === 'downtown' ? generateCity(seed, def) : generatePlace(seed, def, TYPES, mulberry32(seed));
@@ -332,8 +357,9 @@ export class Grid {
 const VEH_SPEED = { car: 7.5, van: 6.5, bus: 5 };
 
 export class World {
-  constructor(map) {
+  constructor(map, options = {}) {
     this.map = map;
+    this.round = options.mode === 'rush' ? rushRound(map, options.perk) : null;
     this.rng = mulberry32((map.seed ^ 0x5bd1e995) >>> 0);
     this.objs = map.objects.map((o, id) => ({ ...o, road: o.road && { ...o.road }, route: o.route && { ...o.route }, id, alive: true, tier: tierOfObject(o.s),
       hop: 0, panic: 0, bump: -9, vx: 0, vz: 0 }));
@@ -389,13 +415,27 @@ export class World {
 
   get tierName() { return TIERS[this.hole.tier].name; }
 
+  get goldLeft() { return this.round ? this.round.targets.filter(id => this.objs[id].alive).length : 0; }
+
+  finishRound() {
+    if (!this.round || this.round.status !== 'playing') return;
+    if (!this.goldLeft) this.round.status = 'won';
+    else if (this.t >= this.round.limit - 1e-8) this.round.status = 'lost';
+    if (this.round.status !== 'playing') this.events.push({ type: 'round-end', status: this.round.status });
+  }
+
   step(dt, ix = 0, iz = 0) {
     const h = this.hole;
     this.events.length = 0;
+    if (this.round) {
+      if (this.round.status !== 'playing') return this.events;
+      dt = Math.min(Math.max(0, Number.isFinite(dt) ? dt : 0), Math.max(0, this.round.limit - this.t));
+      if (dt === 0) { this.finishRound(); return this.events; }
+    }
     this.t += dt;
     const len = Math.hypot(ix, iz);
     if (len > 1) { ix /= len; iz /= len; }
-    const sp = holeSpeed(h.r);
+    const sp = holeSpeed(h.r) * (this.round ? PERKS[this.round.perk].speed : 1);
     h.vx = ix * sp; h.vz = iz * sp;
     const lim = this.map.edge - 1;
     h.x = Math.max(-lim, Math.min(lim, h.x + h.vx * dt));
@@ -403,6 +443,7 @@ export class World {
 
     for (const m of this.movers) if (m.alive) this.moveMover(m, dt);
     this.swallowCheck(dt);
+    this.finishRound();
     return this.events;
   }
 
@@ -592,12 +633,12 @@ export class World {
 
   swallow(o) {
     const h = this.hole;
-    if (!o.alive) return false;
+    if (!o.alive || (this.round && this.round.status !== 'playing')) return false;
     o.alive = false;
     this.grid.remove(o);
     this.left--;
     const before = h.r;
-    h.r = grow(h.r, o.s);
+    h.r = this.round ? Math.sqrt(h.r * h.r + GROWTH_K * o.s * o.s * PERKS[this.round.perk].growth) : grow(h.r, o.s);
     this.lastEat = this.t;
     this.stats.byType[o.type]++;
     const id = TYPES[o.type].id;
@@ -609,7 +650,8 @@ export class World {
       this.stats.maxTier = h.tier;
       this.events.push({ type: 'tier', tier: h.tier });
     }
-    if (this.left === 0) this.events.push({ type: 'cleared' });
+    if (this.round?.targets.includes(o.id)) this.events.push({ type: 'gold', o, left: this.goldLeft });
+    if (this.left === 0 && !this.round) this.events.push({ type: 'cleared' });
     return true;
   }
 
@@ -642,12 +684,16 @@ export class World {
         cars: this.stats.cars,
         maxTier: this.stats.maxTier,
       },
+      ...(this.round ? { round: { version: 1, perk: this.round.perk } } : {}),
       ...extra,
     };
   }
 
   restore(snap) {
     if (!snap || snap.map !== this.map.id || snap.seed !== this.map.seed || !Array.isArray(snap.eaten)) return false;
+    if (snap.round && (snap.round.version !== 1 || !Object.hasOwn(PERKS, snap.round.perk)
+        || !Number.isFinite(snap.t) || snap.t < 0 || snap.t >= RUSH_SECONDS)) return false;
+    this.round = snap.round ? rushRound(this.map, snap.round.perk) : null;
     const lim = this.map.edge - 1;
     if (typeof snap.x === 'number' && isFinite(snap.x)) this.hole.x = Math.max(-lim, Math.min(lim, snap.x));
     if (typeof snap.z === 'number' && isFinite(snap.z)) this.hole.z = Math.max(-lim, Math.min(lim, snap.z));
@@ -671,7 +717,9 @@ export class World {
     } else {
       this.stats.maxTier = this.hole.tier;
     }
-    return this.left > 0;
+    this.finishRound();
+    this.events.length = 0;
+    return this.left > 0 && (!this.round || this.round.status === 'playing');
   }
 }
 

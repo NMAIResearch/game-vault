@@ -2,7 +2,7 @@
 import {
   START_R, GROWTH_K, TIERS, TYPES, grow, fits, tierForSize, tierOfObject, tierProgress, captureDistance, pullReach,
   MAPS, generateMap, generateCity, World, Stopwatch, Store, BestTimes, LOOKS, newUnlocks, formatTime, insideSolid,
-  EraseConfirmation, SaveThrottle,
+  EraseConfirmation, SaveThrottle, PERKS, RUSH_SECONDS, rushRound, holeSpeed,
 } from './logic.js';
 import * as THREE from '../three.module.min.js';
 import { landAt } from './places.js';
@@ -427,6 +427,107 @@ CHECKS.push(['new world models: finite geometry contained by the declared height
     assert(g.boundingBox.max.y <= t.h + 1e-6, `${t.id} exceeds its visual height`);
   }
 }]);
+
+CHECKS.push(
+  ['gold targets: deterministic, distinct, increasingly large and specific to each world', () => {
+    for (const id of Object.keys(MAPS)) {
+      const m = generateMap(7,id), original = JSON.stringify(m);
+      const a = rushRound(m,'drift'), b = rushRound(m,'feast');
+      assert(a.targets.join() === b.targets.join(), 'boost changed the route');
+      assert(a.targets.join() === rushRound(generateMap(7,id)).targets.join(), 'same seed changed targets');
+      assert(a.targets.join() !== rushRound(generateMap(8,id)).targets.join(), 'new route ignored');
+      assert(new Set(a.targets).size === 3, 'duplicate target');
+      let size = START_R;
+      for (const target of a.targets) { assert(m.objects[target].s > size, 'target already fits or size order wrong'); size = m.objects[target].s; }
+      assert(JSON.stringify(m) === original, 'object IDs or positions changed');
+      assert(rushRound(m,'invalid').perk === 'drift', 'invalid boost not bounded');
+    }
+  }],
+  ['gold targets: only marked objects count, all three win without clearing the map, once', () => {
+    const w = new World(generateMap(7), {mode:'rush'});
+    const snack = w.objs.find(o => o.s < START_R);
+    w.swallow(snack); w.finishRound();
+    assert(w.goldLeft === 3 && w.round.status === 'playing', 'ordinary food counted as gold');
+    for (const id of w.round.targets.slice(0,2)) w.swallow(w.objs[id]);
+    w.finishRound();
+    assert(w.goldLeft === 1 && w.round.status === 'playing', 'won with a missing target');
+    const last = w.objs[w.round.targets[2]];
+    w.swallow(last); assert(!w.swallow(last), 'target swallowed twice'); w.finishRound();
+    assert(w.round.status === 'won' && w.left > 0, 'required a full-map clear');
+    assert(w.events.filter(e => e.type === 'gold').length === 3, 'gold event count');
+    assert(w.events.filter(e => e.type === 'round-end').length === 1, 'finish event count');
+    const frozen = JSON.stringify(w.snapshot());
+    assert(w.step(1,1,1).length === 0 && JSON.stringify(w.snapshot()) === frozen, 'completed round kept running');
+    assert(!w.swallow(w.nearestAlive()), 'late swallow after finish');
+  }],
+  ['gold clock: no early loss, clamps at deadline, freezes a loss and rejects non-finite time', () => {
+    const w = new World(generateMap(7), {mode:'rush'});
+    w.step(NaN); w.step(-1); assert(w.t === 0 && w.round.status === 'playing', 'invalid time advanced');
+    w.t = RUSH_SECONDS - .1; w.step(.04);
+    assert(w.round.status === 'playing', 'early timeout');
+    const ev = w.step(.2);
+    assert(near(w.t,RUSH_SECONDS) && w.round.status === 'lost', 'deadline was skipped');
+    assert(ev.filter(e => e.type === 'round-end').length === 1, 'timeout missing');
+    const snap = JSON.stringify(w.snapshot());
+    assert(w.step(1,1,1).length === 0 && JSON.stringify(w.snapshot()) === snap, 'lost round continued');
+    const classic = new World(generateMap(7)); classic.t = RUSH_SECONDS; classic.step(.01);
+    assert(classic.round === null && classic.t > RUSH_SECONDS, 'classic gained a time limit');
+  }],
+  ['gold clock: final target on the deadline wins, after the deadline cannot be collected', () => {
+    const make = () => {
+      const w = new World(generateMap(7), {mode:'rush'});
+      for (const id of w.round.targets.slice(0,2)) w.swallow(w.objs[id]);
+      const o = w.objs[w.round.targets[2]];
+      w.hole.x = o.x; w.hole.z = o.z; w.hole.r = o.s + 1;
+      return w;
+    };
+    const a = make(); a.t = RUSH_SECONDS - .02;
+    assert(a.step(.02).some(e => e.type === 'round-end' && e.status === 'won'), 'deadline target did not win');
+    const b = make(); b.t = RUSH_SECONDS;
+    assert(b.step(.02).some(e => e.type === 'round-end' && e.status === 'lost') && b.goldLeft === 1, 'late target won');
+  }],
+  ['boosts: movement and growth trade places, no stacking, classic keeps both original rates', () => {
+    for (const perk of ['drift','feast',null]) {
+      const w = new World(generateMap(7), perk ? {mode:'rush',perk} : {});
+      const x = w.hole.x;
+      w.step(.01,1,0);
+      assert(near(w.hole.x-x,holeSpeed(START_R)*.01*(perk ? PERKS[perk].speed : 1)), 'wrong movement multiplier');
+      const before = w.hole.r, o = w.objs.find(o => o.alive && o.s <= START_R);
+      w.swallow(o);
+      assert(near(w.hole.r**2-before**2,GROWTH_K*o.s**2*(perk ? PERKS[perk].growth : 1)), 'wrong growth multiplier');
+    }
+    assert(PERKS.drift.speed > PERKS.feast.speed && PERKS.drift.growth < PERKS.feast.growth, 'one boost dominates both rates');
+    const a = new World(generateMap(7),{mode:'rush',perk:'feast'});
+    a.swallow(a.nearestAlive());
+    const b = new World(generateMap(7),{mode:'rush',perk:'feast'});
+    assert(b.hole.r === START_R && b.t === 0, 'boost or progress stacked across rounds');
+  }],
+  ['gold saves: timer, perk and collected targets survive; old saves stay classic; invalid and ended rounds reject', () => {
+    const w = new World(generateMap(7),{mode:'rush',perk:'feast'});
+    w.swallow(w.objs[w.round.targets[0]]); w.t = 31.25;
+    const s = w.snapshot(), restored = new World(generateMap(7));
+    assert(restored.restore(s) && restored.round.perk === 'feast' && restored.goldLeft === 2 && restored.t === 31.25, 'round save lost state');
+    assert(restored.round.targets.join() === w.round.targets.join(), 'saved targets changed');
+    assert(!new World(generateMap(8)).restore(s), 'wrong seed accepted');
+    for (const round of [{version:2,perk:'feast'}, {version:1,perk:'unknown'}]) {
+      assert(!new World(generateMap(7)).restore({...s,round}), 'invalid round accepted');
+    }
+    assert(!new World(generateMap(7)).restore({...s,t:RUSH_SECONDS}), 'expired round resumed');
+    for (const id of w.round.targets) w.swallow(w.objs[id]);
+    assert(!new World(generateMap(7)).restore(w.snapshot()), 'completed round resumed');
+    const old = new World(generateMap(7)); old.swallow(old.nearestAlive()); old.t = 500;
+    const fresh = new World(generateMap(7),{mode:'rush'});
+    assert(fresh.restore(old.snapshot()) && fresh.round === null && fresh.left === old.left && fresh.t === 500, 'old save migrated into timed mode');
+  }],
+  ['gold bests: modes, boosts and seeds never overwrite old free-roam records', () => {
+    const mem = new Map(), backend = {getItem:k=>mem.get(k)??null,setItem:(k,v)=>mem.set(k,v)};
+    const bests = new BestTimes(new Store(backend));
+    bests.submit('downtown',7,250); bests.submit('rush.drift.downtown',7,80); bests.submit('rush.feast.downtown',7,70);
+    assert(bests.get('downtown',7) === 250 && bests.get('rush.drift.downtown',7) === 80 && bests.get('rush.feast.downtown',7) === 70, 'record collision');
+    assert(bests.get('rush.drift.downtown',8) === null, 'route records collided');
+    assert(!newUnlocks([], {map:'harbour',cleared:false,maxTier:4}).includes('captain'), 'rush counted as whole-map clear');
+  }],
+);
 
 export function runChecks() {
   return CHECKS.map(([name, fn]) => {

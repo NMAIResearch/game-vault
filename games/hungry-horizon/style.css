@@ -46,6 +46,17 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; }
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8); white-space: nowrap; pointer-events: none; }
 .menu-actions { margin: 2px 0 8px; }
 .menu-actions button { font-size: 13px; padding: 8px 14px; }
+#goal-hint { margin-top: 5px; font-size: 12px; font-weight: 700; color: #ffe08a; }
+#clock.urgent { color: #ffad9b; }
+#mode-description, #done-detail { font-size: 13px; line-height: 1.5; margin: 8px 0; }
+#mode-picker { margin: 8px 0; }
+#mode-picker button { min-height: 44px; }
+#mode-picker [aria-pressed="true"], .perk-choice[aria-pressed="true"] { outline: 2px solid #ffe08a; background: #51375f; }
+.perk-heading { font-size: 12px; font-weight: 800; margin: 8px 0; }
+.perk-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+.perk-choice { background: #332747; border-radius: 12px; min-height: 60px; padding: 9px 7px; }
+.perk-choice strong, .perk-choice small { display: block; }
+.perk-choice small { font-size: 11px; margin-top: 3px; color: #eee1f5; }
 
 #hint-arrow { position: fixed; left: 0; top: 0; width: 0; height: 0; pointer-events: none; }
 #hint-arrow .tri { position: absolute; left: -16px; top: -14px; width: 0; height: 0; border-top: 14px solid transparent;
@@ -59,6 +70,8 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; }
 .pin i::after { content: ''; position: absolute; left: 1px; top: 13px; border-left: 5px solid transparent; border-right: 5px solid transparent;
   border-top: 9px solid #1b1430; }
 .pin.big i { background: rgba(27, 20, 48, 0.55); border: 3px dashed #ffe08a; }
+.pin span { position: absolute; top: -45px; left: -10px; width: 20px; text-align: center; font-size: 13px;
+  font-weight: 900; color: #fff; text-shadow: 0 1px 3px #000; }
 @keyframes bob { 0%, 100% { margin-top: 0; } 50% { margin-top: -5px; } }
 body.calm .pin i { animation: none; }
 .edge { position: absolute; left: 0; top: 0; width: 0; height: 0; }
@@ -155,7 +168,7 @@ h2 { margin: 0 0 12px; font-size: 30px; font-weight: 900; }
   #radar { width: 96px; height: 96px; }
 }
 @media (max-height: 460px) and (orientation: landscape) {
-  .hud-c { width: min(380px, 46vw); padding: 5px 9px; }
+  .hud-c { top: max(10px, env(safe-area-inset-top)); bottom: auto; width: min(380px, 44vw); padding: 5px 9px; }
   #soon-row { display: none; }
   .card { padding: 14px 18px; }
   h1 { font-size: 38px; }
@@ -165,6 +178,9 @@ h2 { margin: 0 0 12px; font-size: 30px; font-weight: 900; }
   .big { padding: 10px; font-size: 20px; }
   #touch-pad { bottom: max(10px, env(safe-area-inset-bottom)); width: 100px; height: 100px; }
   #touch-pad .touch-ring { width: 82px; height: 82px; }
+}
+@media (max-width: 720px) and (orientation: portrait) {
+  body.rush #touch-pad { bottom: max(110px, calc(env(safe-area-inset-bottom) + 110px)); }
 }
 
 /* Map selection uses native buttons for pointer, touch and keyboard activation. */

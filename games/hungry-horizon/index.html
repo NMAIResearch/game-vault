@@ -23,6 +23,7 @@
     </div>
     <div class="eats"><span class="key solid"></span><span class="lbl">Fits now</span> <b id="eats-now"></b></div>
     <div class="eats" id="soon-row"><span class="key dashed"></span><span class="lbl">Next size</span> <b id="eats-next"></b></div>
+    <div id="goal-hint" hidden>Grow, then swallow the gold targets.</div>
   </div>
   <div class="hud-r pill">
     <div id="left">0 left</div>
@@ -48,9 +49,18 @@
   <div class="card menu-card">
     <div class="menu-main">
     <h1>Hungry <span>Horizon</span></h1>
-    <p class="tag">Start as a speck. Swallow somewhere new.</p>
+    <p class="tag">Get growing. Find the gold. Beat the clock.</p>
     <div id="map-picker" role="group" aria-label="Choose a map"></div>
     <p id="map-description"></p>
+    <div id="mode-picker" class="row" role="group" aria-label="Choose how to play">
+      <button type="button" data-mode="rush">Gold rush</button>
+      <button type="button" data-mode="classic">Free roam</button>
+    </div>
+    <p id="mode-description"></p>
+    <div id="menu-loadout">
+      <p class="perk-heading">Boost for new rounds</p>
+      <div id="menu-perks" class="perk-picker" role="group" aria-label="Choose a boost"></div>
+    </div>
     <button id="play" class="big">Play</button>
     <div class="row menu-actions">
       <button id="new-run" type="button" hidden>New game</button>
@@ -94,8 +104,13 @@
     <div id="done-time"></div>
     <div id="done-best"></div>
     <div id="done-unlocks"></div>
+    <p id="done-detail" hidden></p>
+    <div id="done-loadout" hidden>
+      <p class="perk-heading">Choose your next boost</p>
+      <div id="done-perks" class="perk-picker" role="group" aria-label="Choose your next boost"></div>
+    </div>
     <button id="again" class="big">Play again</button>
-    <div class="row"><button id="done-menu">Menu</button></div>
+    <div class="row"><button id="next-route" hidden>New route</button><button id="done-menu">Menu</button></div>
   </div>
 </div>
 
