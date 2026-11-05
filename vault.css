@@ -2,7 +2,6 @@
 :root{color-scheme:light;--bg:#fbfefc;--surface:#fff;--raised:#f3fbf6;--text:#25332b;--muted:#48604f;--line:#dcefe3;--accent:#276749;--heading:#1c4532;--tag:#eef9f2;--sans:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 :root[data-theme="dark"]{color-scheme:dark;--bg:#0e1712;--surface:#16231b;--raised:#16231b;--text:#e7f3ec;--muted:#a8c2b2;--line:#27402f;--accent:#68d391;--heading:#e6f7ec;--tag:#16231b}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0e1712;--surface:#16231b;--raised:#16231b;--text:#e7f3ec;--muted:#a8c2b2;--line:#27402f;--accent:#68d391;--heading:#e6f7ec;--tag:#16231b}}
-:root{--bar-accent:#2b6cb0}:root[data-theme="dark"]{--bar-accent:#63b3ed}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bar-accent:#63b3ed}}
 *{box-sizing:border-box}html{scroll-padding-top:1.5rem}body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 var(--sans)}
 a{color:var(--accent);text-underline-offset:.22em;text-decoration-thickness:1px}a:hover{text-decoration-thickness:2px}
 button{font:inherit;color:var(--text);cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:.55rem .85rem}
@@ -13,7 +12,7 @@ button{font:inherit;color:var(--text);cursor:pointer;background:var(--surface);b
 /* Header, as on the NMAI Research pages */
 .site-header{max-width:1200px;margin:auto;padding:24px 28px;display:flex;align-items:center;justify-content:space-between;gap:24px;border-bottom:1px solid var(--line)}
 .brand{display:block;width:211px;height:36px;background:url(brand/header-nmai-research-light.svg) left center/contain no-repeat;color:transparent;overflow:hidden;white-space:nowrap;text-indent:100%;font-size:1rem;font-weight:750;text-decoration:none}:root[data-theme="dark"] .brand{background-image:url(brand/header-nmai-research-dark.svg)}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]) .brand{background-image:url(brand/header-nmai-research-dark.svg)}}@media(forced-colors:active){.brand{background:none;color:LinkText;text-indent:0;width:auto;height:auto}}.brand-mark{margin-right:.35em}.brand-subtitle{font-size:.8rem;color:var(--muted);margin-top:4px}
-.site-nav{display:flex;gap:25px;flex-wrap:wrap}.site-nav a{font-size:.9rem;color:var(--muted);text-decoration:none;padding:7px 0}.site-nav a[aria-current]{color:var(--bar-accent);border-bottom:2px solid var(--bar-accent)}
+.site-nav{display:flex;gap:25px;flex-wrap:wrap}.site-nav a{font-size:.9rem;color:var(--muted);text-decoration:none;padding:7px 0}.site-nav a[aria-current]{color:var(--accent);border-bottom:2px solid var(--accent)}
 .theme-toggle-btn{font-size:.8rem;min-height:44px;white-space:nowrap}
 
 /* Type and shared components */
