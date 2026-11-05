@@ -200,7 +200,7 @@
     },
     "remembered": {
       "en": "Music choice remembered. Press Play music when ready.",
-      "hu": "Megjegyeztük a zeneválasztást. Indítsd el a zenét, amikor szeretnéd."
+      "hu": "A zeneválasztás megjegyezve. Indítsd el a zenét, amikor szeretnéd."
     },
     "storage": {
       "en": "Only language, music choice and volume are remembered in this browser.",
