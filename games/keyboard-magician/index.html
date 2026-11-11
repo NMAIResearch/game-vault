@@ -401,6 +401,39 @@ const GROUPS = [
   { id: "energy", name: "Energy", songs: ["borrowed", "coldalloy", "obsidian"] }
 ];
 
+// Songs taken off the menu until their key and note timings are reviewed: one song id per line. A listed song's
+// track file, chart and timings stay; deleting its line brings it back.
+const HIDDEN = [
+  "bright",
+  "light",
+  "spark",
+  "neon",
+  "gravity",
+  "silicon",
+  "wrongturn",
+  "thinwalls",
+  "glasshours",
+  "overclocked",
+  "lowbattery",
+  "feedback",
+  "concrete",
+  "pressure",
+  "caravan",
+  "secondstep",
+  "syncservice",
+  "pocketchange",
+  "greenlights",
+  "afterimage",
+  "borrowed",
+  "coldalloy",
+  "obsidian",
+];
+for (let i = SONGS.length - 1; i >= 0; i--) if (HIDDEN.includes(SONGS[i].id)) SONGS.splice(i, 1);
+for (let i = GROUPS.length - 1; i >= 0; i--) {
+  GROUPS[i].songs = GROUPS[i].songs.filter((id) => !HIDDEN.includes(id));
+  if (!GROUPS[i].songs.length) GROUPS.splice(i, 1);
+}
+
 /* ---------- charts ---------- */
 
 function makeChart(song, built, mode, diff) {
