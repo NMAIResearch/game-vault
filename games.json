@@ -10,7 +10,7 @@
   {
     "id": "keyboard-magician",
     "title": "Keyboard Magician",
-    "vibe": "a calm rhythm game: play the tune on your keyboard or phone, with real piano, strings and recorded songs",
+    "vibe": "a calm rhythm game: play the tune on your keyboard or phone, with real piano and strings",
     "tags": ["rhythm", "music", "calm"],
     "built_with": "Claude (Opus 5.5)",
     "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/6"
