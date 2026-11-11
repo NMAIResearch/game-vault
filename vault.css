@@ -106,3 +106,20 @@ a,button,.btn{transition:color .18s var(--ease),background-color .18s var(--ease
    its border 30 per cent, with a 1 px ring and a soft shadow in the accent; the lift on the pointer stays as it was. */
 .game{--a:var(--accent)}
 .game:hover,.game:focus-within{background-color:color-mix(in srgb,var(--a) 7%,var(--surface));border-color:color-mix(in srgb,var(--a) 30%,var(--line));border-top-color:var(--accent);box-shadow:0 0 0 1px color-mix(in srgb,var(--a) 70%,transparent),0 16px 44px -18px var(--a)}
+
+/* The header's boxes in the same place on every page, and where the NMAI Research pages have them: the same
+   rules as the main site's portfolio.css. A grid with fixed slots: the brand (211 px), the main links from a fixed
+   start, an empty slot where the main site has its language menu, and the buttons' slot (the theme button wide enough
+   for either label, the place of the main site's music button kept). Every link carries its underline's 2 px, coloured
+   only on the current page's link, and the scrollbar's room is kept on short pages too. */
+html{scrollbar-gutter:stable}
+:root{--hdr-lang:calc(2 * 4.2 * .85rem + 12px);--hdr-theme:7rem;--hdr-tools:calc(54px + var(--hdr-theme))}
+.site-header{display:grid;grid-template-columns:211px minmax(0,1fr) var(--hdr-lang) var(--hdr-tools);grid-template-rows:minmax(44px,auto);grid-template-areas:"brand nav lang tools";align-items:center;column-gap:24px;row-gap:15px}
+.site-header>div:first-child{grid-area:brand;min-width:0}
+.site-header>.site-nav{grid-area:nav;justify-self:start;margin-left:12px}
+.site-header>.theme-toggle-btn{grid-area:tools;justify-self:end;margin-left:0}
+.site-header .theme-toggle-btn{min-width:var(--hdr-theme);text-align:center}
+.site-nav a{border-bottom:2px solid transparent}
+@media(max-width:1199px){.site-header{grid-template-rows:auto auto;grid-template-areas:"brand . lang tools" "nav nav nav nav"}.site-header>.site-nav{margin-left:0}}
+@media(max-width:620px){:root{--hdr-theme:6.4rem}.site-header{grid-template-columns:minmax(0,1fr) var(--hdr-lang) var(--hdr-tools);grid-template-rows:auto minmax(44px,auto) auto;grid-template-areas:"brand brand brand" ". lang tools" "nav nav nav";column-gap:10px}}
+@media(max-width:359px){.site-header{grid-template-columns:minmax(0,1fr) auto auto;column-gap:8px}}
