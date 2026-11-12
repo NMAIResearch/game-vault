@@ -46,7 +46,7 @@
 <ol class="steps">
 <li><h3>Játsszon</h3><p>A Széf minden játéka közvetlenül a böngészőben fut.</p></li>
 <li><h3>Ossza meg</h3><p>Készített valamit Claude-dal (vagy egy másik modellel)? Küldje be egy játékbeküldő issue-val a GitHubon, vagy nyisson pull requestet.</p></li>
-<li><h3>Értékeljen, szóljon hozzá</h3><p>Minden játéknak saját beszélgetése van a reakciókhoz, az értékelésekhez és az alkotónak szóló visszajelzésekhez. Nincs GitHub-fiókja? Minden játékhoz e-mail-hivatkozás is tartozik.</p></li>
+<li><h3>Értékeljen, szóljon hozzá</h3><p>Minden játéknak saját beszélgetése van a reakciókhoz, az értékelésekhez és az alkotónak szóló visszajelzésekhez. Nincs GitHub-fiókja? Minden játékhoz a visszajelzési oldalra mutató hivatkozás is tartozik.</p></li>
 </ol>
 </aside>
 </section>
@@ -72,7 +72,7 @@
 (function () {
     "use strict";
     const REPO = "https://github.com/NMAIResearch/vibe-vault";
-    const EMAIL = "NMAIResearch@proton.me";
+    const FEEDBACK = "https://nmairesearch.com/hu/feedback/";
     const grid = document.getElementById("grid");
     const filters = document.getElementById("filters");
     const status = document.getElementById("filter-status");
@@ -145,11 +145,8 @@
             actions.append(make("a", { className: "btn btn-quiet", href: "rate.html?id=" + id }, [glyph("💬"), "Értékelés", spoken(": " + g.title)]));
         }
         article.append(actions);
-        article.append(make("p", { className: "feedback-line" }, ["Visszajelzés e-mailben: ", make("a", {
-            href: "mailto:" + EMAIL + "?subject=" + encodeURIComponent("Visszajelzés a Játék Széfből: " + g.title),
-            "aria-label": "Visszajelzés e-mailben: " + g.title + ", címzett: " + EMAIL,
-            text: EMAIL
-        })]));
+        article.append(make("p", { className: "feedback-line" }, [make("a", { href: FEEDBACK + "?game=" + encodeURIComponent(g.title) },
+            ["Visszajelzés küldése", spoken(": " + g.title)])]));
         return article;
     }
 

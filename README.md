@@ -6,7 +6,7 @@ A community home for games made with AI, built by describing what you want and s
 
 🎮 **Play:** every game in the vault runs right in your browser.
 📤 **Share:** built something with Claude (or another model)? Submit it with a game submission issue on GitHub, or send a pull request.
-💬 **Rate and discuss:** each game has its own discussion thread for reactions, ratings, and feedback to the creator. No GitHub account? Each game's card and rating page has an email link.
+💬 **Rate and discuss:** each game has its own discussion thread for reactions, ratings, and feedback to the creator. No GitHub account? Each game's card and rating page links to the site's [feedback page](https://nmairesearch.com/feedback/).
 
 ---
 

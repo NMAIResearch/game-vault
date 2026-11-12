@@ -44,7 +44,7 @@
 <ol class="steps">
 <li><h3>Play</h3><p>Every game in the vault runs right in your browser.</p></li>
 <li><h3>Share</h3><p>Built something with Claude (or another model)? Submit it with a game submission issue on GitHub, or send a pull request.</p></li>
-<li><h3>Rate and discuss</h3><p>Each game has its own discussion thread for reactions, ratings, and feedback to the creator. No GitHub account? Each game also has an email link.</p></li>
+<li><h3>Rate and discuss</h3><p>Each game has its own discussion thread for reactions, ratings, and feedback to the creator. No GitHub account? Each game also has a link to the feedback page.</p></li>
 </ol>
 </aside>
 </section>
@@ -69,7 +69,7 @@
 (function () {
     "use strict";
     const REPO = "https://github.com/NMAIResearch/vibe-vault";
-    const EMAIL = "NMAIResearch@proton.me";
+    const FEEDBACK = "https://nmairesearch.com/feedback/";
     const grid = document.getElementById("grid");
     const filters = document.getElementById("filters");
     const status = document.getElementById("filter-status");
@@ -140,11 +140,8 @@
             actions.append(make("a", { className: "btn btn-quiet", href: "rate.html?id=" + id }, [glyph("💬"), "Rate", spoken(" " + g.title)]));
         }
         article.append(actions);
-        article.append(make("p", { className: "feedback-line" }, ["Email feedback: ", make("a", {
-            href: "mailto:" + EMAIL + "?subject=" + encodeURIComponent("Game Vault feedback: " + g.title),
-            "aria-label": "Email feedback on " + g.title + " to " + EMAIL,
-            text: EMAIL
-        })]));
+        article.append(make("p", { className: "feedback-line" }, [make("a", { href: FEEDBACK + "?game=" + encodeURIComponent(g.title) },
+            ["Send feedback", spoken(" on " + g.title)])]));
         return article;
     }
 

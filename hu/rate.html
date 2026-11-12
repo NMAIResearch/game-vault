@@ -30,7 +30,7 @@
 <div class="actions" id="actions"></div>
 </div>
 <p class="how">Az értékeléshez jelentkezzen be lent a GitHubbal, majd <strong>reagáljon a fő bejegyzésre</strong> (👍 tetszett · ❤️ imádtam · 👀 meglepett), vagy hagyjon megjegyzést az alkotónak. Az értékelések néhány órán belül megjelennek a játék kártyáján.
-   <span class="how-email">Nincs GitHub-fiókja? Küldje el a visszajelzését e-mailben ide: <a id="feedback-email" href="mailto:NMAIResearch@proton.me">NMAIResearch@proton.me</a>.</span></p>
+   <span class="how-email">Nincs GitHub-fiókja? A visszajelzését itt is elküldheti: <a id="feedback-link" href="https://nmairesearch.com/hu/feedback/">visszajelzési oldal</a>.</span></p>
 <div id="giscus-box"></div>
 </main>
 
@@ -75,7 +75,7 @@
     }
     document.title = `${g.title}: értékelés és hozzászólások | Játék Széf`;
     title.textContent = g.title;
-    document.getElementById("feedback-email").href = "mailto:NMAIResearch@proton.me?subject=" + encodeURIComponent("Visszajelzés a Játék Széfből: " + g.title);
+    document.getElementById("feedback-link").search = "?game=" + encodeURIComponent(g.title);
     vibe.textContent = g.vibe_hu || g.vibe || "";
     document.getElementById("meta").textContent = g.built_with ? `készült: ${g.built_with}` : "";
     actions.append(link("btn btn-primary", `../games/${encodeURIComponent(g.id)}/`, [glyph("▶"), "Indítás"]));
