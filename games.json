@@ -3,6 +3,7 @@
     "id": "fact-checkmate",
     "title": "Fact Checkmate",
     "vibe": "chess against a bot that talks a big game: check its claims",
+    "vibe_hu": "sakk egy nagyszájú bot ellen: ellenőrizze az állításait",
     "tags": ["classic", "strategy", "ai"],
     "built_with": "Claude (Opus 5.5)",
     "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/5"
@@ -11,6 +12,7 @@
     "id": "keyboard-magician",
     "title": "Keyboard Magician",
     "vibe": "a calm rhythm game: play the tune on your keyboard or phone, with real piano and strings",
+    "vibe_hu": "nyugodt ritmusjáték: játssza el a dallamot a billentyűzetén vagy a telefonján, valódi zongora- és vonóshangokkal",
     "tags": ["rhythm", "music", "calm"],
     "built_with": "Claude (Opus 5.5)",
     "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/6"
@@ -19,6 +21,7 @@
     "id": "tic-tac-toe",
     "title": "Tic Tac Toe",
     "vibe": "well, it is exactly what you expect",
+    "vibe_hu": "nos, pontosan az, amire számít",
     "tags": ["classic", "casual"],
     "built_with": "Claude (Sonnet) — by DonatOtvosDev",
     "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/3"
@@ -27,6 +30,7 @@
     "id": "tideline",
     "title": "Tideline",
     "vibe": "first-person surf: slide along steep ramps, strafe through the air and carry your speed across four stages",
+    "vibe_hu": "szörf belső nézetből: csússzon végig meredek rámpákon, oldalazzon a levegőben, és vigye tovább a lendületét négy pályán át",
     "tags": ["action", "speed", "surf"],
     "built_with": "Codex (GPT-6 Astra)",
     "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/9"
@@ -35,6 +39,7 @@
     "id": "hungry-horizon",
     "title": "Hungry Horizon",
     "vibe": "be a small, hungry black hole: swallow your way through a town, a harbour, a farm and a fairground, growing with every bite",
+    "vibe_hu": "legyen egy kicsi, éhes fekete lyuk: falja fel egy kisváros, egy kikötő, egy tanya és egy vidámpark mindenét, és nőjön minden falattal",
     "tags": ["arcade", "physics", "casual"],
     "built_with": "Codex (GPT-6 Astra)",
     "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/10"
@@ -43,6 +48,7 @@
     "id": "keresztrejtveny",
     "title": "Keresztrejtvény / Arrowwords",
     "vibe": "a quiet newspaper break: Hungarian and English arrowwords, clues inside the grid and a hidden phrase to uncover",
+    "vibe_hu": "csendes szünet egy újsággal: magyar és angol svédrejtvények, a rácsba írt meghatározásokkal és egy megfejtendő rejtett mondattal",
     "tags": ["puzzle", "words", "calm"],
     "built_with": "GPT-6 Astra (Codex CLI)",
     "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/11"
@@ -51,6 +57,7 @@
     "id": "szokereso",
     "title": "Szókereső / Word Search",
     "vibe": "a newspaper pause: find the Hungarian or English words, then read a hidden message in the letters left behind",
+    "vibe_hu": "kis szünet egy újsággal: keresse meg a magyar vagy az angol szavakat, aztán olvassa ki a megmaradt betűkből a rejtett üzenetet",
     "tags": ["puzzle", "words", "calm"],
     "built_with": "GPT-6.1 Sol (Codex CLI)",
     "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/12"
@@ -59,6 +66,7 @@
     "id": "water-sort",
     "title": "Water Sort",
     "vibe": "a little colour, a little calm: sort glass tubes one pour at a time, with free hints, undo and no ads",
+    "vibe_hu": "egy kis szín, egy kis nyugalom: rendezze sorba a színeket az üvegcsövekben, egyszerre egy töltéssel, ingyenes tippekkel, visszavonással és reklám nélkül",
     "tags": ["puzzle", "casual", "calm"],
     "built_with": "OpenAI Codex",
     "discuss_url": "https://github.com/NMAIResearch/game-vault/discussions/13"
@@ -67,6 +75,7 @@
     "id": "think-again",
     "title": "Think Again / Gondold újra",
     "vibe": "twenty paper puzzles in English and Hungarian: move, turn and combine what you see",
+    "vibe_hu": "húsz papírfejtörő angolul és magyarul: mozgassa, forgassa és kombinálja, amit lát",
     "tags": [
       "puzzle",
       "casual",

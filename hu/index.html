@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://nmairesearch.com/game-vault/" hreflang="en" rel="alternate"/>
+<link href="https://nmairesearch.com/game-vault/hu/" hreflang="hu" rel="alternate"/>
+<link href="https://nmairesearch.com/game-vault/" hreflang="x-default" rel="alternate"/>
+    <meta name="description" content="Játék Széf: közösségi otthon a Claude-dal és más MI-vel készített játékoknak. Játsszon a böngészőjében, ossza meg a sajátját, értékelje a többit.">
+    <meta property="og:title" content="Játék Széf: MI-vel készült játékok, a böngészőben játszhatók">
+    <meta property="og:description" content="Claude-dal készített játékot? Itt a helye. Játsszon ingyenes böngészős játékokkal, amelyeket alkotóik MI-vel „vibe-kódoltak”, küldje be a sajátját, értékelje a többit. Nincs reklám, telepítés, fiók vagy követés.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://nmairesearch.com/game-vault/hu/">
+<meta content="hu_HU" property="og:locale"/>
+<meta content="en_GB" property="og:locale:alternate"/>
+    <meta name="twitter:card" content="summary">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b0c10'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle'%3E%F0%9F%8C%8C%3C/text%3E%3C/svg%3E">
+    <title>Játék Széf | MI-vel készült játékok, a böngészőben játszhatók</title>
+    <link rel="stylesheet" href="../vault.css">
+    <script src="../theme.js"></script>
+    <script defer src="../survey-field.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#games">Ugrás a játékokhoz</a>
+<header class="site-header"><div><a class="brand" href="https://nmairesearch.com/hu/">NMAI Research</a>
+<div class="brand-subtitle">Független MI-kutatás</div></div>
+<nav aria-label="Fő navigáció" class="site-nav"><a href="https://nmairesearch.com/hu/research.html">Kutatás<span class="nav-vault"> Széf</span></a><a href="https://nmairesearch.com/hu/software-vault/">Szoftver<span class="nav-vault"> Széf</span></a><a aria-current="page" href="./">Játék<span class="nav-vault"> Széf</span></a><a href="https://nmairesearch.com/hu/music-vault/">Zene<span class="nav-vault"> Széf</span></a><a href="https://nmairesearch.com/hu/video-vault/">Videó<span class="nav-vault"> Széf</span></a></nav>
+<nav aria-label="Nyelv" class="lang-switch"><a href="../" hreflang="en" lang="en">English</a><a href="./" hreflang="hu" lang="hu" aria-current="page">Magyar</a></nav>
+<button class="theme-toggle-btn" hidden id="themeToggle" type="button">Téma</button></header>
+<nav aria-label="Játék Széf" class="vault-subnav"><span aria-hidden="true" class="vault-subnav-title">Játék Széf</span><a aria-current="page" href="./">Játékok</a><a href="#how">Így működik</a><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Játék beküldése</a><a href="https://github.com/NMAIResearch/vibe-vault">GitHub</a></nav>
+
+<main class="vault" id="main">
+<section class="vault-hero" aria-labelledby="vault-title" data-survey-field>
+<div>
+<p class="eyebrow">Játék Széf</p>
+<h1 id="vault-title">Játékok, amelyekkel játszhat</h1>
+<p class="lede">Közösségi otthon az MI-vel készült játékoknak, amelyeket úgy építettek, hogy leírták, mit szeretnének, és promptról promptra formálták. Minden játék közvetlenül a böngészőben fut: nincs telepítés, fiók vagy követés. Az egyetlen promptból született apró játékoktól a hónapokig csiszolt játékokig mindnek itt a helye.</p>
+<p class="no-ads">Nincs reklám sem a Játék Széfben, sem a játékaiban.</p>
+<div class="cta-row">
+<a class="btn btn-primary" href="#games">Irány a játékok</a>
+<a class="btn btn-quiet" href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose"><span aria-hidden="true">+</span> Küldje be a játékát</a>
+</div>
+</div>
+<aside class="hero-panel" id="how" aria-labelledby="how-title">
+<h2 id="how-title">Így működik</h2>
+<ol class="steps">
+<li><h3>Játsszon</h3><p>A Széf minden játéka közvetlenül a böngészőben fut.</p></li>
+<li><h3>Ossza meg</h3><p>Készített valamit Claude-dal (vagy egy másik modellel)? Küldje be egy játékbeküldő issue-val a GitHubon, vagy nyisson pull requestet.</p></li>
+<li><h3>Értékeljen, szóljon hozzá</h3><p>Minden játéknak saját beszélgetése van a reakciókhoz, az értékelésekhez és az alkotónak szóló visszajelzésekhez. Nincs GitHub-fiókja? Minden játékhoz e-mail-hivatkozás is tartozik.</p></li>
+</ol>
+</aside>
+</section>
+
+<section class="games" id="games" aria-labelledby="games-title">
+<div class="section-head"><h2 id="games-title">A játékok</h2><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Küldje be a játékát</a></div>
+<div class="filters" id="filters" role="group" aria-label="Játékok szűrése címke szerint"></div>
+<p class="filter-status" id="filter-status" role="status"></p>
+<div class="grid" id="grid"></div>
+<noscript><p class="notice">A katalógus JavaScript nélkül nem tudja felsorolni a játékokat. Böngéssze a <a href="https://github.com/NMAIResearch/vibe-vault/tree/main/games">játékok mappáját a GitHubon</a>.</p></noscript>
+</section>
+</main>
+
+<footer class="hub-footer">
+<p class="ai-disclaimer">MI-nyilatkozat: az oldal elrendezését a Claude Opus 5.5 (Anthropic) tervezte meg.</p>
+<p class="translation-note" lang="hu">A magyar fordítás az Opus 5.5 (Claude Code CLI) segítségével készült. Eltérés esetén az angol változat és a hivatkozott licencek az irányadók.</p>
+<p>© 2026 Vibe Vault · Nyílt forráskód, licenc: <a href="https://github.com/NMAIResearch/vibe-vault/blob/main/LICENSE">MIT</a></p>
+<p>Üzemelteti: <a href="https://nmairesearch.com/hu/">NMAI Research</a></p>
+<div class="footer-links"><a href="https://github.com/NMAIResearch/vibe-vault">GitHub</a><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Játék beküldése</a></div>
+</footer>
+
+<script>
+(function () {
+    "use strict";
+    const REPO = "https://github.com/NMAIResearch/vibe-vault";
+    const EMAIL = "NMAIResearch@proton.me";
+    const grid = document.getElementById("grid");
+    const filters = document.getElementById("filters");
+    const status = document.getElementById("filter-status");
+    let games = [];
+    let ratings = {};
+
+    function make(tag, props, children) {
+        const node = document.createElement(tag);
+        for (const [key, value] of Object.entries(props || {})) {
+            if (key === "text") node.textContent = value;
+            else if (key === "className") node.className = value;
+            else node.setAttribute(key, value);
+        }
+        for (const child of children || []) node.append(child);
+        return node;
+    }
+    const glyph = text => make("span", { "aria-hidden": "true", text });
+    const spoken = text => make("span", { className: "sr-only", text });
+    const isWebLink = url => typeof url === "string" && /^https?:\/\//i.test(url);
+    const TAGS = {"classic": "klasszikus", "strategy": "stratégia", "ai": "MI", "rhythm": "ritmus", "music": "zene", "calm": "nyugalmas", "casual": "könnyed", "action": "akció", "speed": "sebesség", "surf": "szörf", "arcade": "ügyességi", "physics": "fizika", "puzzle": "fejtörő", "words": "szójáték"};
+    const tagName = tag => TAGS[tag] || tag;
+
+    function notice(title, body) {
+        grid.replaceChildren(make("div", { className: "notice" }, [make("h3", { text: title }), body]));
+    }
+
+    function emptyState() {
+        notice("A Széf most nyílik…", make("p", {}, [
+            "Az első játékok most érkeznek. Készített egyet Claude-dal (vagy egy másik MI-vel)?", make("br"),
+            make("a", { href: REPO + "/issues/new/choose", text: "Legyen az elsők között a polcon." })
+        ]));
+    }
+
+    function failedState() {
+        notice("A játéklistát nem sikerült betölteni.", make("p", {}, [
+            "Töltse be újra az oldalt, vagy böngéssze a ", make("a", { href: REPO + "/tree/main/games", text: "játékok mappáját a GitHubon" }), "."
+        ]));
+    }
+
+    function ratingNode(r) {
+        const parts = [["up", "👍", "kedvelés"], ["heart", "❤️", "szív"], ["eyes", "👀", "meglepődés"], ["comments", "💬", "hozzászólás"]]
+            .filter(([key]) => r[key]);
+        const node = make("span", { className: "ratings" });
+        node.append(glyph(parts.map(([key, symbol]) => symbol + r[key]).join(" ")));
+        node.append(spoken("Értékelések: " + parts.map(([key, , label]) => r[key] + " " + label).join(", ")));
+        return node;
+    }
+
+    function card(g) {
+        const id = encodeURIComponent(g.id);
+        const play = "../games/" + id + "/";
+        const article = make("article", { className: "game" });
+        article.append(make("h3", {}, [make("a", { href: play, text: g.title })]));
+        article.append(make("p", { className: "vibe-line", text: g.vibe_hu || g.vibe || "" }));
+        const tags = g.tags || [];
+        if (tags.length) article.append(make("ul", { className: "tags", "aria-label": "Címkék" }, tags.map(t => make("li", { text: "#" + tagName(t) }))));
+        const details = [];
+        const r = ratings[g.id];
+        if (r && (r.up + r.heart + r.eyes + r.comments) > 0) details.push(ratingNode(r));
+        if (g.full_version_url) details.push(make("span", { className: "paid", text: "demó, teljes változat is elérhető" }));
+        const meta = make("p", { className: "meta" });
+        details.forEach((item, i) => { if (i) meta.append(" · "); meta.append(item); });
+        article.append(meta);
+        const actions = make("div", { className: "actions" });
+        actions.append(make("a", { className: "btn btn-primary", href: play }, [glyph("▶"), "Indítás", spoken(": " + g.title)]));
+        if (isWebLink(g.full_version_url)) {
+            actions.append(make("a", { className: "btn btn-quiet", href: g.full_version_url }, ["Teljes változat", glyph("↗"), spoken(": " + g.title)]));
+        }
+        if (g.discuss_url) {
+            actions.append(make("a", { className: "btn btn-quiet", href: "rate.html?id=" + id }, [glyph("💬"), "Értékelés", spoken(": " + g.title)]));
+        }
+        article.append(actions);
+        article.append(make("p", { className: "feedback-line" }, ["Visszajelzés e-mailben: ", make("a", {
+            href: "mailto:" + EMAIL + "?subject=" + encodeURIComponent("Visszajelzés a Játék Széfből: " + g.title),
+            "aria-label": "Visszajelzés e-mailben: " + g.title + ", címzett: " + EMAIL,
+            text: EMAIL
+        })]));
+        return article;
+    }
+
+    function render(tag) {
+        const shown = tag ? games.filter(g => (g.tags || []).includes(tag)) : games;
+        if (!shown.length) { emptyState(); return; }
+        grid.replaceChildren(...shown.map(card));
+    }
+
+    function buildFilters() {
+        const allTags = [...new Set(games.flatMap(g => g.tags || []))];
+        if (!allTags.length) return;
+        const buttons = [];
+        const choose = (button, tag) => {
+            buttons.forEach(b => b.setAttribute("aria-pressed", String(b === button)));
+            render(tag);
+            const count = tag ? games.filter(g => (g.tags || []).includes(tag)).length : games.length;
+            status.textContent = tag
+                ? count + " játék látható, címke: #" + tagName(tag) + "."
+                : "Minden játék látható.";
+        };
+        const add = (label, tag) => {
+            const button = make("button", { type: "button", "aria-pressed": "false", text: label });
+            button.addEventListener("click", () => choose(button, tag));
+            buttons.push(button);
+            filters.append(button);
+            return button;
+        };
+        add("Mind", null).setAttribute("aria-pressed", "true");
+        for (const tag of allTags) add("#" + tagName(tag), tag);
+    }
+
+    async function load(path) {
+        const response = await fetch(path);
+        if (!response.ok) throw new Error(path + " returned " + response.status);
+        return response.json();
+    }
+
+    (async function () {
+        try {
+            games = await load("../games.json");
+        } catch (error) {
+            failedState();
+            return;
+        }
+        if (!Array.isArray(games)) { failedState(); return; }
+        try {
+            ratings = (await load("../ratings.json")) || {};
+        } catch (error) {
+            ratings = {};  // Ratings are optional.
+        }
+        buildFilters();
+        render(null);
+    })();
+})();
+</script>
+</body>
+</html>

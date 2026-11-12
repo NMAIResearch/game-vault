@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://nmairesearch.com/game-vault/rate.html" hreflang="en" rel="alternate"/>
+<link href="https://nmairesearch.com/game-vault/hu/rate.html" hreflang="hu" rel="alternate"/>
+<link href="https://nmairesearch.com/game-vault/rate.html" hreflang="x-default" rel="alternate"/>
+    <title>Értékelés és hozzászólások | Játék Széf</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230b0c10'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle'%3E%F0%9F%8C%8C%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="../vault.css">
+    <script src="../theme.js"></script>
+    <script defer src="../survey-field.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Ugrás a tartalomhoz</a>
+<header class="site-header"><div><a class="brand" href="https://nmairesearch.com/hu/">NMAI Research</a>
+<div class="brand-subtitle">Független MI-kutatás</div></div>
+<nav aria-label="Fő navigáció" class="site-nav"><a href="https://nmairesearch.com/hu/research.html">Kutatás<span class="nav-vault"> Széf</span></a><a href="https://nmairesearch.com/hu/software-vault/">Szoftver<span class="nav-vault"> Széf</span></a><a aria-current="true" href="./">Játék<span class="nav-vault"> Széf</span></a><a href="https://nmairesearch.com/hu/music-vault/">Zene<span class="nav-vault"> Széf</span></a><a href="https://nmairesearch.com/hu/video-vault/">Videó<span class="nav-vault"> Széf</span></a></nav>
+<nav aria-label="Nyelv" class="lang-switch"><a href="../rate.html" hreflang="en" lang="en">English</a><a href="rate.html" hreflang="hu" lang="hu" aria-current="page">Magyar</a></nav>
+<button class="theme-toggle-btn" hidden id="themeToggle" type="button">Téma</button></header>
+<nav aria-label="Játék Széf" class="vault-subnav"><span aria-hidden="true" class="vault-subnav-title">Játék Széf</span><a href="./">Játékok</a><a href="./#how">Így működik</a><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Játék beküldése</a><a href="https://github.com/NMAIResearch/vibe-vault">GitHub</a></nav>
+
+<main class="vault" id="main">
+<div class="rate-head" data-survey-field>
+<a class="back-link" href="./"><span aria-hidden="true">←</span> Az összes játék</a>
+<h1 id="title">Betöltés…</h1>
+<p class="vibe-line" id="vibe"></p>
+<p class="meta" id="meta"></p>
+<div class="actions" id="actions"></div>
+</div>
+<p class="how">Az értékeléshez jelentkezzen be lent a GitHubbal, majd <strong>reagáljon a fő bejegyzésre</strong> (👍 tetszett · ❤️ imádtam · 👀 meglepett), vagy hagyjon megjegyzést az alkotónak. Az értékelések néhány órán belül megjelennek a játék kártyáján.
+   <span class="how-email">Nincs GitHub-fiókja? Küldje el a visszajelzését e-mailben ide: <a id="feedback-email" href="mailto:NMAIResearch@proton.me">NMAIResearch@proton.me</a>.</span></p>
+<div id="giscus-box"></div>
+</main>
+
+<footer class="hub-footer">
+<p class="ai-disclaimer">MI-nyilatkozat: az oldal elrendezését a Claude Opus 5.5 (Anthropic) tervezte meg.</p>
+<p class="translation-note" lang="hu">A magyar fordítás az Opus 5.5 (Claude Code CLI) segítségével készült. Eltérés esetén az angol változat és a hivatkozott licencek az irányadók.</p>
+<p>© 2026 Vibe Vault · a hozzászólásokat a <a href="https://giscus.app">giscus</a> és a GitHub Discussions működteti</p>
+<p>Üzemelteti: <a href="https://nmairesearch.com/hu/">NMAI Research</a></p>
+</footer>
+
+<script>
+(async function () {
+    "use strict";
+    const id = new URLSearchParams(location.search).get("id");
+    // The language switch keeps the chosen game.
+    if (id) document.querySelectorAll(".lang-switch a").forEach(a => { a.search = "?id=" + encodeURIComponent(id); });
+    const title = document.getElementById("title");
+    const vibe = document.getElementById("vibe");
+    const actions = document.getElementById("actions");
+    const isWebLink = url => typeof url === "string" && /^https?:\/\//i.test(url);
+    function link(className, href, parts) {
+        const a = document.createElement("a");
+        a.className = className;
+        a.href = href;
+        for (const part of parts) a.append(part);
+        return a;
+    }
+    function glyph(text) {
+        const span = document.createElement("span");
+        span.setAttribute("aria-hidden", "true");
+        span.textContent = text;
+        return span;
+    }
+
+    let games = [];
+    try { games = await (await fetch("../games.json")).json(); } catch (e) {}
+    const g = Array.isArray(games) ? games.find(x => x.id === id) : undefined;
+    if (!g) {
+        title.textContent = "A játék nem található";
+        vibe.replaceChildren("Vissza a ", link("", "./", ["Játék Széfbe"]), ".");
+        return;
+    }
+    document.title = `${g.title}: értékelés és hozzászólások | Játék Széf`;
+    title.textContent = g.title;
+    document.getElementById("feedback-email").href = "mailto:NMAIResearch@proton.me?subject=" + encodeURIComponent("Visszajelzés a Játék Széfből: " + g.title);
+    vibe.textContent = g.vibe_hu || g.vibe || "";
+    document.getElementById("meta").textContent = g.built_with ? `készült: ${g.built_with}` : "";
+    actions.append(link("btn btn-primary", `../games/${encodeURIComponent(g.id)}/`, [glyph("▶"), "Indítás"]));
+    if (isWebLink(g.discuss_url)) actions.append(link("btn btn-quiet", g.discuss_url, ["Beszélgetés a GitHubon", glyph("↗")]));
+
+    const m = (g.discuss_url || "").match(/\/discussions\/(\d+)/);
+    if (!m) return;
+    const s = document.createElement("script");
+    s.src = "https://giscus.app/client.js";
+    s.async = true; s.crossOrigin = "anonymous";
+    s.setAttribute("data-repo", "NMAIResearch/game-vault");
+    s.setAttribute("data-repo-id", "R_kgDOVDGEcg");
+    s.setAttribute("data-mapping", "number");
+    s.setAttribute("data-term", m[1]);
+    s.setAttribute("data-reactions-enabled", "1");
+    s.setAttribute("data-input-position", "top");
+    const giscusTheme = () => document.documentElement.dataset.theme === "light" ? "noborder_light" : "noborder_dark";
+    s.setAttribute("data-theme", giscusTheme());
+    s.setAttribute("data-lang", "en");
+    document.getElementById("giscus-box").appendChild(s);
+    // theme.js sets data-theme on a toggle and on a system change. Before the giscus frame exists, keep the
+    // pending script's theme current; once the frame has sent its first message, send it the current theme.
+    let giscusReady = false;
+    const syncGiscus = () => {
+      const frame = document.querySelector("iframe.giscus-frame");
+      if (giscusReady && frame && frame.contentWindow) frame.contentWindow.postMessage({ giscus: { setConfig: { theme: giscusTheme() } } }, "https://giscus.app");
+      else s.setAttribute("data-theme", giscusTheme());
+    };
+    new MutationObserver(syncGiscus).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    window.addEventListener("message", (event) => {
+      if (giscusReady || event.origin !== "https://giscus.app" || !event.data || typeof event.data !== "object" || !("giscus" in event.data)) return;
+      giscusReady = true;
+      syncGiscus();
+    });
+})();
+</script>
+</body>
+</html>

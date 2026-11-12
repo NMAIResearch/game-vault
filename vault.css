@@ -125,3 +125,12 @@ html{scrollbar-gutter:stable}
 @media(max-width:1199px){.site-header{grid-template-rows:auto auto;grid-template-areas:"brand . lang tools" "nav nav nav nav"}.site-header>.site-nav{margin-left:0}}
 @media(max-width:620px){:root{--hdr-theme:6.4rem}.site-header{grid-template-columns:minmax(0,1fr) var(--hdr-lang) var(--hdr-tools);grid-template-rows:auto minmax(44px,auto) auto;grid-template-areas:"brand brand brand" ". lang tools" "nav nav nav";column-gap:10px}}
 @media(max-width:359px){.site-header{grid-template-columns:minmax(0,1fr) auto auto;column-gap:8px}}
+
+/* The language menu (English, Magyar) in the slot above, with the main site's rules for it (portfolio.css): each link a
+   fixed width, so the current one's bold moves nothing; the current one's underline in the accent */
+.lang-switch{display:flex;gap:12px;font-size:.85rem}.lang-switch a{color:var(--muted);text-decoration:none;padding:7px 0}
+.lang-switch a[aria-current]{color:var(--heading);font-weight:650;border-bottom:2px solid var(--accent)}
+.translation-note{margin-bottom:10px}
+.site-header>.lang-switch{grid-area:lang;justify-self:end;margin-left:0}
+.lang-switch a{border-bottom:2px solid transparent;min-width:4.2em;text-align:center}
+@media(max-width:359px){.lang-switch a{min-width:0}}
