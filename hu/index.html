@@ -27,7 +27,7 @@
 <nav aria-label="Fő navigáció" class="site-nav"><a href="https://nmairesearch.com/hu/research.html">Kutatás<span class="nav-vault"> Széf</span></a><a href="https://nmairesearch.com/hu/software-vault/">Szoftver<span class="nav-vault"> Széf</span></a><a aria-current="page" href="./">Játék<span class="nav-vault"> Széf</span></a><a href="https://nmairesearch.com/hu/music-vault/">Zene<span class="nav-vault"> Széf</span></a><a href="https://nmairesearch.com/hu/video-vault/">Videó<span class="nav-vault"> Széf</span></a></nav>
 <nav aria-label="Nyelv" class="lang-switch"><a href="../" hreflang="en" lang="en">English</a><a href="./" hreflang="hu" lang="hu" aria-current="page">Magyar</a></nav>
 <button class="theme-toggle-btn" hidden id="themeToggle" type="button">Téma</button></header>
-<nav aria-label="Játék Széf" class="vault-subnav"><span aria-hidden="true" class="vault-subnav-title">Játék Széf</span><a aria-current="page" href="./">Játékok</a><a href="#how">Így működik</a><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Játék beküldése</a><a href="https://github.com/NMAIResearch/vibe-vault">GitHub</a></nav>
+<nav aria-label="Játék Széf" class="vault-subnav"><span aria-hidden="true" class="vault-subnav-title">Játék Széf</span><a aria-current="page" href="./">Játékok</a><a href="#how">Így működik</a><a href="https://github.com/NMAIResearch/game-vault/issues/new/choose">Játék beküldése</a><a href="https://github.com/NMAIResearch/game-vault">GitHub</a></nav>
 
 <main class="vault" id="main">
 <section class="vault-hero" aria-labelledby="vault-title" data-survey-field>
@@ -38,7 +38,7 @@
 <p class="no-ads">Nincs reklám sem a Játék Széfben, sem a játékaiban.</p>
 <div class="cta-row">
 <a class="btn btn-primary" href="#games">Irány a játékok</a>
-<a class="btn btn-quiet" href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose"><span aria-hidden="true">+</span> Küldje be a játékát</a>
+<a class="btn btn-quiet" href="https://github.com/NMAIResearch/game-vault/issues/new/choose"><span aria-hidden="true">+</span> Küldje be a játékát</a>
 </div>
 </div>
 <aside class="hero-panel" id="how" aria-labelledby="how-title">
@@ -52,26 +52,26 @@
 </section>
 
 <section class="games" id="games" aria-labelledby="games-title">
-<div class="section-head"><h2 id="games-title">A játékok</h2><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Küldje be a játékát</a></div>
+<div class="section-head"><h2 id="games-title">A játékok</h2><a href="https://github.com/NMAIResearch/game-vault/issues/new/choose">Küldje be a játékát</a></div>
 <div class="filters" id="filters" role="group" aria-label="Játékok szűrése címke szerint"></div>
 <p class="filter-status" id="filter-status" role="status"></p>
 <div class="grid" id="grid"></div>
-<noscript><p class="notice">A katalógus JavaScript nélkül nem tudja felsorolni a játékokat. Böngéssze a <a href="https://github.com/NMAIResearch/vibe-vault/tree/main/games">játékok mappáját a GitHubon</a>.</p></noscript>
+<noscript><p class="notice">A katalógus JavaScript nélkül nem tudja felsorolni a játékokat. Böngéssze a <a href="https://github.com/NMAIResearch/game-vault/tree/main/games">játékok mappáját a GitHubon</a>.</p></noscript>
 </section>
 </main>
 
 <footer class="hub-footer">
 <p class="ai-disclaimer">MI-nyilatkozat: az oldal elrendezését a Claude Opus 5.5 (Anthropic) tervezte meg.</p>
 <p class="translation-note" lang="hu">A magyar fordítás az Opus 5.5 (Claude Code CLI) segítségével készült. Eltérés esetén az angol változat és a hivatkozott licencek az irányadók.</p>
-<p>© 2026 Vibe Vault · Nyílt forráskód, licenc: <a href="https://github.com/NMAIResearch/vibe-vault/blob/main/LICENSE">MIT</a></p>
+<p>© 2026 Játék Széf · Nyílt forráskód, licenc: <a href="https://github.com/NMAIResearch/game-vault/blob/main/LICENSE">MIT</a></p>
 <p>Üzemelteti: <a href="https://nmairesearch.com/hu/">NMAI Research</a></p>
-<div class="footer-links"><a href="https://github.com/NMAIResearch/vibe-vault">GitHub</a><a href="https://github.com/NMAIResearch/vibe-vault/issues/new/choose">Játék beküldése</a></div>
+<div class="footer-links"><a href="https://github.com/NMAIResearch/game-vault">GitHub</a><a href="https://github.com/NMAIResearch/game-vault/issues/new/choose">Játék beküldése</a></div>
 </footer>
 
 <script>
 (function () {
     "use strict";
-    const REPO = "https://github.com/NMAIResearch/vibe-vault";
+    const REPO = "https://github.com/NMAIResearch/game-vault";
     const FEEDBACK = "https://nmairesearch.com/hu/feedback/";
     const grid = document.getElementById("grid");
     const filters = document.getElementById("filters");

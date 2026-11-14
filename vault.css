@@ -1,4 +1,4 @@
-/* Vibe Vault presentation: the NMAI Research type, header, footer and focus pattern in the vault's purple palette, with the catalogue and rating components. */
+/* Game Vault presentation: the NMAI Research type, header, footer and focus pattern in the vault's purple palette, with the catalogue and rating components. */
 :root{color-scheme:light;--bg:#fbfefc;--surface:#fff;--raised:#f3fbf6;--text:#25332b;--muted:#48604f;--line:#dcefe3;--accent:#276749;--heading:#1c4532;--tag:#eef9f2;--sans:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 :root[data-theme="dark"]{color-scheme:dark;--bg:#0e1712;--surface:#16231b;--raised:#16231b;--text:#e7f3ec;--muted:#a8c2b2;--line:#27402f;--accent:#68d391;--heading:#e6f7ec;--tag:#16231b}
 @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0e1712;--surface:#16231b;--raised:#16231b;--text:#e7f3ec;--muted:#a8c2b2;--line:#27402f;--accent:#68d391;--heading:#e6f7ec;--tag:#16231b}}
